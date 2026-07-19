@@ -13,6 +13,8 @@ import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
+import { recordVitals, type RecordVitalsBody } from './triage.ts';
+import { VitalError } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -102,6 +104,15 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const body = (await readBody(req)) as CheckoutApiBody;
           const out = await doCheckout(pool, body);
           return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/triage/vitals' && req.method === 'POST') {
+          const body = (await readBody(req)) as RecordVitalsBody;
+          try {
+            return sendJson(res, 201, await recordVitals(pool, body));
+          } catch (err) {
+            if (err instanceof VitalError) return sendJson(res, 422, { error: { code: 'vitals_need_confirmation', message: err.message } });
+            throw err;
+          }
         }
         if (p === '/api/cashier/open' && req.method === 'POST') {
           const body = (await readBody(req)) as { cashier: string; site?: string; openingFloatMinor: number };

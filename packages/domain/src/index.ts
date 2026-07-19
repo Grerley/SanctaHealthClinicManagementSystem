@@ -14,3 +14,4 @@ export * from './duplicate-detection.ts';
 export * from './pricebook.ts';
 export * from './ageing.ts';
 export * from './cashier.ts';
+export * from './vitals.ts';
