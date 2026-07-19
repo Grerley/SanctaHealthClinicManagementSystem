@@ -16,6 +16,7 @@ import { registerPatient, searchPatients, type RegisterBody } from './patients.t
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
+import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -154,6 +155,20 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/debtors/ageing' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
           return sendJson(res, 200, await ageingReport(pool, asOf));
+        }
+        if (p === '/api/finance/period/close' && req.method === 'POST') {
+          const b = (await readBody(req)) as { periodId: string; approver?: string };
+          try { return sendJson(res, 200, await closePeriod(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'period_close_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/period/reopen' && req.method === 'POST') {
+          const b = (await readBody(req)) as { periodId: string; approver?: string; reason?: string };
+          try { return sendJson(res, 200, await reopenPeriod(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'period_reopen_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/period' && req.method === 'GET') {
+          const id = url.searchParams.get('id') ?? '';
+          return sendJson(res, 200, { periodId: id, status: await periodStatus(pool, id) });
         }
         if (p === '/api/sync/status' && req.method === 'GET') return sendJson(res, 200, await syncStatus(pool));
         if (p === '/api/sync/push' && req.method === 'POST') {
