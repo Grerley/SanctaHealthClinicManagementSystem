@@ -14,6 +14,7 @@ import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
+import { ageingReport } from './debtors.ts';
 import { VitalError } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -126,6 +127,10 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
             // Variance over tolerance without approval, or shift not open.
             return sendJson(res, 409, { error: { code: 'shift_close_rejected', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/debtors/ageing' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, await ageingReport(pool, asOf));
         }
         if (p === '/api/sync/status' && req.method === 'GET') return sendJson(res, 200, await syncStatus(pool));
         if (p === '/api/sync/push' && req.method === 'POST') {
