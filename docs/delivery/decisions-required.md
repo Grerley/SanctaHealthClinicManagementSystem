@@ -4,6 +4,11 @@ Per the prompt (§14.9) and pack §25.1. Decisions marked **BLOCKING** materiall
 implementation and must have an owner before the relevant work starts. For non-blocking
 gaps a conservative default is recorded (prompt §14) and revisited when the owner engages.
 
+> **Ready to sign:** these decisions are elevated into an actionable owner sign-off sheet at
+> [`../governance/decision-signoff-pack.md`](../governance/decision-signoff-pack.md) — each with
+> the exact question, the recommended default already in use, options, and a signature block.
+> Production is blocked until **B1** and **B2** are signed.
+
 ## Blocking (needed before / early in Phase 1)
 
 | # | Decision | Owner | Why blocking | Conservative default until decided |
