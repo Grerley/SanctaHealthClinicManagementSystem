@@ -58,10 +58,12 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
-      - name: Vertical-slice integration tests (dispense → invoice → payment → journals → replay)
+      - name: Vertical-slice + sync integration tests (dispense → invoice → payment → journals → edge↔cloud sync → replay)
         run: npm run test:integration -w @sancta/clinic-edge
         env:
           DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
+          # The cloud store lives in an isolated `cloud` schema; one instance suffices in CI.
+          CLOUD_DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
 
   # Reserved gates that expand as modules land (pack §22). Kept green so the
   # required-checks contract is stable while real suites are added per phase.

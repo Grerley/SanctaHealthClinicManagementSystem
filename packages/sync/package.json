@@ -1,0 +1,17 @@
+{
+  "name": "@sancta/sync",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-neutral edge->cloud synchronisation engine: outbox push over a pluggable transport, idempotent and resumable (ADR-0004).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@sancta/domain": "*"
+  }
+}

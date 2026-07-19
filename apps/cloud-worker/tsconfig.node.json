@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "//": "The Node cloud adapter (dev/test) runs on Node, not the Worker runtime, so it typechecks with Node types. It re-uses the Worker's CloudSyncService from src/.",
+  "include": ["node/**/*.ts", "src/cloud-sync.ts", "src/sync-ingress.ts"]
+}

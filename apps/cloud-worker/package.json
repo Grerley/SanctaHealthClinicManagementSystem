@@ -4,11 +4,18 @@
   "private": true,
   "type": "module",
   "description": "Cloudflare Worker: cloud API, synchronisation ingress and integration gateway (CLD-002).",
+  "exports": {
+    ".": "./src/cloud-sync.ts",
+    "./node-adapter": "./node/adapter.ts"
+  },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "node --experimental-strip-types --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@sancta/domain": "*"
+  },
+  "devDependencies": {
+    "pg": "^8.13.1"
   }
 }

@@ -109,7 +109,8 @@ export async function commitCheckout(client: PoolClient, req: CheckoutRequest): 
     await client.query(
       `INSERT INTO billing.invoice (id, invoice_number, patient_id, status, currency, finalised_at)
        VALUES ($1,$2,$3,'finalised','USD', now())`,
-      [d.invoiceId, 'INV-' + d.invoiceId.slice(0, 8), d.patientId],
+      // Number from the UUID random suffix (the timestamp prefix repeats for ~65s).
+      [d.invoiceId, 'INV-' + d.invoiceId.slice(-12), d.patientId],
     );
     await client.query(
       `INSERT INTO billing.invoice_line (id, invoice_id, service_code, rule_version, standard_minor, applied_minor, tax_minor)
@@ -122,7 +123,7 @@ export async function commitCheckout(client: PoolClient, req: CheckoutRequest): 
     await client.query(
       `INSERT INTO billing.payment (id, receipt_number, patient_id, method, amount_minor, currency, status)
        VALUES ($1,$2,$3,$4,$5,'USD','confirmed')`,
-      [paymentId, 'RCT-' + paymentId.slice(0, 8), d.patientId, req.paymentMethod, req.paymentMinor],
+      [paymentId, 'RCT-' + paymentId.slice(-12), d.patientId, req.paymentMethod, req.paymentMinor],
     );
     await client.query(
       `INSERT INTO billing.payment_allocation (id, payment_id, invoice_id, amount_minor)
