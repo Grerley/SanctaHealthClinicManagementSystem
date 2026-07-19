@@ -12,6 +12,7 @@ import { readFile } from 'node:fs/promises';
 import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
+import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -86,7 +87,16 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
 
       if (p.startsWith('/api/')) {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
-        if (p === '/api/patients' && req.method === 'GET') return sendJson(res, 200, { patients: await listPatients(pool) });
+        if (p === '/api/patients' && req.method === 'GET') {
+          const q = url.searchParams.get('q');
+          if (q) return sendJson(res, 200, { patients: await searchPatients(pool, q) });
+          return sendJson(res, 200, { patients: await listPatients(pool) });
+        }
+        if (p === '/api/patients' && req.method === 'POST') {
+          const body = (await readBody(req)) as RegisterBody;
+          const out = await registerPatient(pool, body);
+          return sendJson(res, out.ok ? 201 : 409, out);
+        }
         if (p === '/api/stock' && req.method === 'GET') return sendJson(res, 200, await stockForSku(pool, url.searchParams.get('sku') ?? ''));
         if (p === '/api/checkout' && req.method === 'POST') {
           const body = (await readBody(req)) as CheckoutApiBody;
