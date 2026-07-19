@@ -1,0 +1,36 @@
+{
+  "$comment": "Source of truth for backlog coverage. 'built' = implemented with passing tests; 'partial' = schema/domain/endpoint present but flow or acceptance evidence incomplete. Update as modules land, then run `npm run coverage`.",
+  "moduleTotals": {
+    "PAT": 10, "APT": 9, "VIS": 9, "TRI": 8, "EHR": 12, "ORD": 9, "MED": 10,
+    "INV": 11, "BIL": 12, "DOC": 7, "OPS": 8, "FIN": 14, "MGT": 10, "COM": 6,
+    "ADM": 8, "SYN": 10, "CLD": 12
+  },
+  "nfrTotal": 38,
+  "brTotal": 15,
+  "built": [
+    "PAT-001", "PAT-002", "PAT-003",
+    "TRI-002", "TRI-003",
+    "MED-007", "MED-008", "MED-010",
+    "INV-005", "INV-006",
+    "BIL-005", "BIL-006", "BIL-008", "BIL-009",
+    "FIN-002",
+    "SYN-001", "SYN-002", "SYN-003", "SYN-004", "SYN-005", "SYN-007",
+    "CLD-011"
+  ],
+  "partial": [
+    "PAT-004", "PAT-007",
+    "VIS-001",
+    "EHR-002", "EHR-008",
+    "MED-002",
+    "INV-001", "INV-002",
+    "BIL-001", "BIL-002", "BIL-003", "BIL-004", "BIL-010", "BIL-012",
+    "FIN-001", "FIN-004", "FIN-009", "FIN-010",
+    "ADM-004", "ADM-007",
+    "SYN-006", "SYN-010",
+    "CLD-001", "CLD-002", "CLD-003", "CLD-004", "CLD-012"
+  ],
+  "nfrBuilt": ["NFR-001", "NFR-002", "NFR-010", "NFR-031", "NFR-035", "NFR-038"],
+  "nfrPartial": ["NFR-015", "NFR-016", "NFR-018", "NFR-020", "NFR-024", "NFR-025", "NFR-037"],
+  "brBuilt": ["BR-001", "BR-002", "BR-003", "BR-005", "BR-006", "BR-007", "BR-008", "BR-009", "BR-012"],
+  "brPartial": ["BR-011", "BR-015"]
+}
