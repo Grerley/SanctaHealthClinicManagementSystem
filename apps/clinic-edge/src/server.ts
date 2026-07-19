@@ -15,7 +15,8 @@ import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashie
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
-import { VitalError } from '@sancta/domain';
+import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
+import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -126,6 +127,28 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             // Variance over tolerance without approval, or shift not open.
             return sendJson(res, 409, { error: { code: 'shift_close_rejected', message: (err as Error).message } });
+          }
+        }
+        if (p === '/api/schedule/slot' && req.method === 'POST') {
+          const b = (await readBody(req)) as { provider: string; site?: string; startsAt: string; endsAt: string };
+          return sendJson(res, 201, await createSlot(pool, b));
+        }
+        if (p === '/api/schedule/book' && req.method === 'POST') {
+          const b = (await readBody(req)) as { slotId: string; patientId: string; serviceCode?: string; reason?: string };
+          const out = await bookAppointment(pool, b);
+          return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/schedule/next' && req.method === 'GET') {
+          const provider = url.searchParams.get('provider') ?? '';
+          const afterIso = url.searchParams.get('after') ?? new Date().toISOString();
+          return sendJson(res, 200, { slot: await nextAvailableSlot(pool, { provider, afterIso }) });
+        }
+        if (p === '/api/schedule/status' && req.method === 'POST') {
+          const b = (await readBody(req)) as { appointmentId: string; to: AppointmentState };
+          try {
+            return sendJson(res, 200, await setAppointmentStatus(pool, b));
+          } catch (err) {
+            return sendJson(res, 409, { error: { code: 'illegal_transition', message: (err as Error).message } });
           }
         }
         if (p === '/api/debtors/ageing' && req.method === 'GET') {
