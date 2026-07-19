@@ -13,3 +13,4 @@ export * from './state-machines.ts';
 export * from './duplicate-detection.ts';
 export * from './pricebook.ts';
 export * from './ageing.ts';
+export * from './cashier.ts';

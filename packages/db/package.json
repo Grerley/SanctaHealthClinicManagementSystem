@@ -1,0 +1,13 @@
+{
+  "name": "@sancta/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Forward-only SQL migrations and schema for the edge and cloud PostgreSQL.",
+  "exports": {
+    "./migrations": "./src/migrations.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

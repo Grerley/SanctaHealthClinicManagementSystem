@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import pg from 'pg';
+import { allMigrationsSql } from '@sancta/db/migrations';
 import { startCloudAdapter } from '@sancta/cloud-worker/node-adapter';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -21,7 +22,7 @@ const CLOUD_DATABASE_URL = process.env['CLOUD_DATABASE_URL'] ?? 'postgres://sanc
 const EDGE_PORT = process.env['EDGE_PORT'] ?? '8791';
 
 async function main(): Promise<void> {
-  const migration = readFileSync(join(repoRoot, 'packages/db/migrations/0001_init.sql'), 'utf8');
+  const migration = allMigrationsSql();
   const seed = readFileSync(join(repoRoot, 'seed/synthetic-seed.sql'), 'utf8');
 
   // Reset the edge database.

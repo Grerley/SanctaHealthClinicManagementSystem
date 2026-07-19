@@ -7,13 +7,13 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 
 ```
 # Unit — npm test
-@sancta/domain        tests 60  pass 60  fail 0
+@sancta/domain        tests 67  pass 67  fail 0   (incl. cashier shift-close math)
 @sancta/sync          tests  6  pass  6  fail 0
 @sancta/clinic-edge   tests  4  pass  4  fail 0
 @sancta/cloud-worker  tests  7  pass  7  fail 0
 
 # Integration — real PostgreSQL 16 (edge + cloud) — npm run test:integration
-@sancta/clinic-edge   tests 10  pass 10  fail 0
+@sancta/clinic-edge   tests 15  pass 15  fail 0   (checkout, sync, resilience, concurrency, cashier)
 
 # End-to-end — real browser (Chromium) driving the real stack — npm run e2e
 @sancta/clinic-web    3 passed
@@ -96,12 +96,29 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Dispense-and-pay commits locally, shows "Pending sync: 1", stock decremented | SYN-002/005 | ✅ |
 | "Sync now" reconciles to the cloud with no duplication | SYN-004, NFR-010 (UAT-01 UI) | ✅ |
 
+## Cashier shift close (real PostgreSQL) — BIL-009, UAT-09
+
+`packages/domain/src/cashier.ts` + `apps/clinic-edge/{src/cashier.ts,test/cashier.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Exact count closes without approval; no variance journal | BIL-009, UAT-09 | ✅ |
+| Only cash payments count toward the drawer (mobile-money excluded) | BIL-009 | ✅ |
+| Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
+| A closed shift cannot be closed again | BIL-009 | ✅ |
+
+## Concurrency safety (real PostgreSQL) — INV-005
+
+`apps/clinic-edge/test/resilience.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Two concurrent dispenses of the same lot near depletion: exactly one succeeds, the other is rejected — no oversell to negative (FOR UPDATE row lock) | INV-005, BR-007 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to
   the Worker (contract identical). TLS termination and Cloudflare Access/WAF are IaC, not
   yet exercised in an automated test.
 - The remaining MVP modules (orders/results, full finance, procurement, messaging, etc.).
-- Concurrency hardening for same-lot depletion races (row-level locking / SERIALIZABLE) —
-  current tests use ample stock; near-zero-stock concurrency is a known follow-up.
 - Everything ultimately gated on the blocking decisions in `decisions-required.md`.

@@ -16,7 +16,8 @@
     "@sancta/sync": "*"
   },
   "devDependencies": {
-    "@sancta/cloud-worker": "*"
+    "@sancta/cloud-worker": "*",
+    "@sancta/db": "*"
   },
   "exports": {
     ".": "./src/index.ts",

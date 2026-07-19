@@ -14,6 +14,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import pg from 'pg';
+import { allMigrationsSql } from '@sancta/db/migrations';
 import { startCloudAdapter, stopCloudAdapter, type CloudAdapter } from '@sancta/cloud-worker/node-adapter';
 import { doCheckout, syncStatus, syncPush } from '../src/api.ts';
 
@@ -23,7 +24,7 @@ const skip = !DATABASE_URL || !CLOUD_DATABASE_URL;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..', '..');
-const migration = readFileSync(join(repoRoot, 'packages/db/migrations/0001_init.sql'), 'utf8');
+const migration = allMigrationsSql();
 const seed = readFileSync(join(repoRoot, 'seed/synthetic-seed.sql'), 'utf8');
 
 let edgePool: pg.Pool;

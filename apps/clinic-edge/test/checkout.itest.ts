@@ -15,6 +15,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import pg from 'pg';
+import { allMigrationsSql } from '@sancta/db/migrations';
 import { commitCheckout, DuplicateCheckoutError, type CheckoutRequest } from '../src/checkout.ts';
 
 const DATABASE_URL = process.env['DATABASE_URL'];
@@ -22,7 +23,7 @@ const skip = !DATABASE_URL;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..', '..');
-const migration = readFileSync(join(repoRoot, 'packages/db/migrations/0001_init.sql'), 'utf8');
+const migration = allMigrationsSql();
 const seed = readFileSync(join(repoRoot, 'seed/synthetic-seed.sql'), 'utf8');
 
 let pool: pg.Pool;

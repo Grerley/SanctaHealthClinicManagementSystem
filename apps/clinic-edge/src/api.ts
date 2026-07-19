@@ -8,6 +8,8 @@ import { uuidv7 } from '@sancta/domain';
 import { drain, HttpSyncTransport } from '@sancta/sync';
 import { PgOutboxStore } from './outbox-store.ts';
 import { commitCheckout, DuplicateCheckoutError, type CheckoutRequest } from './checkout.ts';
+import { openShift, closeCashierShift } from './cashier.ts';
+import type { Denomination } from '@sancta/domain';
 
 export async function listPatients(pool: Pool): Promise<unknown[]> {
   const res = await pool.query(
@@ -29,6 +31,7 @@ export type CheckoutApiBody = {
   chargeMinor: number;
   paymentMinor: number;
   paymentMethod: 'cash' | 'bank' | 'mobile';
+  shiftId?: string;
   site?: string;
   device?: string;
   user?: string;
@@ -84,6 +87,7 @@ export async function doCheckout(
       paymentMinor: body.paymentMinor,
       paymentMethod: body.paymentMethod,
       now: 1_700_000_000_000,
+      ...(body.shiftId === undefined ? {} : { shiftId: body.shiftId }),
     };
 
     const res = await commitCheckout(c, req);
@@ -94,6 +98,26 @@ export async function doCheckout(
   } finally {
     c.release();
   }
+}
+
+export async function openCashierShift(pool: Pool, body: { cashier: string; site?: string; openingFloatMinor: number }): Promise<{ shiftId: string }> {
+  return openShift(pool, body);
+}
+
+export type CloseShiftApiBody = {
+  shiftId: string;
+  denominations: Denomination[];
+  toleranceMinor: number;
+  approver?: string;
+};
+
+export async function closeShiftApi(pool: Pool, body: CloseShiftApiBody) {
+  return closeCashierShift(pool, {
+    shiftId: body.shiftId,
+    denominations: body.denominations,
+    toleranceMinor: body.toleranceMinor,
+    ...(body.approver === undefined ? {} : { approver: body.approver }),
+  });
 }
 
 export async function syncStatus(pool: Pool): Promise<{ pending: number }> {

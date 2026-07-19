@@ -24,30 +24,18 @@ import {
   type JournalBatch,
 } from '@sancta/domain';
 import { planDispense, type DispenseRequest } from './dispense.ts';
+import { insertJournalBatch } from './journal.ts';
 
 export type CheckoutRequest = {
   readonly dispense: DispenseRequest;
   readonly paymentMinor: number; // part-payment taken now
   readonly paymentMethod: 'cash' | 'bank' | 'mobile';
   readonly now: number;
+  /** Optional cashier shift the payment belongs to (BIL-009). */
+  readonly shiftId?: string;
 };
 
 export class DuplicateCheckoutError extends Error {}
-
-async function insertJournal(client: PoolClient, batch: JournalBatch, periodId: string): Promise<void> {
-  await client.query(
-    `INSERT INTO finance.journal_batch (id, origin, source_type, source_id, currency, posting_date, period_id, reverses)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-    [batch.id, batch.origin, batch.source.type, batch.source.id, batch.currency, batch.postingDate, periodId, batch.reverses ?? null],
-  );
-  for (const l of batch.lines) {
-    await client.query(
-      `INSERT INTO finance.journal_line (id, batch_id, account_code, debit_minor, credit_minor, cost_centre, memo)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-      [uuidv7(), batch.id, l.accountCode, l.debit.minor, l.credit.minor, l.costCentre ?? null, l.memo ?? null],
-    );
-  }
-}
 
 /**
  * Persist the checkout atomically. Loads current stock inside the transaction,
@@ -58,10 +46,14 @@ export async function commitCheckout(client: PoolClient, req: CheckoutRequest): 
   const d = req.dispense;
   await client.query('BEGIN');
   try {
-    // Load lots and movements for the SKU inside the transaction (consistent read).
+    // Load lots for the SKU and take a row lock on them (FOR UPDATE), ordered by
+    // id for a deterministic lock order (deadlock-free). This serialises
+    // concurrent dispenses of the same SKU: a second transaction blocks here
+    // until the first commits, then reads the first's committed movements below —
+    // so the negative-stock check cannot be bypassed by a race (INV-005).
     const lotRows = await client.query(
       `SELECT id, sku, to_char(expiry_date,'YYYY-MM-DD') AS expiry_date, status, unit_cost_minor
-       FROM inventory.lot WHERE sku = $1`,
+       FROM inventory.lot WHERE sku = $1 ORDER BY id FOR UPDATE`,
       [d.sku],
     );
     const lots: Lot[] = lotRows.rows.map((r) => ({
@@ -121,9 +113,9 @@ export async function commitCheckout(client: PoolClient, req: CheckoutRequest): 
     // 3. Payment (part-payment) + allocation.
     const paymentId = uuidv7(req.now);
     await client.query(
-      `INSERT INTO billing.payment (id, receipt_number, patient_id, method, amount_minor, currency, status)
-       VALUES ($1,$2,$3,$4,$5,'USD','confirmed')`,
-      [paymentId, 'RCT-' + paymentId.slice(-12), d.patientId, req.paymentMethod, req.paymentMinor],
+      `INSERT INTO billing.payment (id, receipt_number, patient_id, method, amount_minor, currency, status, shift_id)
+       VALUES ($1,$2,$3,$4,$5,'USD','confirmed',$6)`,
+      [paymentId, 'RCT-' + paymentId.slice(-12), d.patientId, req.paymentMethod, req.paymentMinor, req.shiftId ?? null],
     );
     await client.query(
       `INSERT INTO billing.payment_allocation (id, payment_id, invoice_id, amount_minor)
@@ -139,9 +131,9 @@ export async function commitCheckout(client: PoolClient, req: CheckoutRequest): 
       req.paymentMethod,
     );
     const periodId = d.postingDate.slice(0, 7);
-    await insertJournal(client, plan.revenue, periodId);
-    await insertJournal(client, plan.cogs, periodId);
-    await insertJournal(client, paymentJournal, periodId);
+    await insertJournalBatch(client, plan.revenue, periodId);
+    await insertJournalBatch(client, plan.cogs, periodId);
+    await insertJournalBatch(client, paymentJournal, periodId);
 
     // 5. Audit event (append-only, hash-chained placeholder).
     await client.query(

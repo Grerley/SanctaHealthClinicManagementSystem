@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import pg from 'pg';
+import { allMigrationsSql } from '@sancta/db/migrations';
 import { startCloudAdapter, stopCloudAdapter, type CloudAdapter } from '@sancta/cloud-worker/node-adapter';
 import { doCheckout, syncStatus, syncPush } from '../src/api.ts';
 
@@ -21,7 +22,7 @@ const skip = !DATABASE_URL || !CLOUD_DATABASE_URL;
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(here, '..', '..', '..');
-const migration = readFileSync(join(repoRoot, 'packages/db/migrations/0001_init.sql'), 'utf8');
+const migration = allMigrationsSql();
 const seed = readFileSync(join(repoRoot, 'seed/synthetic-seed.sql'), 'utf8');
 
 let pool: pg.Pool;
@@ -142,6 +143,27 @@ test('extended internet outage: many local commits, then bulk reconnect reconcil
   const again = await syncPush(pool, cloud.url, SITE);
   assert.equal(again.attempted, 0);
   assert.equal(await cloudCount(), N);
+});
+
+test('concurrent dispensing near depletion cannot oversell (row-lock, INV-005)', { skip }, async () => {
+  await resetEdge();
+  await clearCloud();
+  // A low-stock lot: only 10 units available.
+  await pool.query(`INSERT INTO inventory.product (sku, name, category, base_unit) VALUES ('TEST-LOW','Low stock item (SYNTHETIC)','test','unit')`);
+  await pool.query(`INSERT INTO inventory.lot (id, sku, expiry_date, status, unit_cost_minor) VALUES ('00000000-0000-7000-8000-0000000000ab','TEST-LOW','2027-12-01','available',5)`);
+  await pool.query(`INSERT INTO inventory.stock_movement (id, sku, lot_id, location, movement_type, quantity, source_ref) VALUES ('00000000-0000-7000-8000-0000000000ac','TEST-LOW','00000000-0000-7000-8000-0000000000ab','MAIN','receipt',10,'seed')`);
+
+  // Two clinicians dispense 8 each at the same instant. Only one can succeed;
+  // the loser must be rejected for insufficient stock — never oversell to -6.
+  const settled = await Promise.allSettled([
+    doCheckout(pool, { patientId: PATIENT, sku: 'TEST-LOW', quantity: 8, chargeMinor: 100, paymentMinor: 0, paymentMethod: 'cash' }),
+    doCheckout(pool, { patientId: PATIENT, sku: 'TEST-LOW', quantity: 8, chargeMinor: 100, paymentMinor: 0, paymentMethod: 'cash' }),
+  ]);
+  const ok = settled.filter((s) => s.status === 'fulfilled' && (s.value as { ok: boolean }).ok).length;
+  const rejected = settled.filter((s) => s.status === 'rejected').length;
+  assert.equal(ok, 1, 'exactly one dispense should succeed');
+  assert.equal(rejected, 1, 'the other should be rejected (insufficient stock)');
+  assert.equal(await stockOf('TEST-LOW'), 2, 'balance stays at 2 — no oversell to a negative');
 });
 
 test('concurrent dispensing during the outage keeps every movement (append-only, BR-007)', { skip }, async () => {

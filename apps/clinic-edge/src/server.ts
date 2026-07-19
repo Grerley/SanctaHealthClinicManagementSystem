@@ -11,7 +11,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { readFile } from 'node:fs/promises';
 import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
-import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, type CheckoutApiBody } from './api.ts';
+import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -92,6 +92,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const body = (await readBody(req)) as CheckoutApiBody;
           const out = await doCheckout(pool, body);
           return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/cashier/open' && req.method === 'POST') {
+          const body = (await readBody(req)) as { cashier: string; site?: string; openingFloatMinor: number };
+          return sendJson(res, 201, await openCashierShift(pool, body));
+        }
+        if (p === '/api/cashier/close' && req.method === 'POST') {
+          const body = (await readBody(req)) as CloseShiftApiBody;
+          try {
+            return sendJson(res, 200, await closeShiftApi(pool, body));
+          } catch (err) {
+            // Variance over tolerance without approval, or shift not open.
+            return sendJson(res, 409, { error: { code: 'shift_close_rejected', message: (err as Error).message } });
+          }
         }
         if (p === '/api/sync/status' && req.method === 'GET') return sendJson(res, 200, await syncStatus(pool));
         if (p === '/api/sync/push' && req.method === 'POST') {

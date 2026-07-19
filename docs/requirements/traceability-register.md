@@ -25,6 +25,10 @@ integration):
   override controls, allocation, ageing), **PAT-001/003** (offline UUIDv7, duplicate matcher).
 - **SYN-003 / NFR-010** (idempotent outbox apply, no duplicate on replay), **SYN-007** (clock
   drift flag), **CLD-011 / NFR-035** (`no-store` on protected responses).
+- **BIL-009 / UAT-09** (cashier shift close: expected-from-payments, denomination count,
+  variance, supervisor-approval gate above tolerance, cash-over/short posting).
+- **INV-005 concurrency** (FOR UPDATE row lock on lot rows prevents oversell under
+  concurrent same-lot dispensing).
 
 These remain `built` (code + tests) rather than `verified` end-to-end until the browser
 offline→reconnect flow (UAT-01) and the resilience suites run. Row-level status columns below
