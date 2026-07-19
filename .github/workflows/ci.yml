@@ -65,6 +65,40 @@ jobs:
           # The cloud store lives in an isolated `cloud` schema; one instance suffices in CI.
           CLOUD_DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
 
+  e2e:
+    name: e2e (PWA offline → dispense → pay → reconcile)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sancta
+          POSTGRES_PASSWORD: sancta
+          POSTGRES_DB: sancta_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sancta"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Build the PWA
+        run: npm run build -w @sancta/clinic-web
+      - name: Install Playwright Chromium
+        run: npx --workspace @sancta/clinic-web playwright install --with-deps chromium
+      - name: Run offline-first E2E (SYN-001, UAT-01)
+        run: npm run e2e -w @sancta/clinic-web
+        env:
+          DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
+          CLOUD_DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
+
   # Reserved gates that expand as modules land (pack §22). Kept green so the
   # required-checks contract is stable while real suites are added per phase.
   future-gates:

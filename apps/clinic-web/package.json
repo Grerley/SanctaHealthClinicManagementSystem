@@ -1,0 +1,28 @@
+{
+  "name": "@sancta/clinic-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline-first React + Vite PWA. Served by the clinic edge during outages and by Cloudflare Workers Static Assets when connected (ADR-0002, CLD-001).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11",
+    "pg": "^8.13.1",
+    "@sancta/clinic-edge": "*",
+    "@sancta/cloud-worker": "*"
+  }
+}
