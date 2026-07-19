@@ -17,6 +17,7 @@ import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
+import { recordPayment, allocate, reallocate, invoiceOutstanding } from './billing.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -155,6 +156,25 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/debtors/ageing' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
           return sendJson(res, 200, await ageingReport(pool, asOf));
+        }
+        if (p === '/api/billing/payment' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; method: 'cash' | 'bank' | 'mobile'; amountMinor: number };
+          try { return sendJson(res, 201, await recordPayment(pool, b)); }
+          catch (err) { return sendJson(res, 400, { error: { code: 'payment_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/allocate' && req.method === 'POST') {
+          const b = (await readBody(req)) as { paymentId: string; allocations: Array<{ invoiceId: string; amountMinor: number }> };
+          try { await allocate(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'allocation_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/reallocate' && req.method === 'POST') {
+          const b = (await readBody(req)) as { paymentId: string; fromInvoiceId: string; toInvoiceId: string; amountMinor: number };
+          try { await reallocate(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'reallocation_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/invoice-outstanding' && req.method === 'GET') {
+          const id = url.searchParams.get('id') ?? '';
+          return sendJson(res, 200, { invoiceId: id, outstandingMinor: await invoiceOutstanding(pool, id) });
         }
         if (p === '/api/finance/period/close' && req.method === 'POST') {
           const b = (await readBody(req)) as { periodId: string; approver?: string };
