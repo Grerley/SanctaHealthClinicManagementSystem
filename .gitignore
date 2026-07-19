@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+.wrangler/
+*.tsbuildinfo
+
+# Environment & secrets (never commit — CLD-012 / NFR-018)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Local data & caches (never commit patient or workbook data)
+*.sqlite
+*.db
+/data/
+/tmp/
+migration/source/          # the source workbook and any extracted patient-level data
+
+# Logs (must never contain PHI — NFR-018)
+*.log
+logs/
+
+# Test & coverage artefacts
+coverage/
+playwright-report/
+test-results/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
