@@ -1,0 +1,14 @@
+{
+  "name": "@sancta/domain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Framework-neutral domain logic and invariants shared by the clinic edge and the Cloudflare cloud plane.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

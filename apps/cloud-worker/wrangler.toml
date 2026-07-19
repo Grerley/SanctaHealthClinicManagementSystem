@@ -1,0 +1,49 @@
+# Cloudflare Worker configuration (CLD-001/012, NFR-037). Version-controlled;
+# environments are isolated and reproducible; secrets are NEVER committed here —
+# they are set with `wrangler secret put` / secret bindings (CLD-012).
+name = "sancta-cloud-worker"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+workers_dev = false
+
+# Connected PWA + management portal ship with the Worker as one release unit
+# (Workers Static Assets — CLD-001; NOT the deprecated Workers Sites pattern).
+[assets]
+directory = "../clinic-web/dist"
+binding = "ASSETS"
+
+[vars]
+SCHEMA_VERSION = "1"
+
+# --- Hyperdrive: canonical cloud PostgreSQL, caching DISABLED on protected paths
+# (CLD-004/005, NFR-035). The connection string is a secret binding, not a var.
+# [[hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "<set-per-environment>"
+# caching = { disabled = true }
+
+# --- Queues: async sync application, notifications, reports, integrations
+# with bounded retry + dead-letter queues + audited replay (CLD-003, NFR-036).
+# [[queues.producers]]
+# queue = "sync-apply"
+# binding = "SYNC_QUEUE"
+# [[queues.consumers]]
+# queue = "sync-apply"
+# max_retries = 5
+# dead_letter_queue = "sync-apply-dlq"
+
+# --- R2: private buckets for documents, reports, encrypted backups (CLD-006).
+# [[r2_buckets]]
+# binding = "DOCUMENTS"
+# bucket_name = "sancta-documents"
+
+# --- Durable Objects: bounded coordination only (CLD-007).
+# [[durable_objects.bindings]]
+# name = "SITE_SEQUENCE"
+# class_name = "SiteSequence"
+
+[env.staging]
+vars = { SCHEMA_VERSION = "1" }
+
+[env.production]
+vars = { SCHEMA_VERSION = "1" }

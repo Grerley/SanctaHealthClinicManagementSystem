@@ -1,0 +1,15 @@
+{
+  "name": "@sancta/clinic-edge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Clinic edge hub: local API + business-rule service, the operational system of record for launch-core work (ADR-0001).",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "start": "node --experimental-strip-types src/server.ts"
+  },
+  "dependencies": {
+    "@sancta/domain": "*"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "sancta-clinic-management-system",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Offline-first clinic management, EMR, operations, finance and management-oversight platform for Sancta Health Clinic.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.6.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "test:domain": "npm run test --workspace @sancta/domain",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "echo \"lint: eslint config lands with app code in Phase 1 — placeholder\" && exit 0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.8.3"
+  }
+}

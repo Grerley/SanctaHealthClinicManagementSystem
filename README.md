@@ -14,14 +14,39 @@ is the single source of truth for scope, workflows, requirements, data model, co
 architecture and release gates. Where this repository and the pack conflict, the pack wins
 unless an authorised product decision overrides it (recorded in an ADR).
 
-## Current status — Phase 0 (discovery and safety baseline)
+## Current status — Phase 1 (production foundation, in progress)
 
-This is the **discovery handover baseline**. No application code is generated yet, by
-design: the pack requires discovery and planning artefacts before implementation. The
-first vertical slice (Phase 1) begins only after the blocking decisions in
+Phase 0 (discovery) is complete and Phase 1 has begun with the **production foundation**:
+a workspace monorepo, a fully tested safety-critical **domain package**, the DB schema
+baseline, the Cloudflare Worker + clinic-edge skeletons, IaC stubs, CI and synthetic seed.
+The first end-to-end vertical slice (`docs/delivery/vertical-slice.md`) is the next step and
+begins in earnest once the blocking decisions in
 [`docs/delivery/decisions-required.md`](docs/delivery/decisions-required.md) have owners.
 
-### What exists now
+### Build, typecheck and test
+
+```bash
+npm install        # links workspaces
+npm run typecheck  # all workspaces
+npm test           # 71 unit tests: ledger, stock/FEFO, idempotency, state machines, dispense, sync ingress
+```
+
+The domain package needs **no test framework and no build step** — tests run on Node's
+built-in runner via type-stripping (`node --test --experimental-strip-types`).
+
+### Foundation now in place
+
+| Area | Location |
+|------|----------|
+| Tested domain invariants (money, ledger, stock/FEFO, idempotency, state machines, duplicate detection, pricing, ageing) | [`packages/domain/`](packages/domain/) |
+| Canonical DB schema baseline (schemas, universal fields, append-only ledgers/audit/outbox) | [`packages/db/migrations/0001_init.sql`](packages/db/migrations/0001_init.sql) |
+| Cloud Worker: API + sync ingress + `no-store` cache-safety | [`apps/cloud-worker/`](apps/cloud-worker/) |
+| Clinic edge: local server + atomic dispense plan | [`apps/clinic-edge/`](apps/clinic-edge/) |
+| Cloudflare IaC (Terraform) + `wrangler.toml` | [`infra/cloudflare/`](infra/cloudflare/), [`apps/cloud-worker/wrangler.toml`](apps/cloud-worker/wrangler.toml) |
+| CI (lint · typecheck · test) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Synthetic seed data (no PHI) | [`seed/synthetic-seed.sql`](seed/synthetic-seed.sql) |
+
+### Discovery deliverables (Phase 0)
 
 | Area | Document |
 |------|----------|

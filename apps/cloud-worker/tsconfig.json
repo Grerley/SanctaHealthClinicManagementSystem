@@ -1,0 +1,11 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "lib": ["ES2023", "WebWorker"],
+    "types": []
+  },
+  "include": ["src/**/*.ts"],
+  "//": "Worker source targets the WebWorker runtime (no Node types). Test files are Node-run and are validated by `npm test`, so they are excluded from the Worker typecheck.",
+  "exclude": ["src/**/*.test.ts"]
+}
