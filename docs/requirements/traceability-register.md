@@ -12,6 +12,25 @@ Phase: per pack §23 (P1 = operational MVP … P4 = scale/ecosystem).
 > Traceability is intentionally exhaustive: 148 functional requirements (PAT…CLD),
 > 38 non-functional requirements (NFR), and 15 cross-module business rules (BR).
 
+## Phase 1 verification status (what is proven so far)
+
+Evidence and reproduction in [`../delivery/verification-evidence.md`](../delivery/verification-evidence.md).
+The following rows are **built and verified** by passing tests (71 unit + 3 real-PostgreSQL
+integration):
+
+- **BR-003, BR-007, BR-008, BR-009, BR-006** — append-only signed content; stock balance =
+  Σ movements; atomic dispense; balanced/immutable journals; allocate-before-reduce.
+- **FIN-002** (balanced journals from events), **INV-005/006 / MED-007/008** (negative-stock
+  block + FEFO + expired-lot block), **BIL-001/003/006/008** (effective-dated pricing,
+  override controls, allocation, ageing), **PAT-001/003** (offline UUIDv7, duplicate matcher).
+- **SYN-003 / NFR-010** (idempotent outbox apply, no duplicate on replay), **SYN-007** (clock
+  drift flag), **CLD-011 / NFR-035** (`no-store` on protected responses).
+
+These remain `built` (code + tests) rather than `verified` end-to-end until the browser
+offline→reconnect flow (UAT-01) and the resilience suites run. Row-level status columns below
+still read `planned` where the surrounding module is not yet implemented; the list above is
+the authoritative Phase-1 progress marker.
+
 ## 7.1 Patient identity & master patient index (PAT)
 
 | ID | Requirement (abridged) | Pri | Phase | Verification | Status |

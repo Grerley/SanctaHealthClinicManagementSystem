@@ -34,10 +34,39 @@ jobs:
       - name: Unit tests (domain invariants, sync, dispense)
         run: npm test
 
-  # Placeholder gates that expand as modules land (pack §22). Kept green so the
+  integration:
+    name: integration (real PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sancta
+          POSTGRES_PASSWORD: sancta
+          POSTGRES_DB: sancta_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sancta"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Vertical-slice integration tests (dispense → invoice → payment → journals → replay)
+        run: npm run test:integration -w @sancta/clinic-edge
+        env:
+          DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
+
+  # Reserved gates that expand as modules land (pack §22). Kept green so the
   # required-checks contract is stable while real suites are added per phase.
   future-gates:
-    name: reserved gates (integration · contract · security · e2e · a11y)
+    name: reserved gates (contract · security · e2e · a11y · offline-resilience)
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Integration (real PostgreSQL), OpenAPI/FHIR contract, security (ASVS 5.0 L2), Playwright e2e + accessibility, and offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md)."
+      - run: echo "OpenAPI/FHIR contract, security (ASVS 5.0 L2), Playwright e2e + accessibility, and 72h offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md)."

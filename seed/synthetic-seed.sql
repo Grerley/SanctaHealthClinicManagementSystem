@@ -35,14 +35,14 @@ INSERT INTO inventory.product (sku, name, category, base_unit, controlled, reord
   ('PARA-500', 'Paracetamol 500mg tablet (SYNTHETIC)', 'analgesic', 'tablet', false, 500, 2000);
 
 INSERT INTO inventory.lot (id, sku, expiry_date, status, unit_cost_minor, supplier) VALUES
-  ('00000000-0000-7000-8000-0000000000a1', 'AMOX-500', '2026-09-01', 'available', 10, 'Synthetic Supplier A'),
-  ('00000000-0000-7000-8000-0000000000a2', 'AMOX-500', '2026-08-01', 'available', 12, 'Synthetic Supplier A'),
-  ('00000000-0000-7000-8000-0000000000p1', 'PARA-500', '2027-01-01', 'available', 3,  'Synthetic Supplier B');
+  ('00000000-0000-7000-8000-000000000a01', 'AMOX-500', '2026-09-01', 'available', 10, 'Synthetic Supplier A'),
+  ('00000000-0000-7000-8000-000000000a02', 'AMOX-500', '2026-08-01', 'available', 12, 'Synthetic Supplier A'),
+  ('00000000-0000-7000-8000-000000000b01', 'PARA-500', '2027-01-01', 'available', 3,  'Synthetic Supplier B');
 
 INSERT INTO inventory.stock_movement (id, sku, lot_id, location, movement_type, quantity, source_ref) VALUES
-  ('00000000-0000-7000-8000-0000000000m1', 'AMOX-500', '00000000-0000-7000-8000-0000000000a1', 'MAIN', 'receipt', 1000, 'seed'),
-  ('00000000-0000-7000-8000-0000000000m2', 'AMOX-500', '00000000-0000-7000-8000-0000000000a2', 'MAIN', 'receipt',  500, 'seed'),
-  ('00000000-0000-7000-8000-0000000000m3', 'PARA-500', '00000000-0000-7000-8000-0000000000p1', 'MAIN', 'receipt', 2000, 'seed');
+  ('00000000-0000-7000-8000-000000000c01', 'AMOX-500', '00000000-0000-7000-8000-000000000a01', 'MAIN', 'receipt', 1000, 'seed'),
+  ('00000000-0000-7000-8000-000000000c02', 'AMOX-500', '00000000-0000-7000-8000-000000000a02', 'MAIN', 'receipt',  500, 'seed'),
+  ('00000000-0000-7000-8000-000000000c03', 'PARA-500', '00000000-0000-7000-8000-000000000b01', 'MAIN', 'receipt', 2000, 'seed');
 
 -- --- A couple of clearly-fictional patients (for demo/training only) ----------
 INSERT INTO identity.patient (id, mrn, given_name, family_name, date_of_birth, sex, phone, sensitivity, site_id) VALUES

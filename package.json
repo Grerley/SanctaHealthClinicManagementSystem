@@ -14,11 +14,13 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "test:domain": "npm run test --workspace @sancta/domain",
+    "test:integration": "npm run test:integration -w @sancta/clinic-edge",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "echo \"lint: eslint config lands with app code in Phase 1 — placeholder\" && exit 0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
     "typescript": "^5.8.3"
   }
 }

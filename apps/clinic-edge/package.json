@@ -7,9 +7,11 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "node --experimental-strip-types --test \"src/**/*.test.ts\"",
+    "test:integration": "node --experimental-strip-types --test \"test/**/*.itest.ts\"",
     "start": "node --experimental-strip-types src/server.ts"
   },
   "dependencies": {
-    "@sancta/domain": "*"
+    "@sancta/domain": "*",
+    "pg": "^8.13.1"
   }
 }
