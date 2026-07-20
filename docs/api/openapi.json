@@ -2490,6 +2490,27 @@
         }
       }
     },
+    "/api/orders/cancel": {
+      "post": {
+        "operationId": "post_api_orders_cancel",
+        "summary": "POST /api/orders/cancel",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/orders/critical/ack": {
       "post": {
         "operationId": "post_api_orders_critical_ack",
@@ -2532,6 +2553,48 @@
         }
       }
     },
+    "/api/orders/external-result": {
+      "post": {
+        "operationId": "post_api_orders_external_result",
+        "summary": "POST /api/orders/external-result",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/external-result/reconcile": {
+      "post": {
+        "operationId": "post_api_orders_external_result_reconcile",
+        "summary": "POST /api/orders/external-result/reconcile",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/orders/result": {
       "post": {
         "operationId": "post_api_orders_result",
@@ -2540,6 +2603,48 @@
           "orders"
         ],
         "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/result/correct": {
+      "post": {
+        "operationId": "post_api_orders_result_correct",
+        "summary": "POST /api/orders/result/correct",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/unmatched": {
+      "get": {
+        "operationId": "get_api_orders_unmatched",
+        "summary": "GET /api/orders/unmatched",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

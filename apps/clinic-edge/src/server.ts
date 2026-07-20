@@ -41,7 +41,7 @@ import { quotePrice, chargeService, defineFee, listFees } from './pricing.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
-import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
+import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
@@ -408,6 +408,25 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/orders/critical/outstanding' && req.method === 'GET') {
           return sendJson(res, 200, { results: await outstandingCriticalResults(pool) });
+        }
+        if (p === '/api/orders/external-result' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof attachExternalResult>[1];
+          try { return sendJson(res, 201, await attachExternalResult(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'external_result_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/external-result/reconcile' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof reconcileExternalResult>[1];
+          try { return sendJson(res, 200, await reconcileExternalResult(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'reconcile_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/unmatched' && req.method === 'GET') {
+          return sendJson(res, 200, { unmatched: await unmatchedResults(pool) });
+        }
+        if (p === '/api/orders/cancel' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof cancelOrder>[1];
+          try { return sendJson(res, 200, await cancelOrder(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'cancel_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/result/correct' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof correctResult>[1];
+          try { return sendJson(res, 200, await correctResult(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'correct_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/triage/vitals' && req.method === 'POST') {
           const body = (await readBody(req)) as RecordVitalsBody;

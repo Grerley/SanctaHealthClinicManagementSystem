@@ -73,6 +73,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/orders$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/orders\/(result|critical\/ack)$/, permission: 'amend' },
   { method: 'GET', test: /^\/api\/orders\/critical\/outstanding$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/orders\/(external-result|external-result\/reconcile|cancel|result\/correct)$/, permission: 'amend' }, // ORD-007/009
+  { method: 'GET', test: /^\/api\/orders\/unmatched$/, permission: 'view_summary' },
   // Flow
   { method: 'POST', test: /^\/api\/visits\/(start|transfer|complete)$/, permission: 'create' },
   { method: 'GET', test: /^\/api\/visits\/queue$/, permission: 'discover' },

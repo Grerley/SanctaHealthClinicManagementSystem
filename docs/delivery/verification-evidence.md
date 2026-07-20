@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## External-result reconciliation + cancel/correct without deleting (real PostgreSQL) — ORD-007, ORD-009
+
+`apps/clinic-edge/{src/orders.ts,test/orders-reconcile.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An external result auto-matches an active order by reference, or queues as unmatched then reconciles to an order (audited); re-reconcile refused | ORD-007 | ✅ |
+| An order cancels only with a reason, is **retained** (not deleted) + audited; a cancelled/completed order cannot be re-cancelled | ORD-009 | ✅ |
+| A result correction **retains the original** (marked corrected, value preserved) and a new row supersedes it; re-correcting refused | ORD-009 | ✅ |
+
+3 integration tests. ORD module 4/9 → 6/9.
+
 ## Formulary search, dispensing worklist & printed prescription (real PostgreSQL) — MED-001/005/006
 
 `apps/clinic-edge/{src/medication.ts,test/medication.itest.ts}`:
