@@ -103,13 +103,13 @@
     "SYN-010",
     "CLD-003",
     "SYN-009",
-    "ADM-007"
+    "ADM-007",
+    "CLD-012"
   ],
   "partial": [
     "CLD-001",
     "CLD-002",
-    "CLD-004",
-    "CLD-012"
+    "CLD-004"
   ],
   "nfrBuilt": [
     "NFR-001",
@@ -126,12 +126,12 @@
     "NFR-016",
     "NFR-020",
     "NFR-018",
-    "NFR-025"
-  ],
-  "nfrPartial": [
-    "NFR-015",
+    "NFR-025",
     "NFR-024",
     "NFR-037"
+  ],
+  "nfrPartial": [
+    "NFR-015"
   ],
   "brBuilt": [
     "BR-001",

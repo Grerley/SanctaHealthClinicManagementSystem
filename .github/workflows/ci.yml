@@ -34,6 +34,9 @@ jobs:
       - name: API contract gate (openapi.json ↔ edge routes + permissions)
         run: npm run contract
 
+      - name: IaC integrity gate (version-controlled, env-isolated, secret-free)
+        run: npm run iac
+
       - name: Unit tests (domain invariants, sync, dispense)
         run: npm test
 

@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## IaC integrity + forward-only migrations (CI-enforced) — CLD-012, NFR-037, NFR-024
+
+`scripts/iac-check.mjs` (`npm run iac`) + `packages/db/src/migrations.test.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Wrangler + Terraform are present and git-tracked; environments isolated ([env.staging]/[env.production]; TF `environment` var) | CLD-012, NFR-037 | ✅ |
+| No inline secrets: TF credentials come from variables marked `sensitive = true`; Wrangler secrets set out-of-band; no literal tokens/keys/connection strings | CLD-012, NFR-037 | ✅ |
+| Migrations are numbered, gap-free, strictly increasing; forward-only (no down/rollback); lexical order == apply order | NFR-024 | ✅ |
+| `allMigrationsSql` concatenates every migration in order | NFR-024 | ✅ |
+
+The IaC gate runs in the `build-test` CI job. It validates reproducibility inputs statically; a real `terraform apply` / `wrangler deploy` remains gated on a live Cloudflare account and the B2/B3 decisions.
+
 ## Instance mode marking + no-PHI telemetry — ADM-007, NFR-018, NFR-025
 
 `apps/clinic-edge/src/instance.ts` + `packages/domain/src/telemetry.ts`:

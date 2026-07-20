@@ -8,6 +8,7 @@
     "./migrations": "./src/migrations.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.ts\""
   }
 }
