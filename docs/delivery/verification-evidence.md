@@ -139,6 +139,21 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Versioned structured clinical forms + patient timeline (real PostgreSQL) — EHR-003, EHR-002
+
+`packages/domain/src/forms.ts` (schema + validator) +
+`apps/clinic-edge/{src/forms.ts,src/encounters.ts,src/timeline.ts,test/forms.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An encounter bound to a form can only be signed with content valid for that exact form version (required fields present, typed, coded; no stray keys) | EHR-003, BR-003 | ✅ |
+| Forms are versioned and effective-dated; a later revision adding a mandatory field does not change how an earlier (v1-bound) encounter validates | EHR-003 | ✅ |
+| A form definition needs ≥1 field and a forward-dated revision; changes are audited | EHR-003, BR-012 | ✅ |
+| The patient timeline assembles encounters, addenda, observations and results chronologically, each carrying provenance (author + timestamp) | EHR-002 | ✅ |
+| The timeline supports filtering by event type and date window | EHR-002 | ✅ |
+
+Form validation covered by 7 unit tests (types, codes, required, unknown keys, effective-dated resolution).
+
 ## Configurable demographic capture policy (real PostgreSQL) — PAT-004
 
 `packages/domain/src/demographics.ts` (validation) +

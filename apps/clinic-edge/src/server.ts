@@ -14,6 +14,8 @@ import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { listPolicy, setFieldRule } from './demographics.ts';
+import { defineForm, listForms, formAsOf } from './forms.ts';
+import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
@@ -30,7 +32,7 @@ import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
-import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
+import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { dashboard, exportDashboard } from './management.ts';
@@ -211,6 +213,33 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/encounters/get' && req.method === 'GET') {
           return sendJson(res, 200, await getEncounter(pool, url.searchParams.get('id') ?? ''));
+        }
+        if (p === '/api/encounters/attach-form' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof attachForm>[1];
+          try { return sendJson(res, 200, await attachForm(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'attach_form_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/forms' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? undefined;
+          return sendJson(res, 200, { forms: await listForms(pool, asOf) });
+        }
+        if (p === '/api/forms/get' && req.method === 'GET') {
+          const code = url.searchParams.get('formCode') ?? '';
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          try { return sendJson(res, 200, await formAsOf(pool, code, asOf)); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'form_not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/forms' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof defineForm>[1];
+          try { return sendJson(res, 201, await defineForm(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'form_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/patients/timeline' && req.method === 'GET') {
+          const patientId = url.searchParams.get('patientId') ?? '';
+          const type = (url.searchParams.get('type') ?? undefined) as TimelineItem['type'] | undefined;
+          const from = url.searchParams.get('from') ?? undefined;
+          const to = url.searchParams.get('to') ?? undefined;
+          return sendJson(res, 200, { timeline: await patientTimeline(pool, patientId, { ...(type ? { type } : {}), ...(from ? { from } : {}), ...(to ? { to } : {}) }) });
         }
         if (p === '/api/allergies' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; substanceCode: string; severity?: 'low' | 'high' | 'critical' };

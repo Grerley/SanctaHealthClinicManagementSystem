@@ -46,6 +46,9 @@
       "name": "finance"
     },
     {
+      "name": "forms"
+    },
+    {
       "name": "management"
     },
     {
@@ -752,6 +755,27 @@
         }
       }
     },
+    "/api/encounters/attach-form": {
+      "post": {
+        "operationId": "post_api_encounters_attach_form",
+        "summary": "POST /api/encounters/attach-form",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/encounters/draft": {
       "post": {
         "operationId": "post_api_encounters_draft",
@@ -1317,6 +1341,67 @@
         }
       }
     },
+    "/api/forms": {
+      "get": {
+        "operationId": "get_api_forms",
+        "summary": "GET /api/forms",
+        "tags": [
+          "forms"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_forms",
+        "summary": "POST /api/forms",
+        "tags": [
+          "forms"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/forms/get": {
+      "get": {
+        "operationId": "get_api_forms_get",
+        "summary": "GET /api/forms/get",
+        "tags": [
+          "forms"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/management/dashboard": {
       "get": {
         "operationId": "get_api_management_dashboard",
@@ -1636,6 +1721,27 @@
           "patients"
         ],
         "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/timeline": {
+      "get": {
+        "operationId": "get_api_patients_timeline",
+        "summary": "GET /api/patients/timeline",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_clinical_detail",
         "responses": {
           "200": {
             "description": "Success"

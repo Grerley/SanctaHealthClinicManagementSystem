@@ -6,11 +6,25 @@
  * by the shared encounter state machine.
  */
 import type { Pool } from 'pg';
-import { uuidv7, assertTransition, ENCOUNTER_TRANSITIONS, isSignedImmutable, type EncounterState } from '@sancta/domain';
+import { uuidv7, assertTransition, ENCOUNTER_TRANSITIONS, isSignedImmutable, assertFormContent, type EncounterState } from '@sancta/domain';
+import { formAsOf } from './forms.ts';
 
 const DEFAULT_SITE = '00000000-0000-7000-8000-0000000000f1';
 
 export class EncounterError extends Error {}
+
+/**
+ * Bind an encounter to a structured form version (EHR-003). Resolves the form in
+ * force on the date and records form_code + form_version so signing validates the
+ * content against exactly that version.
+ */
+export async function attachForm(pool: Pool, args: { encounterId: string; formCode: string; onDate?: string }): Promise<{ formCode: string; version: number }> {
+  const status = await currentStatus(pool, args.encounterId);
+  if (isSignedImmutable(status)) throw new EncounterError('cannot change the form of a signed encounter');
+  const def = await formAsOf(pool, args.formCode, args.onDate ?? new Date().toISOString().slice(0, 10));
+  await pool.query(`UPDATE clinical.encounter SET form_code=$2, form_version=$3 WHERE id=$1`, [args.encounterId, def.formCode, def.version]);
+  return { formCode: def.formCode, version: def.version };
+}
 
 export async function createDraftEncounter(pool: Pool, args: { patientId: string; user?: string }): Promise<{ encounterId: string; visitId: string }> {
   const visitId = uuidv7();
@@ -57,7 +71,7 @@ export async function signEncounter(pool: Pool, args: { encounterId: string; sig
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const r = await client.query(`SELECT status, content FROM clinical.encounter WHERE id=$1 FOR UPDATE`, [args.encounterId]);
+    const r = await client.query(`SELECT status, content, form_code, form_version FROM clinical.encounter WHERE id=$1 FOR UPDATE`, [args.encounterId]);
     if (r.rows.length === 0) throw new EncounterError('encounter not found');
     let from = r.rows[0].status as EncounterState;
     if (from === 'draft') {
@@ -65,6 +79,19 @@ export async function signEncounter(pool: Pool, args: { encounterId: string; sig
       from = 'ready_to_sign';
     }
     assertTransition(ENCOUNTER_TRANSITIONS, from, 'signed'); // throws if already signed/entered-in-error
+
+    // EHR-003: if the encounter is on a structured form, the content being signed
+    // must be valid for that exact form version.
+    const contentObj = (args.content === undefined ? r.rows[0].content : args.content) as Record<string, unknown>;
+    if (r.rows[0].form_code) {
+      const def = (await client.query(
+        `SELECT form_code, version, title, schema, to_char(effective_from,'YYYY-MM-DD') AS ef, to_char(effective_to,'YYYY-MM-DD') AS et, active
+         FROM clinical.form_definition WHERE form_code=$1 AND version=$2`,
+        [r.rows[0].form_code, r.rows[0].form_version],
+      )).rows[0];
+      if (!def) throw new EncounterError(`form ${r.rows[0].form_code} v${r.rows[0].form_version} not found`);
+      assertFormContent({ formCode: def.form_code, version: def.version, title: def.title, fields: def.schema, effectiveFrom: def.ef, ...(def.et ? { effectiveTo: def.et } : {}), active: def.active }, contentObj ?? {});
+    }
     const content = args.content === undefined ? r.rows[0].content : JSON.stringify(args.content);
     await client.query(`UPDATE clinical.encounter SET status='signed', signed_by=$2, signed_at=now(), content=$3 WHERE id=$1`, [
       args.encounterId,
