@@ -13,6 +13,9 @@
   ],
   "tags": [
     {
+      "name": "admin"
+    },
+    {
       "name": "allergies"
     },
     {
@@ -107,6 +110,151 @@
     }
   ],
   "paths": {
+    "/api/admin/config": {
+      "get": {
+        "operationId": "get_api_admin_config",
+        "summary": "GET /api/admin/config",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/admin/config-release": {
+      "post": {
+        "operationId": "post_api_admin_config_release",
+        "summary": "POST /api/admin/config-release",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/admin/config-release/promote": {
+      "post": {
+        "operationId": "post_api_admin_config_release_promote",
+        "summary": "POST /api/admin/config-release/promote",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/admin/config-release/rollback": {
+      "post": {
+        "operationId": "post_api_admin_config_release_rollback",
+        "summary": "POST /api/admin/config-release/rollback",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/admin/feature-flag": {
+      "get": {
+        "operationId": "get_api_admin_feature_flag",
+        "summary": "GET /api/admin/feature-flag",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_admin_feature_flag",
+        "summary": "POST /api/admin/feature-flag",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/admin/health": {
+      "get": {
+        "operationId": "get_api_admin_health",
+        "summary": "GET /api/admin/health",
+        "tags": [
+          "admin"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/allergies": {
       "post": {
         "operationId": "post_api_allergies",

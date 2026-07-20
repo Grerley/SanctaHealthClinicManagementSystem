@@ -21,6 +21,7 @@ import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { instanceInfo } from './instance.ts';
 import { registerSite, listSitesForUser } from './site.ts';
 import { setKpiTarget, recordSnapshot, kpiComparison } from './kpi.ts';
+import { createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth } from './admin.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
@@ -211,6 +212,34 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/sites' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof registerSite>[1];
           try { return sendJson(res, 201, await registerSite(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'site_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/admin/health' && req.method === 'GET') {
+          return sendJson(res, 200, await systemHealth(pool));
+        }
+        if (p === '/api/admin/config-release' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createRelease>[1];
+          try { return sendJson(res, 201, await createRelease(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'release_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/admin/config-release/promote' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof promoteRelease>[1];
+          try { return sendJson(res, 200, await promoteRelease(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'promote_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/admin/config-release/rollback' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof rollbackRelease>[1];
+          try { return sendJson(res, 200, await rollbackRelease(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'rollback_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/admin/config' && req.method === 'GET') {
+          return sendJson(res, 200, { config: await currentConfig(pool, url.searchParams.get('name') ?? '') });
+        }
+        if (p === '/api/admin/feature-flag' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setFeatureFlag>[1];
+          return sendJson(res, 200, await setFeatureFlag(pool, b));
+        }
+        if (p === '/api/admin/feature-flag' && req.method === 'GET') {
+          const key = url.searchParams.get('key') ?? '';
+          const siteHeader = req.headers['x-site'];
+          const site = Array.isArray(siteHeader) ? siteHeader[0] ?? null : siteHeader ?? null;
+          return sendJson(res, 200, { key, enabled: await evaluateFlag(pool, key, { site, roles: ctx.roles }) });
         }
         if (p === '/api/fhir/metadata' && req.method === 'GET') {
           return sendJson(res, 200, capabilityStatement('0.1.0'));

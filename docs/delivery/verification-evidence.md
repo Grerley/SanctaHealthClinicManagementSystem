@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Config releases, feature flags & system health (real PostgreSQL) — ADM-003/005/006
+
+`packages/domain/src/feature.ts` + `apps/clinic-edge/{src/admin.ts,test/admin.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A config release moves draft→test→approved→published with maker-checker approval; illegal transitions rejected | ADM-003, BR-011 | ✅ |
+| Publishing supersedes the prior release; rollback re-publishes it | ADM-003 | ✅ |
+| Feature flags gate staged rollout by site AND role; unknown flag → off | ADM-006 | ✅ |
+| System health aggregates DB / sync backlog / integration queue / open conflicts and flags attention | ADM-005 | ✅ |
+
+5 domain unit tests (feature eval) + 4 integration. ADM module 4/8 → 7/8.
+
 ## Multi-currency conversion + budgets & variance (real PostgreSQL) — FIN-013, FIN-007
 
 `packages/domain/src/currency.ts` + `apps/clinic-edge/{src/finance-budget.ts,test/finance-budget.itest.ts}`:
@@ -149,7 +162,7 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | A budget upserts per account + period; an unknown account is rejected | FIN-007 | ✅ |
 | Variance compares the budget to the ACTUAL debit-positive net posted to the ledger in the period (reconciles to the GL) | FIN-007, FIN-002 | ✅ |
 
-4 domain unit tests (currency) + 2 integration (budgets). FIN module 11/14 → 13/14.
+4 domain unit tests (currency) + 2 integration (budgets). FIN module 8/14 → 10/14.
 
 ## Document generation snapshot, versioning & retention (real PostgreSQL) — DOC-002/003/005
 

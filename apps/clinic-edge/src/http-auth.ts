@@ -122,6 +122,9 @@ const RULES: Rule[] = [
   // Administration
   { method: 'GET', test: /^\/api\/sites$/, permission: 'view_summary' }, // OPS-008 multi-site
   { method: 'POST', test: /^\/api\/sites$/, permission: 'administer' },
+  { method: 'GET', test: /^\/api\/admin\/(health|config|feature-flag)$/, permission: 'view_summary' }, // ADM-005/003/006
+  { method: 'POST', test: /^\/api\/admin\/config-release(\/(promote|rollback))?$/, permission: 'configure' }, // ADM-003
+  { method: 'POST', test: /^\/api\/admin\/feature-flag$/, permission: 'configure' }, // ADM-006
   { method: 'POST', test: /^\/api\/devices/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/devices\/trusted$/, permission: 'view_summary' },
   { method: 'GET', test: /^\/api\/audit\/search$/, permission: 'view_summary' },
