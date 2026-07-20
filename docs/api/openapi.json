@@ -164,6 +164,27 @@
         }
       }
     },
+    "/api/billing/charge": {
+      "post": {
+        "operationId": "post_api_billing_charge",
+        "summary": "POST /api/billing/charge",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/billing/charge-capture": {
       "get": {
         "operationId": "get_api_billing_charge_capture",
@@ -193,6 +214,48 @@
           "billing"
         ],
         "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/fee": {
+      "post": {
+        "operationId": "post_api_billing_fee",
+        "summary": "POST /api/billing/fee",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/fees": {
+      "get": {
+        "operationId": "get_api_billing_fees",
+        "summary": "GET /api/billing/fees",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"
@@ -277,6 +340,27 @@
           "billing"
         ],
         "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/price": {
+      "get": {
+        "operationId": "get_api_billing_price",
+        "summary": "GET /api/billing/price",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

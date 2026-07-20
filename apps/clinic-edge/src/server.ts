@@ -24,6 +24,7 @@ import { trialBalance, incomeStatement } from './finance-reports.ts';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
 import { balanceSheet, monthlyClose } from './finance-close.ts';
 import { createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions } from './chart.ts';
+import { quotePrice, chargeService, defineFee, listFees } from './pricing.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
@@ -396,6 +397,28 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/billing/charge-capture' && req.method === 'GET') {
           return sendJson(res, 200, await chargeCaptureReport(pool));
+        }
+        if (p === '/api/billing/price' && req.method === 'GET') {
+          const serviceCode = url.searchParams.get('serviceCode') ?? '';
+          const onDate = url.searchParams.get('onDate') ?? new Date().toISOString().slice(0, 10);
+          const appliedRaw = url.searchParams.get('appliedMinor');
+          try {
+            return sendJson(res, 200, await quotePrice(pool, { serviceCode, onDate, ...(appliedRaw ? { appliedMinor: Number(appliedRaw) } : {}), ...(url.searchParams.get('reason') ? { reason: url.searchParams.get('reason') as string } : {}), ...(url.searchParams.get('approver') ? { approver: url.searchParams.get('approver') as string } : {}) }));
+          } catch (err) { return sendJson(res, 409, { error: { code: 'price_unavailable', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/charge' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof chargeService>[1];
+          try { return sendJson(res, 201, await chargeService(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'charge_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/fees' && req.method === 'GET') {
+          const sc = url.searchParams.get('serviceCode') ?? undefined;
+          return sendJson(res, 200, { fees: await listFees(pool, sc) });
+        }
+        if (p === '/api/billing/fee' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof defineFee>[1];
+          try { return sendJson(res, 201, await defineFee(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'fee_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/billing/refund' && req.method === 'POST') {
           const b = (await readBody(req)) as { paymentId: string; amountMinor: number; method: 'cash' | 'bank' | 'mobile'; reason: string; approver?: string };

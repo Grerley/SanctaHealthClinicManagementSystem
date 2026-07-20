@@ -51,6 +51,9 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/visits\/queue$/, permission: 'discover' },
   // Billing / cashier
   { method: 'POST', test: /^\/api\/checkout$/, permission: 'dispense' },
+  { method: 'GET', test: /^\/api\/billing\/(price|fees)$/, permission: 'view_summary' }, // pricing quote / schedule (BIL-001)
+  { method: 'POST', test: /^\/api\/billing\/fee$/, permission: 'configure' }, // fee-schedule admin (BIL-001)
+  { method: 'POST', test: /^\/api\/billing\/charge$/, permission: 'create' }, // priced service charge (BIL-001/003)
   { method: 'POST', test: /^\/api\/billing\/(payment|allocate|reallocate)$/, permission: 'receive_payment' },
   { method: 'POST', test: /^\/api\/billing\/refund$/, permission: 'reverse' },
   { method: 'GET', test: /^\/api\/billing\/invoice-outstanding$/, permission: 'view_summary' },

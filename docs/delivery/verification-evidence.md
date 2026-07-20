@@ -139,6 +139,21 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Effective-dated pricing & priced service charges (real PostgreSQL) — BIL-001, BIL-003, BR-005
+
+`packages/domain/src/pricebook.ts` (resolve/apply) +
+`apps/clinic-edge/{src/pricing.ts,test/pricing.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A quote resolves the fee version in force on the date — a mid-year price change (CONSULT-GP v1 1000 → v2 1200 + 15% tax) resolves correctly by date | BIL-001, BR-005 | ✅ |
+| No fee effective before the schedule starts / for an unknown service is rejected | BIL-001 | ✅ |
+| A price away from standard needs a reason; one outside the min/max band needs an approver | BIL-003 | ✅ |
+| Charging a service creates an invoice line that retains the applied rule version, standard, applied, adjustment and tax — a later price change never rewrites it | BIL-001, BR-005 | ✅ |
+| The finalisation journal balances and splits tax to a liability (Dr AR / Cr Revenue / Cr Tax payable); outstanding = applied + tax; trial balance stays balanced | BIL-001, FIN-002 | ✅ |
+| An out-of-band charge is rejected without an approver; with one, the override reason + approver are retained on the line | BIL-003, BR-011 | ✅ |
+| The fee schedule is revised forward-dated (min ≤ standard ≤ max enforced; new date must post-date the current version) | BIL-001 | ✅ |
+
 ## Versioned chart of accounts, cost centres & dimensions (real PostgreSQL) — FIN-001
 
 `packages/domain/src/chart.ts` (effective-dated resolver + code/type validation) +
