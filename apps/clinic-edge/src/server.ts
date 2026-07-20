@@ -18,6 +18,7 @@ import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
+import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -108,6 +109,21 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const body = (await readBody(req)) as CheckoutApiBody;
           const out = await doCheckout(pool, body);
           return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/orders' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; category: string; code: string; priority?: string; indication?: string; requestedBy?: string };
+          return sendJson(res, 201, await createOrder(pool, b));
+        }
+        if (p === '/api/orders/result' && req.method === 'POST') {
+          const b = (await readBody(req)) as ReleaseResultBody;
+          return sendJson(res, 201, await releaseResult(pool, b));
+        }
+        if (p === '/api/orders/critical/ack' && req.method === 'POST') {
+          const b = (await readBody(req)) as { resultId: string; acknowledgedBy: string; action?: string };
+          return sendJson(res, 200, await acknowledgeCritical(pool, b));
+        }
+        if (p === '/api/orders/critical/outstanding' && req.method === 'GET') {
+          return sendJson(res, 200, { results: await outstandingCriticalResults(pool) });
         }
         if (p === '/api/triage/vitals' && req.method === 'POST') {
           const body = (await readBody(req)) as RecordVitalsBody;
