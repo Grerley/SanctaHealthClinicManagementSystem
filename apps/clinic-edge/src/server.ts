@@ -27,7 +27,7 @@ import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalRes
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
-import { dashboard } from './management.ts';
+import { dashboard, exportDashboard } from './management.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
@@ -107,6 +107,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
         const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
         return sendJson(res, 200, await dashboard(pool, asOf));
+      }
+      if (p === '/api/management/export' && req.method === 'POST') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const b = (await readBody(req)) as { asOf?: string; exportedBy: string; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
+        return sendJson(res, 200, await exportDashboard(pool, { asOf: b.asOf ?? new Date().toISOString().slice(0, 10), exportedBy: b.exportedBy, ...(b.filters ? { filters: b.filters } : {}), ...(b.format ? { format: b.format } : {}) }));
       }
       if (p === '/healthz') return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true });
       if (p === '/readyz') return sendJson(res, 200, { status: pool ? 'ready' : 'no-db' });

@@ -6,6 +6,7 @@
  * records — nothing is a stored/editable total.
  */
 import type { Pool } from 'pg';
+import { uuidv7 } from '@sancta/domain';
 import { ageingReport } from './debtors.ts';
 import { stockAlerts } from './inventory.ts';
 import { outstandingCriticalResults } from './orders.ts';
@@ -58,4 +59,39 @@ export async function dashboard(pool: Pool, asOf: string): Promise<Dashboard> {
   if (!ageing.reconciles) exceptions.push({ type: 'ar_mismatch', label: 'Debtors do not reconcile to the ledger', count: 1, queue: '/api/debtors/ageing', owner: 'Finance officer' });
 
   return { asOf, kpis, exceptions };
+}
+
+export type ManagementExport = {
+  asOf: string;
+  filters: Record<string, string>;
+  confidentiality: string;
+  exportedBy: string;
+  format: string;
+  dashboard: Dashboard;
+};
+
+/**
+ * Export a management pack (MGT-007, UAT-15). The envelope carries the as-of time,
+ * filters, owner and confidentiality label; the export itself is audited (bulk
+ * export of aggregate data). Patient-level detail is not included here.
+ */
+export async function exportDashboard(
+  pool: Pool,
+  args: { asOf: string; exportedBy: string; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' },
+): Promise<ManagementExport> {
+  const dash = await dashboard(pool, args.asOf);
+  const envelope: ManagementExport = {
+    asOf: args.asOf,
+    filters: args.filters ?? {},
+    confidentiality: 'management-only',
+    exportedBy: args.exportedBy,
+    format: args.format ?? 'json',
+    dashboard: dash,
+  };
+  await pool.query(
+    `INSERT INTO audit.audit_event (id, actor_user, action, resource_type, outcome, reason, captured_at, event_hash)
+     VALUES ($1,$2,'export','management_report','success',$3, now(), $4)`,
+    [uuidv7(), args.exportedBy, `management pack as-of ${args.asOf} (${envelope.format})`, 'mgmt-export:' + uuidv7()],
+  );
+  return envelope;
 }
