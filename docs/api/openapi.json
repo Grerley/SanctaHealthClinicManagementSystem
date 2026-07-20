@@ -40,6 +40,9 @@
       "name": "documents"
     },
     {
+      "name": "ehr"
+    },
+    {
       "name": "encounters"
     },
     {
@@ -709,6 +712,170 @@
           "documents"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/diagnosis": {
+      "get": {
+        "operationId": "get_api_ehr_diagnosis",
+        "summary": "GET /api/ehr/diagnosis",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_ehr_diagnosis",
+        "summary": "POST /api/ehr/diagnosis",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/diagnosis-codes": {
+      "get": {
+        "operationId": "get_api_ehr_diagnosis_codes",
+        "summary": "GET /api/ehr/diagnosis-codes",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/draft/autosave": {
+      "post": {
+        "operationId": "post_api_ehr_draft_autosave",
+        "summary": "POST /api/ehr/draft/autosave",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/draft/open": {
+      "post": {
+        "operationId": "post_api_ehr_draft_open",
+        "summary": "POST /api/ehr/draft/open",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/history": {
+      "get": {
+        "operationId": "get_api_ehr_history",
+        "summary": "GET /api/ehr/history",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_ehr_history",
+        "summary": "POST /api/ehr/history",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/history/status": {
+      "post": {
+        "operationId": "post_api_ehr_history_status",
+        "summary": "POST /api/ehr/history/status",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
         "responses": {
           "200": {
             "description": "Success"

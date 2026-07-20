@@ -30,6 +30,18 @@ SELECT gen_random_uuid(), a.code, 1, a.name, a.type, a.active, DATE '2026-01-01'
 FROM finance.account a
 WHERE NOT EXISTS (SELECT 1 FROM finance.account_version v WHERE v.code = a.code);
 
+-- Synthetic diagnosis code set (EHR-005). PLACEHOLDER only — the approved coding
+-- system + version is decision B5; this seeds non-production for search/testing.
+INSERT INTO clinical.diagnosis_code (system, code, display) VALUES
+  ('SYNTHETIC-DX', 'A00', 'Cholera'),
+  ('SYNTHETIC-DX', 'J06', 'Acute upper respiratory infection'),
+  ('SYNTHETIC-DX', 'J18', 'Pneumonia, organism unspecified'),
+  ('SYNTHETIC-DX', 'B54', 'Unspecified malaria'),
+  ('SYNTHETIC-DX', 'E11', 'Type 2 diabetes mellitus'),
+  ('SYNTHETIC-DX', 'I10', 'Essential (primary) hypertension'),
+  ('SYNTHETIC-DX', 'K59', 'Other functional intestinal disorders'),
+  ('SYNTHETIC-DX', 'O80', 'Single spontaneous delivery');
+
 INSERT INTO finance.financial_period (id, status) VALUES ('2026-07', 'open');
 
 -- --- Fee schedule (effective-dated) -----------------------------------------

@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Clinical history, coded diagnoses & draft recovery (real PostgreSQL) — EHR-004/005/007
+
+`apps/clinic-edge/{src/ehr.ts,test/ehr.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Structured history (problem/past/surgical/family/social/immunisation/allergy) captured + status-tracked; invalid category rejected | EHR-004 | ✅ |
+| Diagnoses coded from an offline-searchable code table (resolves display) or free-text, with certainty + rank; unknown code / bad certainty / empty rejected | EHR-005 | ✅ |
+| An interrupted draft recovers to the **same** encounter (exactly one open draft), never a duplicate; after signing, autosave is refused and a fresh draft opens | EHR-007, BR-003 | ✅ |
+
+The approved diagnosis code **system/version is decision B5**; a synthetic placeholder set seeds non-production (no autonomous decision support). 3 integration tests. EHR module 4/12 → 7/12.
+
 ## Facility operations: resources, checklists, incidents, maintenance (real PostgreSQL) — OPS-002/004/005/006
 
 `apps/clinic-edge/{src/facility.ts,test/facility.itest.ts}`:

@@ -21,6 +21,7 @@ import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { instanceInfo } from './instance.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
+import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
@@ -251,6 +252,38 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/encounters/get' && req.method === 'GET') {
           return sendJson(res, 200, await getEncounter(pool, url.searchParams.get('id') ?? ''));
+        }
+        // Clinical history (EHR-004)
+        if (p === '/api/ehr/history' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addHistoryItem>[1];
+          try { return sendJson(res, 201, await addHistoryItem(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'history_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/history/status' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setHistoryStatus>[1];
+          try { return sendJson(res, 200, await setHistoryStatus(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'history_status_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/history' && req.method === 'GET') {
+          return sendJson(res, 200, { history: await listHistory(pool, url.searchParams.get('patientId') ?? '', url.searchParams.get('category') ?? undefined) });
+        }
+        // Coded diagnoses (EHR-005)
+        if (p === '/api/ehr/diagnosis-codes' && req.method === 'GET') {
+          return sendJson(res, 200, { codes: await searchDiagnosisCodes(pool, url.searchParams.get('q') ?? '') });
+        }
+        if (p === '/api/ehr/diagnosis' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordDiagnosis>[1];
+          try { return sendJson(res, 201, await recordDiagnosis(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'diagnosis_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/diagnosis' && req.method === 'GET') {
+          return sendJson(res, 200, { diagnoses: await listDiagnoses(pool, url.searchParams.get('encounterId') ?? '') });
+        }
+        // Draft recovery (EHR-007)
+        if (p === '/api/ehr/draft/open' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof openDraftEncounter>[1];
+          return sendJson(res, 200, await openDraftEncounter(pool, b));
+        }
+        if (p === '/api/ehr/draft/autosave' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof autosaveDraft>[1];
+          try { return sendJson(res, 200, await autosaveDraft(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'autosave_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/encounters/attach-form' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachForm>[1];
