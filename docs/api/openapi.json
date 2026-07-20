@@ -3557,6 +3557,27 @@
         }
       }
     },
+    "/api/stock/movement-report": {
+      "get": {
+        "operationId": "get_api_stock_movement_report",
+        "summary": "GET /api/stock/movement-report",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/stock/receive": {
       "post": {
         "operationId": "post_api_stock_receive",
@@ -3565,6 +3586,27 @@
           "stock"
         ],
         "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock/reorder": {
+      "get": {
+        "operationId": "get_api_stock_reorder",
+        "summary": "GET /api/stock/reorder",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

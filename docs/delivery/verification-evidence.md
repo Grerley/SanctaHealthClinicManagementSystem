@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Reorder suggestions + movement report (real PostgreSQL) — INV-007, INV-011
+
+`packages/domain/src/reorder.ts` + `apps/clinic-edge/{src/inventory-reports.ts,test/inventory-reports.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A SKU at/below its reorder minimum is suggested up to the maximum, with the assumptions (min/max/usage) shown; never auto-ordered | INV-007 | ✅ |
+| Average daily use is estimated from trailing dispensing; days-of-cover derived | INV-007 | ✅ |
+| The movement report sums received/dispensed/adjustment from the immutable movement records over a period (net reconciles) | INV-011, BR-007 | ✅ |
+
+4 domain unit tests + 2 integration. INV module 7/11 → 9/11.
+
 ## Related persons + restricted-record access (real PostgreSQL) — PAT-005, PAT-009
 
 `packages/domain/src/patient-access.ts` + `apps/clinic-edge/{src/patient-relations.ts,test/patient-relations.itest.ts}`:

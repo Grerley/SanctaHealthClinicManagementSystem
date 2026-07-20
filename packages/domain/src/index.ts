@@ -34,3 +34,4 @@ export * from './notification.ts';
 export * from './currency.ts';
 export * from './feature.ts';
 export * from './patient-access.ts';
+export * from './reorder.ts';

@@ -51,6 +51,7 @@ import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalRes
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
+import { reorderSuggestions, stockMovementReport } from './inventory-reports.ts';
 import { dashboard, exportDashboard } from './management.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
@@ -296,6 +297,14 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { lotId: string; countedQty: number; approver?: string };
           try { return sendJson(res, 200, await performStocktake(pool, b)); }
           catch (err) { return sendJson(res, 409, { error: { code: 'stocktake_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/stock/reorder' && req.method === 'GET') {
+          return sendJson(res, 200, { suggestions: await reorderSuggestions(pool) });
+        }
+        if (p === '/api/stock/movement-report' && req.method === 'GET') {
+          const from = url.searchParams.get('from') ?? '2026-01-01';
+          const to = url.searchParams.get('to') ?? '2027-01-01';
+          return sendJson(res, 200, await stockMovementReport(pool, { from, to }));
         }
         if (p === '/api/checkout' && req.method === 'POST') {
           const body = (await readBody(req)) as CheckoutApiBody;

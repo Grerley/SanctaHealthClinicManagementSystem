@@ -95,7 +95,7 @@ const RULES: Rule[] = [
   // Inventory
   { method: 'POST', test: /^\/api\/stock\/receive$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/stock\/stocktake$/, permission: 'approve' },
-  { method: 'GET', test: /^\/api\/stock(\/alerts)?$/, permission: 'view_summary' },
+  { method: 'GET', test: /^\/api\/stock(\/(alerts|reorder|movement-report))?$/, permission: 'view_summary' }, // incl. INV-007/011
   // Finance
   { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value|budget)$/, permission: 'configure' }, // chart/reference data (FIN-001) + budgets (FIN-007)
   { method: 'POST', test: /^\/api\/finance\/journal\/draft$/, permission: 'create' }, // maker drafts (FIN-003)
