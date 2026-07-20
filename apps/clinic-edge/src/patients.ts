@@ -6,19 +6,36 @@
  * automatically. Every creation is audited (BR-012).
  */
 import type { Pool, PoolClient } from 'pg';
-import { uuidv7, findDuplicates, type PatientCandidate, type MatchResult } from '@sancta/domain';
+import { uuidv7, findDuplicates, assertDemographics, type PatientCandidate, type MatchResult, type Marker, type DemographicInput } from '@sancta/domain';
+import { loadPolicy } from './demographics.ts';
 
 export type RegisterBody = {
-  givenName: string;
-  familyName: string;
+  givenName?: string;
+  familyName?: string;
   dateOfBirth?: string; // ISO date
   sex?: string;
   phone?: string;
+  /** Explicit unknown/declined markers per field (PAT-004). */
+  markers?: Partial<Record<'given_name' | 'family_name' | 'date_of_birth' | 'sex' | 'phone', Marker>>;
   /** Proceed despite likely duplicates (after human review). */
   force?: boolean;
   user?: string;
   site?: string;
 };
+
+/** Map the registration body to the policy's field/value/marker shape (PAT-004). */
+function toDemographicInput(body: RegisterBody): DemographicInput {
+  const m = body.markers ?? {};
+  const field = (value: string | undefined, key: keyof NonNullable<RegisterBody['markers']>) =>
+    m[key] ? { marker: m[key] as Marker } : { value: value ?? null };
+  return {
+    given_name: field(body.givenName, 'given_name'),
+    family_name: field(body.familyName, 'family_name'),
+    date_of_birth: field(body.dateOfBirth, 'date_of_birth'),
+    sex: field(body.sex, 'sex'),
+    phone: field(body.phone, 'phone'),
+  };
+}
 
 export type RegisterResult =
   | { ok: true; id: string; mrn: string }
@@ -42,10 +59,12 @@ export async function registerPatient(pool: Pool, body: RegisterBody, threshold 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    // PAT-004: enforce the configurable capture policy before anything else.
+    assertDemographics(await loadPolicy(client), toDemographicInput(body));
     const candidates = await loadCandidates(client);
     const incoming: Omit<PatientCandidate, 'id'> = {
-      givenName: body.givenName,
-      familyName: body.familyName,
+      givenName: body.givenName ?? '',
+      familyName: body.familyName ?? '',
       ...(body.dateOfBirth ? { dateOfBirth: body.dateOfBirth } : {}),
       ...(body.sex ? { sex: body.sex } : {}),
       ...(body.phone ? { phone: body.phone } : {}),
@@ -60,9 +79,9 @@ export async function registerPatient(pool: Pool, body: RegisterBody, threshold 
     const mrnRes = await client.query(`SELECT 'SCC-' || lpad(nextval('identity.mrn_seq')::text, 6, '0') AS mrn`);
     const mrn = mrnRes.rows[0].mrn as string;
     await client.query(
-      `INSERT INTO identity.patient (id, mrn, given_name, family_name, date_of_birth, sex, phone, site_id, created_by, origin_site)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$8)`,
-      [id, mrn, body.givenName, body.familyName, body.dateOfBirth ?? null, body.sex ?? null, body.phone ?? null, body.site ?? null, body.user ?? null],
+      `INSERT INTO identity.patient (id, mrn, given_name, family_name, date_of_birth, sex, phone, demographic_markers, site_id, created_by, origin_site)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$9)`,
+      [id, mrn, body.givenName ?? null, body.familyName ?? null, body.dateOfBirth ?? null, body.sex ?? null, body.phone ?? null, JSON.stringify(body.markers ?? {}), body.site ?? null, body.user ?? null],
     );
     await client.query(
       `INSERT INTO audit.audit_event (id, actor_user, action, resource_type, resource_id, patient_ref, outcome, reason, captured_at, event_hash)

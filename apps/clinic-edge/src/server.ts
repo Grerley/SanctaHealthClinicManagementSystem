@@ -13,6 +13,7 @@ import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
+import { listPolicy, setFieldRule } from './demographics.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
@@ -139,8 +140,20 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/patients' && req.method === 'POST') {
           const body = (await readBody(req)) as RegisterBody;
-          const out = await registerPatient(pool, body);
-          return sendJson(res, out.ok ? 201 : 409, out);
+          try {
+            const out = await registerPatient(pool, body);
+            return sendJson(res, out.ok ? 201 : 409, out);
+          } catch (err) {
+            return sendJson(res, 422, { error: { code: 'demographics_invalid', message: (err as Error).message } });
+          }
+        }
+        if (p === '/api/patients/policy' && req.method === 'GET') {
+          return sendJson(res, 200, { fields: await listPolicy(pool) });
+        }
+        if (p === '/api/patients/policy' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setFieldRule>[1];
+          try { return sendJson(res, 200, await setFieldRule(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'policy_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/patients/merge' && req.method === 'POST') {
           const b = (await readBody(req)) as { survivorId: string; mergedId: string; mergedBy: string };

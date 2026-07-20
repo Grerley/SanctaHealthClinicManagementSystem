@@ -139,6 +139,21 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Configurable demographic capture policy (real PostgreSQL) — PAT-004
+
+`packages/domain/src/demographics.ts` (validation) +
+`apps/clinic-edge/{src/demographics.ts,src/patients.ts,test/demographics.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A configurable field policy governs registration (given/family/DOB mandatory, DOB may be unknown, phone may be declined) | PAT-004 | ✅ |
+| Registration rejects a missing mandatory field | PAT-004 | ✅ |
+| A mandatory field may be satisfied by a permitted unknown/declined marker (never silently skipped); the marker is retained on the patient | PAT-004 | ✅ |
+| A marker not permitted for a field is rejected | PAT-004 | ✅ |
+| The policy is administrable — making a field mandatory tightens what registration accepts; the config change is audited | PAT-004, BR-012 | ✅ |
+
+Domain validation covered by 8 unit tests (all issues reported at once, whitespace ≠ value, value+marker conflict).
+
 ## Effective-dated pricing & priced service charges (real PostgreSQL) — BIL-001, BIL-003, BR-005
 
 `packages/domain/src/pricebook.ts` (resolve/apply) +

@@ -30,6 +30,8 @@ const RULES: Rule[] = [
   // Identity
   { method: 'GET', test: /^\/api\/patients$/, permission: 'discover' },
   { method: 'POST', test: /^\/api\/patients$/, permission: 'create' },
+  { method: 'GET', test: /^\/api\/patients\/policy$/, permission: 'view_summary' }, // PAT-004 capture policy
+  { method: 'POST', test: /^\/api\/patients\/policy$/, permission: 'configure' },
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },
   // Sync conflict queue (SYN-006): identity edits and human resolution are privileged.
   { method: 'GET', test: /^\/api\/sync\/conflicts$/, permission: 'view_summary' },

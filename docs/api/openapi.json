@@ -1609,6 +1609,46 @@
         }
       }
     },
+    "/api/patients/policy": {
+      "get": {
+        "operationId": "get_api_patients_policy",
+        "summary": "GET /api/patients/policy",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_patients_policy",
+        "summary": "POST /api/patients/policy",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/patients/unmerge": {
       "post": {
         "operationId": "post_api_patients_unmerge",

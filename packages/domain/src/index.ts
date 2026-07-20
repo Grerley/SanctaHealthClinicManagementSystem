@@ -21,3 +21,4 @@ export * from './rbac.ts';
 export * from './conflict.ts';
 export * from './close.ts';
 export * from './chart.ts';
+export * from './demographics.ts';
