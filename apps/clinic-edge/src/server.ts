@@ -15,6 +15,7 @@ import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashie
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
+import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
@@ -265,6 +266,18 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { visitId: string; override?: boolean; reason?: string; user?: string };
           const out = await completeVisit(pool, b);
           return sendJson(res, out.ok ? 200 : 409, out);
+        }
+        if (p === '/api/devices' && req.method === 'POST') {
+          const b = (await readBody(req)) as { label: string; site?: string; softwareVersion?: string };
+          return sendJson(res, 201, await registerDevice(pool, b));
+        }
+        if (p === '/api/devices/revoke' && req.method === 'POST') {
+          const b = (await readBody(req)) as { deviceId: string; user?: string };
+          try { await revokeDevice(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'device_not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/devices/trusted' && req.method === 'GET') {
+          return sendJson(res, 200, { trusted: await isDeviceTrusted(pool, url.searchParams.get('id') ?? '') });
         }
         if (p === '/api/ops/staff' && req.method === 'POST') {
           const b = (await readBody(req)) as { fullName: string; role: string; registrationNo?: string; credentialExpiry?: string };

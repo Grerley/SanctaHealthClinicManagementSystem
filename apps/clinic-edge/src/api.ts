@@ -7,6 +7,7 @@ import type { Pool } from 'pg';
 import { uuidv7 } from '@sancta/domain';
 import { drain, HttpSyncTransport } from '@sancta/sync';
 import { PgOutboxStore } from './outbox-store.ts';
+import { assertDeviceTrusted } from './devices.ts';
 import { commitCheckout, DuplicateCheckoutError, type CheckoutRequest } from './checkout.ts';
 import { openShift, closeCashierShift } from './cashier.ts';
 import type { Denomination } from '@sancta/domain';
@@ -131,7 +132,10 @@ export async function syncPush(
   cloudIngressUrl: string,
   originSite: string,
   deviceToken = 'edge-device-token',
+  deviceId?: string,
 ): Promise<{ attempted: number; acknowledged: number; failed: number; deferred: number }> {
+  // A revoked device cannot push (ADM-002/UAT-14).
+  if (deviceId) await assertDeviceTrusted(pool, deviceId);
   const store = new PgOutboxStore(pool);
   const transport = new HttpSyncTransport(cloudIngressUrl, deviceToken);
   const r = await drain(store, transport, originSite);
