@@ -19,6 +19,7 @@ import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } 
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
+import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -109,6 +110,33 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const body = (await readBody(req)) as CheckoutApiBody;
           const out = await doCheckout(pool, body);
           return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/encounters' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string };
+          return sendJson(res, 201, await createDraftEncounter(pool, b));
+        }
+        if (p === '/api/encounters/draft' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; content: unknown };
+          try { await updateDraft(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'draft_locked', message: (err as Error).message } }); }
+        }
+        if (p === '/api/encounters/sign' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; signedBy: string; content?: unknown };
+          try { return sendJson(res, 200, await signEncounter(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'sign_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/encounters/addendum' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; author: string; content: unknown };
+          try { return sendJson(res, 201, await addAddendum(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'addendum_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/encounters/entered-in-error' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; user: string; reason: string };
+          try { return sendJson(res, 200, await markEnteredInError(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'eie_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/encounters/get' && req.method === 'GET') {
+          return sendJson(res, 200, await getEncounter(pool, url.searchParams.get('id') ?? ''));
         }
         if (p === '/api/orders' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; category: string; code: string; priority?: string; indication?: string; requestedBy?: string };
