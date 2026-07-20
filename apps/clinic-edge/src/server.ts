@@ -21,6 +21,8 @@ import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
+import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
+import { balanceSheet, monthlyClose } from './finance-close.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
@@ -431,6 +433,33 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/finance/income-statement' && req.method === 'GET') {
           return sendJson(res, 200, await incomeStatement(pool));
+        }
+        if (p === '/api/finance/balance-sheet' && req.method === 'GET') {
+          return sendJson(res, 200, await balanceSheet(pool));
+        }
+        if (p === '/api/finance/journal' && req.method === 'GET') {
+          const st = url.searchParams.get('status') ?? undefined;
+          return sendJson(res, 200, { journals: await listManualJournals(pool, st) });
+        }
+        if (p === '/api/finance/journal/draft' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof draftManualJournal>[1];
+          try { return sendJson(res, 201, await draftManualJournal(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'journal_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/journal/post' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof approveManualJournal>[1];
+          try { return sendJson(res, 200, await approveManualJournal(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'journal_post_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/journal/reject' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof rejectManualJournal>[1];
+          try { return sendJson(res, 200, await rejectManualJournal(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'journal_reject_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/monthly-close' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof monthlyClose>[1];
+          try { return sendJson(res, 200, await monthlyClose(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'monthly_close_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/finance/period' && req.method === 'GET') {
           const id = url.searchParams.get('id') ?? '';

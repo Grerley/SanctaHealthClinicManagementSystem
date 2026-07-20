@@ -139,6 +139,20 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Finance close loop: manual journal + month-end close (real PostgreSQL) — FIN-003, FIN-004, FIN-010
+
+`packages/domain/src/close.ts` (closing-entry math) +
+`apps/clinic-edge/{src/manual-journal.ts,src/finance-close.ts,test/finance-close.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An unbalanced manual-journal draft is rejected before it reaches a checker | FIN-002, BR-009 | ✅ |
+| A maker cannot post their own journal; a different checker posts a balanced batch that lands in the ledger (maker-checker) | FIN-003, BR-011 | ✅ |
+| A posted journal cannot be re-posted; a checker can reject a draft with a reason and it never posts; both steps audited | FIN-003, BR-012 | ✅ |
+| Month-end close clears revenue and expense to retained earnings via a balanced closing batch (profit credits equity, loss debits) | FIN-004 | ✅ |
+| A period cannot be closed twice, and posting into a hard-closed period is blocked | FIN-004, BR-010 | ✅ |
+| The balance sheet balances (assets = liabilities + equity) before and after the close — earnings reclassified within equity, total unchanged | FIN-010 | ✅ |
+
 ## Release gates: security + accessibility (CI-enforced) — NFR-014, NFR-019
 
 `scripts/secret-scan.mjs`, `npm run security`, `apps/clinic-web/e2e/a11y.spec.ts`:
