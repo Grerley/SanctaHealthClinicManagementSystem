@@ -24,6 +24,7 @@ import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
 import { createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps } from './care-plan.ts';
 import { generateVisitSummary, generatePrescription, generateSickNote, generateReferral } from './docgen.ts';
+import { sendHandover, acknowledgeHandover, inbox } from './handover.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
@@ -327,6 +328,18 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/ehr/document/referral' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof generateReferral>[1];
           try { return sendJson(res, 200, await generateReferral(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'docgen_rejected', message: (err as Error).message } }); }
+        }
+        // Clinical handover / internal messages (EHR-012)
+        if (p === '/api/ehr/handover' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof sendHandover>[1];
+          try { return sendJson(res, 201, await sendHandover(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'handover_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/handover/ack' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof acknowledgeHandover>[1];
+          try { return sendJson(res, 200, await acknowledgeHandover(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'handover_ack_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/inbox' && req.method === 'GET') {
+          return sendJson(res, 200, { inbox: await inbox(pool, url.searchParams.get('staffId') ?? '', url.searchParams.get('all') === 'true') });
         }
         if (p === '/api/encounters/attach-form' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachForm>[1];

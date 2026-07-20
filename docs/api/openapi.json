@@ -1038,6 +1038,48 @@
         }
       }
     },
+    "/api/ehr/handover": {
+      "post": {
+        "operationId": "post_api_ehr_handover",
+        "summary": "POST /api/ehr/handover",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/handover/ack": {
+      "post": {
+        "operationId": "post_api_ehr_handover_ack",
+        "summary": "POST /api/ehr/handover/ack",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/ehr/history": {
       "get": {
         "operationId": "get_api_ehr_history",
@@ -1086,6 +1128,27 @@
           "ehr"
         ],
         "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/inbox": {
+      "get": {
+        "operationId": "get_api_ehr_inbox",
+        "summary": "GET /api/ehr/inbox",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
         "responses": {
           "200": {
             "description": "Success"

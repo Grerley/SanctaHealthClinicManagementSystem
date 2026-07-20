@@ -55,6 +55,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/ehr\/care-plan(\/(goal|followup|followup\/complete))?$/, permission: 'amend' },
   { method: 'GET', test: /^\/api\/ehr\/care-plans?(\/overdue)?$/, permission: 'view_clinical_detail' },
   { method: 'POST', test: /^\/api\/ehr\/document\/(visit-summary|prescription|sick-note|referral)$/, permission: 'view_clinical_detail' },
+  { method: 'POST', test: /^\/api\/ehr\/handover(\/ack)?$/, permission: 'amend' }, // EHR-012
+  { method: 'GET', test: /^\/api\/ehr\/inbox$/, permission: 'view_clinical_detail' },
   { method: 'GET', test: /^\/api\/patients\/timeline$/, permission: 'view_clinical_detail' }, // EHR-002
   { method: 'GET', test: /^\/api\/forms(\/get)?$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/forms$/, permission: 'configure' }, // EHR-003 form admin

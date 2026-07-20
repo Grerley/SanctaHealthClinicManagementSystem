@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Clinical handover + specialty templates (real PostgreSQL) — EHR-012, EHR-010
+
+`apps/clinic-edge/{src/handover.ts,test/handover.itest.ts}` + migration 0027:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A handover addressed to a staff member (optionally linked to patient/task) reaches the inbox, unacknowledged first, and is acknowledged exactly once | EHR-012 | ✅ |
+| Empty message / missing recipient rejected; re-acknowledging is refused | EHR-012 | ✅ |
+| Specialty templates (child health, family planning, wound care) resolve as versioned forms and validate content (coded options, required fields) | EHR-010, EHR-003 | ✅ |
+
+2 integration tests. EHR module 9/12 → 11/12 (only EHR-001 patient-banner E2E remains).
+
 ## Care plans + clinical document generation (real PostgreSQL) — EHR-006, EHR-011
 
 `packages/domain/src/docgen.ts` (pure generators) +
