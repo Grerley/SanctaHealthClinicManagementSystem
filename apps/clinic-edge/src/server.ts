@@ -24,6 +24,7 @@ import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { dashboard } from './management.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
+import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -219,6 +220,18 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             return sendJson(res, 409, { error: { code: 'illegal_transition', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/documents' && req.method === 'POST') {
+          const b = (await readBody(req)) as UploadBody;
+          return sendJson(res, 201, await uploadDocument(pool, b));
+        }
+        if (p === '/api/documents/open' && req.method === 'POST') {
+          const b = (await readBody(req)) as { documentId: string; userId: string; purpose?: string };
+          try { return sendJson(res, 200, await openDocument(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'document_unavailable', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/disclosures' && req.method === 'GET') {
+          return sendJson(res, 200, { disclosures: await disclosureLog(pool, url.searchParams.get('id') ?? '') });
         }
         if (p === '/api/audit/search' && req.method === 'GET') {
           const f: AuditFilter = {
