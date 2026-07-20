@@ -25,6 +25,7 @@ import { performStocktake } from './stocktake.ts';
 import { dashboard } from './management.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
+import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -220,6 +221,23 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             return sendJson(res, 409, { error: { code: 'illegal_transition', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/visits/start' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; station?: string; priority?: number };
+          return sendJson(res, 201, await startVisit(pool, b));
+        }
+        if (p === '/api/visits/transfer' && req.method === 'POST') {
+          const b = (await readBody(req)) as { visitId: string; toStation: string; priority?: number };
+          try { await transfer(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'no_queue_entry', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/queue' && req.method === 'GET') {
+          return sendJson(res, 200, { queue: await queueBoard(pool, url.searchParams.get('station') ?? undefined) });
+        }
+        if (p === '/api/visits/complete' && req.method === 'POST') {
+          const b = (await readBody(req)) as { visitId: string; override?: boolean; reason?: string; user?: string };
+          const out = await completeVisit(pool, b);
+          return sendJson(res, out.ok ? 200 : 409, out);
         }
         if (p === '/api/documents' && req.method === 'POST') {
           const b = (await readBody(req)) as UploadBody;
