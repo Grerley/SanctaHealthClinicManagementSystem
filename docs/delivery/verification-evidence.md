@@ -139,6 +139,20 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## API contract gate (CI-enforced) — SYN-009, pack §22
+
+`docs/api/openapi.json` (versioned contract) + `scripts/{gen-openapi,contract-check}.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Every implemented `/api` route (81 operations) is documented in the OpenAPI 3.1 contract; no undocumented endpoint | SYN-009 | ✅ |
+| Every documented operation is implemented; no phantom documentation | SYN-009 | ✅ |
+| Each operation's declared `x-permission` matches the permission the server actually enforces — the contract cannot misstate protection | SYN-009, ADM-001 | ✅ |
+| Drift is caught: a tampered permission fails `npm run contract`; `npm run openapi:gen` regenerates and restores agreement | SYN-009 | ✅ |
+
+Runs in the `build-test` CI job. The FHIR interoperability layer (remainder of
+SYN-009) is a later phase.
+
 ## Finance close loop: manual journal + month-end close (real PostgreSQL) — FIN-003, FIN-004, FIN-010
 
 `packages/domain/src/close.ts` (closing-entry math) +

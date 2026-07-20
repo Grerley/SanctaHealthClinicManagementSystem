@@ -1,0 +1,1811 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sancta Clinic — Edge API",
+    "version": "0.1.0",
+    "description": "Offline-first clinic edge API (system of record). Every /api route is guarded by a deny-by-default permission (x-permission); the edge injects the authenticated user and roles at the session boundary. Contract enforced in CI by scripts/contract-check.ts."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8791",
+      "description": "Local edge hub"
+    }
+  ],
+  "tags": [
+    {
+      "name": "allergies"
+    },
+    {
+      "name": "audit"
+    },
+    {
+      "name": "billing"
+    },
+    {
+      "name": "cashier"
+    },
+    {
+      "name": "checkout"
+    },
+    {
+      "name": "comms"
+    },
+    {
+      "name": "debtors"
+    },
+    {
+      "name": "devices"
+    },
+    {
+      "name": "documents"
+    },
+    {
+      "name": "encounters"
+    },
+    {
+      "name": "finance"
+    },
+    {
+      "name": "management"
+    },
+    {
+      "name": "ops"
+    },
+    {
+      "name": "orders"
+    },
+    {
+      "name": "patients"
+    },
+    {
+      "name": "prescribe"
+    },
+    {
+      "name": "schedule"
+    },
+    {
+      "name": "stock"
+    },
+    {
+      "name": "sync"
+    },
+    {
+      "name": "system"
+    },
+    {
+      "name": "triage"
+    },
+    {
+      "name": "visits"
+    }
+  ],
+  "paths": {
+    "/api/allergies": {
+      "post": {
+        "operationId": "post_api_allergies",
+        "summary": "POST /api/allergies",
+        "tags": [
+          "allergies"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/audit/export": {
+      "post": {
+        "operationId": "post_api_audit_export",
+        "summary": "POST /api/audit/export",
+        "tags": [
+          "audit"
+        ],
+        "x-permission": "export",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/audit/search": {
+      "get": {
+        "operationId": "get_api_audit_search",
+        "summary": "GET /api/audit/search",
+        "tags": [
+          "audit"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/allocate": {
+      "post": {
+        "operationId": "post_api_billing_allocate",
+        "summary": "POST /api/billing/allocate",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/charge-capture": {
+      "get": {
+        "operationId": "get_api_billing_charge_capture",
+        "summary": "GET /api/billing/charge-capture",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/charge-exception": {
+      "post": {
+        "operationId": "post_api_billing_charge_exception",
+        "summary": "POST /api/billing/charge-exception",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/invoice-outstanding": {
+      "get": {
+        "operationId": "get_api_billing_invoice_outstanding",
+        "summary": "GET /api/billing/invoice-outstanding",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/link-charge": {
+      "post": {
+        "operationId": "post_api_billing_link_charge",
+        "summary": "POST /api/billing/link-charge",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/mark-billable": {
+      "post": {
+        "operationId": "post_api_billing_mark_billable",
+        "summary": "POST /api/billing/mark-billable",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/payment": {
+      "post": {
+        "operationId": "post_api_billing_payment",
+        "summary": "POST /api/billing/payment",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/reallocate": {
+      "post": {
+        "operationId": "post_api_billing_reallocate",
+        "summary": "POST /api/billing/reallocate",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/refund": {
+      "post": {
+        "operationId": "post_api_billing_refund",
+        "summary": "POST /api/billing/refund",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "reverse",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/cashier/close": {
+      "post": {
+        "operationId": "post_api_cashier_close",
+        "summary": "POST /api/cashier/close",
+        "tags": [
+          "cashier"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/cashier/open": {
+      "post": {
+        "operationId": "post_api_cashier_open",
+        "summary": "POST /api/cashier/open",
+        "tags": [
+          "cashier"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/checkout": {
+      "post": {
+        "operationId": "post_api_checkout",
+        "summary": "POST /api/checkout",
+        "tags": [
+          "checkout"
+        ],
+        "x-permission": "dispense",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/message": {
+      "post": {
+        "operationId": "post_api_comms_message",
+        "summary": "POST /api/comms/message",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/pending": {
+      "get": {
+        "operationId": "get_api_comms_pending",
+        "summary": "GET /api/comms/pending",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/preference": {
+      "post": {
+        "operationId": "post_api_comms_preference",
+        "summary": "POST /api/comms/preference",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/sent": {
+      "post": {
+        "operationId": "post_api_comms_sent",
+        "summary": "POST /api/comms/sent",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/debtors/ageing": {
+      "get": {
+        "operationId": "get_api_debtors_ageing",
+        "summary": "GET /api/debtors/ageing",
+        "tags": [
+          "debtors"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/devices": {
+      "post": {
+        "operationId": "post_api_devices",
+        "summary": "POST /api/devices",
+        "tags": [
+          "devices"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/devices/revoke": {
+      "post": {
+        "operationId": "post_api_devices_revoke",
+        "summary": "POST /api/devices/revoke",
+        "tags": [
+          "devices"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/devices/trusted": {
+      "get": {
+        "operationId": "get_api_devices_trusted",
+        "summary": "GET /api/devices/trusted",
+        "tags": [
+          "devices"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents": {
+      "post": {
+        "operationId": "post_api_documents",
+        "summary": "POST /api/documents",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/disclosures": {
+      "get": {
+        "operationId": "get_api_documents_disclosures",
+        "summary": "GET /api/documents/disclosures",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/open": {
+      "post": {
+        "operationId": "post_api_documents_open",
+        "summary": "POST /api/documents/open",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters": {
+      "post": {
+        "operationId": "post_api_encounters",
+        "summary": "POST /api/encounters",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters/addendum": {
+      "post": {
+        "operationId": "post_api_encounters_addendum",
+        "summary": "POST /api/encounters/addendum",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters/draft": {
+      "post": {
+        "operationId": "post_api_encounters_draft",
+        "summary": "POST /api/encounters/draft",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters/entered-in-error": {
+      "post": {
+        "operationId": "post_api_encounters_entered_in_error",
+        "summary": "POST /api/encounters/entered-in-error",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters/get": {
+      "get": {
+        "operationId": "get_api_encounters_get",
+        "summary": "GET /api/encounters/get",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/encounters/sign": {
+      "post": {
+        "operationId": "post_api_encounters_sign",
+        "summary": "POST /api/encounters/sign",
+        "tags": [
+          "encounters"
+        ],
+        "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/ap-reconciliation": {
+      "get": {
+        "operationId": "get_api_finance_ap_reconciliation",
+        "summary": "GET /api/finance/ap-reconciliation",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/balance-sheet": {
+      "get": {
+        "operationId": "get_api_finance_balance_sheet",
+        "summary": "GET /api/finance/balance-sheet",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/expense": {
+      "post": {
+        "operationId": "post_api_finance_expense",
+        "summary": "POST /api/finance/expense",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/income-statement": {
+      "get": {
+        "operationId": "get_api_finance_income_statement",
+        "summary": "GET /api/finance/income-statement",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/journal": {
+      "get": {
+        "operationId": "get_api_finance_journal",
+        "summary": "GET /api/finance/journal",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/journal/draft": {
+      "post": {
+        "operationId": "post_api_finance_journal_draft",
+        "summary": "POST /api/finance/journal/draft",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/journal/post": {
+      "post": {
+        "operationId": "post_api_finance_journal_post",
+        "summary": "POST /api/finance/journal/post",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/journal/reject": {
+      "post": {
+        "operationId": "post_api_finance_journal_reject",
+        "summary": "POST /api/finance/journal/reject",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/monthly-close": {
+      "post": {
+        "operationId": "post_api_finance_monthly_close",
+        "summary": "POST /api/finance/monthly-close",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/pay-supplier": {
+      "post": {
+        "operationId": "post_api_finance_pay_supplier",
+        "summary": "POST /api/finance/pay-supplier",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/period": {
+      "get": {
+        "operationId": "get_api_finance_period",
+        "summary": "GET /api/finance/period",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/period/close": {
+      "post": {
+        "operationId": "post_api_finance_period_close",
+        "summary": "POST /api/finance/period/close",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/period/reopen": {
+      "post": {
+        "operationId": "post_api_finance_period_reopen",
+        "summary": "POST /api/finance/period/reopen",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/trial-balance": {
+      "get": {
+        "operationId": "get_api_finance_trial_balance",
+        "summary": "GET /api/finance/trial-balance",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/management/dashboard": {
+      "get": {
+        "operationId": "get_api_management_dashboard",
+        "summary": "GET /api/management/dashboard",
+        "tags": [
+          "management"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/management/export": {
+      "post": {
+        "operationId": "post_api_management_export",
+        "summary": "POST /api/management/export",
+        "tags": [
+          "management"
+        ],
+        "x-permission": "export",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/credential": {
+      "get": {
+        "operationId": "get_api_ops_credential",
+        "summary": "GET /api/ops/credential",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/staff": {
+      "post": {
+        "operationId": "post_api_ops_staff",
+        "summary": "POST /api/ops/staff",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/task": {
+      "post": {
+        "operationId": "post_api_ops_task",
+        "summary": "POST /api/ops/task",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/task/complete": {
+      "post": {
+        "operationId": "post_api_ops_task_complete",
+        "summary": "POST /api/ops/task/complete",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/tasks/overdue": {
+      "get": {
+        "operationId": "get_api_ops_tasks_overdue",
+        "summary": "GET /api/ops/tasks/overdue",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders": {
+      "post": {
+        "operationId": "post_api_orders",
+        "summary": "POST /api/orders",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/critical/ack": {
+      "post": {
+        "operationId": "post_api_orders_critical_ack",
+        "summary": "POST /api/orders/critical/ack",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/critical/outstanding": {
+      "get": {
+        "operationId": "get_api_orders_critical_outstanding",
+        "summary": "GET /api/orders/critical/outstanding",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/result": {
+      "post": {
+        "operationId": "post_api_orders_result",
+        "summary": "POST /api/orders/result",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients": {
+      "get": {
+        "operationId": "get_api_patients",
+        "summary": "GET /api/patients",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_patients",
+        "summary": "POST /api/patients",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/merge": {
+      "post": {
+        "operationId": "post_api_patients_merge",
+        "summary": "POST /api/patients/merge",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/unmerge": {
+      "post": {
+        "operationId": "post_api_patients_unmerge",
+        "summary": "POST /api/patients/unmerge",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/prescribe": {
+      "post": {
+        "operationId": "post_api_prescribe",
+        "summary": "POST /api/prescribe",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/book": {
+      "post": {
+        "operationId": "post_api_schedule_book",
+        "summary": "POST /api/schedule/book",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/next": {
+      "get": {
+        "operationId": "get_api_schedule_next",
+        "summary": "GET /api/schedule/next",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/slot": {
+      "post": {
+        "operationId": "post_api_schedule_slot",
+        "summary": "POST /api/schedule/slot",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/status": {
+      "post": {
+        "operationId": "post_api_schedule_status",
+        "summary": "POST /api/schedule/status",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock": {
+      "get": {
+        "operationId": "get_api_stock",
+        "summary": "GET /api/stock",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock/alerts": {
+      "get": {
+        "operationId": "get_api_stock_alerts",
+        "summary": "GET /api/stock/alerts",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock/receive": {
+      "post": {
+        "operationId": "post_api_stock_receive",
+        "summary": "POST /api/stock/receive",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock/stocktake": {
+      "post": {
+        "operationId": "post_api_stock_stocktake",
+        "summary": "POST /api/stock/stocktake",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/conflicts": {
+      "get": {
+        "operationId": "get_api_sync_conflicts",
+        "summary": "GET /api/sync/conflicts",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/conflicts/resolve": {
+      "post": {
+        "operationId": "post_api_sync_conflicts_resolve",
+        "summary": "POST /api/sync/conflicts/resolve",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/demographic-update": {
+      "post": {
+        "operationId": "post_api_sync_demographic_update",
+        "summary": "POST /api/sync/demographic-update",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/push": {
+      "post": {
+        "operationId": "post_api_sync_push",
+        "summary": "POST /api/sync/push",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/status": {
+      "get": {
+        "operationId": "get_api_sync_status",
+        "summary": "GET /api/sync/status",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/triage/vitals": {
+      "post": {
+        "operationId": "post_api_triage_vitals",
+        "summary": "POST /api/triage/vitals",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/complete": {
+      "post": {
+        "operationId": "post_api_visits_complete",
+        "summary": "POST /api/visits/complete",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/queue": {
+      "get": {
+        "operationId": "get_api_visits_queue",
+        "summary": "GET /api/visits/queue",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/start": {
+      "post": {
+        "operationId": "post_api_visits_start",
+        "summary": "POST /api/visits/start",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/transfer": {
+      "post": {
+        "operationId": "post_api_visits_transfer",
+        "summary": "POST /api/visits/transfer",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "get_healthz",
+        "summary": "GET /healthz",
+        "tags": [
+          "system"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Forbidden": {
+        "description": "Missing required permission (deny-by-default RBAC)."
+      },
+      "Conflict": {
+        "description": "Business-rule or state conflict (e.g. period closed, segregation, duplicate)."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

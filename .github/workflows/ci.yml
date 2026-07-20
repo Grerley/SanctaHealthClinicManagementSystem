@@ -31,6 +31,9 @@ jobs:
       - name: Type-check (all workspaces)
         run: npm run typecheck
 
+      - name: API contract gate (openapi.json ↔ edge routes + permissions)
+        run: npm run contract
+
       - name: Unit tests (domain invariants, sync, dispense)
         run: npm test
 
@@ -124,7 +127,7 @@ jobs:
   # Reserved gates that expand as modules land (pack §22). Kept green so the
   # required-checks contract is stable while real suites are added per phase.
   future-gates:
-    name: reserved gates (contract · offline-resilience)
+    name: reserved gates (FHIR interop · offline-resilience)
     runs-on: ubuntu-latest
     steps:
-      - run: echo "OpenAPI/FHIR contract and full 72h offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md). Security (NFR-014) and accessibility (NFR-019) gates are now enforced in the 'security' and 'e2e + accessibility' jobs."
+      - run: echo "FHIR interoperability contract and full 72h offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md). The OpenAPI contract gate (build-test job), security (NFR-014) and accessibility (NFR-019) gates are now enforced."
