@@ -18,6 +18,7 @@ import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
+import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
@@ -342,6 +343,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { periodId: string; approver?: string; reason?: string };
           try { return sendJson(res, 200, await reopenPeriod(pool, b)); }
           catch (err) { return sendJson(res, 409, { error: { code: 'period_reopen_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/expense' && req.method === 'POST') {
+          const b = (await readBody(req)) as { category: string; supplier?: string; amountMinor: number; approver?: string; dueDate?: string };
+          try { return sendJson(res, 201, await recordExpense(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'expense_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/pay-supplier' && req.method === 'POST') {
+          const b = (await readBody(req)) as { payableId: string; method?: 'cash' | 'bank' };
+          try { return sendJson(res, 200, await paySupplier(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'payment_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/ap-reconciliation' && req.method === 'GET') {
+          return sendJson(res, 200, await apReconciliation(pool));
         }
         if (p === '/api/finance/trial-balance' && req.method === 'GET') {
           return sendJson(res, 200, await trialBalance(pool));
