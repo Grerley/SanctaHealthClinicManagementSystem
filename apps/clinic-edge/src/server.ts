@@ -22,6 +22,7 @@ import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalRes
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
+import { dashboard } from './management.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -92,6 +93,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
     const p = url.pathname;
     try {
+      if (p === '/api/management/dashboard' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+        return sendJson(res, 200, await dashboard(pool, asOf));
+      }
       if (p === '/healthz') return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true });
       if (p === '/readyz') return sendJson(res, 200, { status: pool ? 'ready' : 'no-db' });
 
