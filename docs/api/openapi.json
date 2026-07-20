@@ -1673,6 +1673,69 @@
         }
       }
     },
+    "/api/patients/deceased": {
+      "post": {
+        "operationId": "post_api_patients_deceased",
+        "summary": "POST /api/patients/deceased",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/demographic": {
+      "post": {
+        "operationId": "post_api_patients_demographic",
+        "summary": "POST /api/patients/demographic",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/history": {
+      "get": {
+        "operationId": "get_api_patients_history",
+        "summary": "GET /api/patients/history",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/patients/merge": {
       "post": {
         "operationId": "post_api_patients_merge",

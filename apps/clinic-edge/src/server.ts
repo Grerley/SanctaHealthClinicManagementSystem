@@ -14,6 +14,7 @@ import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { listPolicy, setFieldRule } from './demographics.ts';
+import { changeDemographic, markDeceased, patientIdentityHistory } from './identity-history.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
@@ -148,6 +149,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             return sendJson(res, 422, { error: { code: 'demographics_invalid', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/patients/history' && req.method === 'GET') {
+          return sendJson(res, 200, { history: await patientIdentityHistory(pool, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/patients/demographic' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof changeDemographic>[1];
+          try { return sendJson(res, 200, await changeDemographic(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'demographic_change_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/patients/deceased' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof markDeceased>[1];
+          try { return sendJson(res, 200, await markDeceased(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'deceased_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/patients/policy' && req.method === 'GET') {
           return sendJson(res, 200, { fields: await listPolicy(pool) });
