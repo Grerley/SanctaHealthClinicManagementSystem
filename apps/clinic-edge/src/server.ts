@@ -16,6 +16,8 @@ import { registerPatient, searchPatients, type RegisterBody } from './patients.t
 import { listPolicy, setFieldRule } from './demographics.ts';
 import { changeDemographic, markDeceased, patientIdentityHistory } from './identity-history.ts';
 import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } from './integration-queue.ts';
+import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
+import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
@@ -166,6 +168,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/patients/policy' && req.method === 'GET') {
           return sendJson(res, 200, { fields: await listPolicy(pool) });
+        }
+        if (p === '/api/fhir/metadata' && req.method === 'GET') {
+          return sendJson(res, 200, capabilityStatement('0.1.0'));
+        }
+        if (p === '/api/fhir/Patient' && req.method === 'GET') {
+          const id = url.searchParams.get('id');
+          const identifier = url.searchParams.get('identifier');
+          if (id) {
+            const resource = await fhirPatientById(pool, id);
+            if (!resource) return sendJson(res, 404, { resourceType: 'OperationOutcome', issue: [{ severity: 'error', code: 'not-found' }] });
+            return sendJson(res, 200, resource);
+          }
+          return sendJson(res, 200, toFhirBundle(await fhirPatientSearch(pool, identifier ?? '')));
         }
         if (p === '/api/patients/policy' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof setFieldRule>[1];

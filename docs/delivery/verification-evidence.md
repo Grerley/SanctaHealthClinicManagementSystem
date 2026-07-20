@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## FHIR-compatible read layer + locale conventions — SYN-009, NFR-020
+
+`packages/domain/src/{fhir.ts,locale.ts}` + `apps/clinic-edge/{src/fhir.ts,test/fhir.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Internal patients project onto FHIR R4 Patient resources (identifier/name/gender/birthDate/telecom, deceasedDateTime) and a searchset Bundle | SYN-009 | ✅ |
+| A CapabilityStatement declares the read-only FHIR surface (fhirVersion 4.0.1) | SYN-009 | ✅ |
+| Edge endpoints read real rows: `/api/fhir/Patient?id=`, `?identifier=`, `/api/fhir/metadata` | SYN-009 | ✅ |
+| Locale conventions centralised and tested: DD/MM/YYYY dates, USD base currency, en-GB | NFR-020 | ✅ |
+
+This completes SYN-009 (versioned REST contract gate + FHIR-compatible layer). 5 domain unit tests + 2 integration.
+
 ## Online-integration queue: never blocks local, retry/DLQ/replay (real PostgreSQL) — SYN-010, CLD-003
 
 `apps/clinic-edge/{src/integration-queue.ts,test/integration-queue.itest.ts}`:

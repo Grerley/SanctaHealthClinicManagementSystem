@@ -43,6 +43,9 @@
       "name": "encounters"
     },
     {
+      "name": "fhir"
+    },
+    {
       "name": "finance"
     },
     {
@@ -850,6 +853,48 @@
           "encounters"
         ],
         "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/fhir/metadata": {
+      "get": {
+        "operationId": "get_api_fhir_metadata",
+        "summary": "GET /api/fhir/metadata",
+        "tags": [
+          "fhir"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/fhir/Patient": {
+      "get": {
+        "operationId": "get_api_fhir_Patient",
+        "summary": "GET /api/fhir/Patient",
+        "tags": [
+          "fhir"
+        ],
+        "x-permission": "view_clinical_detail",
         "responses": {
           "200": {
             "description": "Success"
