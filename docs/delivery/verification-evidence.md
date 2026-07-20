@@ -7,19 +7,26 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 
 ```
 # Unit — npm test
-@sancta/domain        tests 67  pass 67  fail 0   (incl. cashier shift-close math)
+@sancta/domain        tests 74  pass 74  fail 0   (money, ledger, stock/FEFO, idempotency,
+                                                    state machines, dupes, pricing, ageing,
+                                                    cashier, vitals)
 @sancta/sync          tests  6  pass  6  fail 0
 @sancta/clinic-edge   tests  4  pass  4  fail 0
 @sancta/cloud-worker  tests  7  pass  7  fail 0
 
 # Integration — real PostgreSQL 16 (edge + cloud) — npm run test:integration
-@sancta/clinic-edge   tests 15  pass 15  fail 0   (checkout, sync, resilience, concurrency, cashier)
+@sancta/clinic-edge   tests 40  pass 40  fail 0   (checkout, sync, resilience, concurrency,
+                                                    cashier, patients, triage, debtors,
+                                                    scheduling, finance-period, billing, refund)
 
 # End-to-end — real browser (Chromium) driving the real stack — npm run e2e
 @sancta/clinic-web    3 passed
 
 # Type-check — npm run typecheck
 all workspaces: OK
+
+# Backlog coverage — npm run coverage
+functional 24.8% weighted · business rules 76.7% · measurable NFRs 25%
 ```
 
 Local reproduction (a PostgreSQL 16 on 127.0.0.1:5433 with role `sancta`):
