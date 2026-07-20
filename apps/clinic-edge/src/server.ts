@@ -28,6 +28,7 @@ import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
+import { addStaff, checkCredential, createTask, completeTask, overdueTasks } from './ops.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -240,6 +241,28 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { visitId: string; override?: boolean; reason?: string; user?: string };
           const out = await completeVisit(pool, b);
           return sendJson(res, out.ok ? 200 : 409, out);
+        }
+        if (p === '/api/ops/staff' && req.method === 'POST') {
+          const b = (await readBody(req)) as { fullName: string; role: string; registrationNo?: string; credentialExpiry?: string };
+          return sendJson(res, 201, await addStaff(pool, b));
+        }
+        if (p === '/api/ops/credential' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          try { return sendJson(res, 200, await checkCredential(pool, url.searchParams.get('staffId') ?? '', asOf)); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'staff_not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ops/task' && req.method === 'POST') {
+          const b = (await readBody(req)) as { subject: string; owner?: string; priority?: number; dueDate?: string };
+          return sendJson(res, 201, await createTask(pool, b));
+        }
+        if (p === '/api/ops/task/complete' && req.method === 'POST') {
+          const b = (await readBody(req)) as { taskId: string };
+          try { await completeTask(pool, b.taskId); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'task_not_open', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ops/tasks/overdue' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { tasks: await overdueTasks(pool, asOf) });
         }
         if (p === '/api/comms/preference' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; purpose: Purpose; channel: Channel; allowed: boolean };
