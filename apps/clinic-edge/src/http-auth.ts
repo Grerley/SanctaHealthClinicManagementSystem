@@ -94,6 +94,8 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/comms\//, permission: 'view_summary' },
   // Operations
   { method: 'POST', test: /^\/api\/ops\/staff$/, permission: 'administer' },
+  { method: 'POST', test: /^\/api\/ops\/(resource|resource\/status|checklist|maintenance|maintenance\/complete)$/, permission: 'administer' }, // facility admin (OPS-002/004/006)
+  { method: 'POST', test: /^\/api\/ops\/(checklist\/run|incident|incident\/update)$/, permission: 'create' }, // operational recording (OPS-004/005)
   { method: 'POST', test: /^\/api\/ops\/task(\/complete)?$/, permission: 'create' },
   { method: 'GET', test: /^\/api\/ops\//, permission: 'view_summary' },
   // Administration

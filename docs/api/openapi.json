@@ -1579,10 +1579,262 @@
         }
       }
     },
+    "/api/ops/capacity": {
+      "get": {
+        "operationId": "get_api_ops_capacity",
+        "summary": "GET /api/ops/capacity",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/checklist": {
+      "post": {
+        "operationId": "post_api_ops_checklist",
+        "summary": "POST /api/ops/checklist",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/checklist/run": {
+      "post": {
+        "operationId": "post_api_ops_checklist_run",
+        "summary": "POST /api/ops/checklist/run",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/ops/credential": {
       "get": {
         "operationId": "get_api_ops_credential",
         "summary": "GET /api/ops/credential",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/incident": {
+      "post": {
+        "operationId": "post_api_ops_incident",
+        "summary": "POST /api/ops/incident",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/incident/update": {
+      "post": {
+        "operationId": "post_api_ops_incident_update",
+        "summary": "POST /api/ops/incident/update",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/incidents": {
+      "get": {
+        "operationId": "get_api_ops_incidents",
+        "summary": "GET /api/ops/incidents",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/maintenance": {
+      "post": {
+        "operationId": "post_api_ops_maintenance",
+        "summary": "POST /api/ops/maintenance",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/maintenance/complete": {
+      "post": {
+        "operationId": "post_api_ops_maintenance_complete",
+        "summary": "POST /api/ops/maintenance/complete",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/maintenance/due": {
+      "get": {
+        "operationId": "get_api_ops_maintenance_due",
+        "summary": "GET /api/ops/maintenance/due",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/resource": {
+      "post": {
+        "operationId": "post_api_ops_resource",
+        "summary": "POST /api/ops/resource",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/resource/status": {
+      "post": {
+        "operationId": "post_api_ops_resource_status",
+        "summary": "POST /api/ops/resource/status",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ops/resources": {
+      "get": {
+        "operationId": "get_api_ops_resources",
+        "summary": "GET /api/ops/resources",
         "tags": [
           "ops"
         ],

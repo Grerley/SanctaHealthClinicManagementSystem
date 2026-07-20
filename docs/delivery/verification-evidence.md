@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Facility operations: resources, checklists, incidents, maintenance (real PostgreSQL) — OPS-002/004/005/006
+
+`apps/clinic-edge/{src/facility.ts,test/facility.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Rooms/service points/equipment track capacity + status; available capacity excludes resources in maintenance | OPS-002 | ✅ |
+| A checklist run is `complete` only when every required item is answered; missing items are returned | OPS-004 | ✅ |
+| An incident cannot be closed without a corrective action; open incidents rank by severity | OPS-005 | ✅ |
+| Maintenance/calibration becomes "due" on/before its date and clears when performed (cannot re-complete) | OPS-006 | ✅ |
+
+4 integration tests. OPS module 2/8 → 6/8 (remaining: OPS-007 productivity report [P3], OPS-008 multi-site [P4]).
+
 ## Triage assessment, danger signs & sign/hand-off (real PostgreSQL) — TRI-001/004/005/006/007/008
 
 `packages/domain/src/triage.ts` (danger signs + early-warning score) +
