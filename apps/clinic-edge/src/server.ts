@@ -23,6 +23,7 @@ import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnte
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { dashboard } from './management.ts';
+import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -218,6 +219,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             return sendJson(res, 409, { error: { code: 'illegal_transition', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/audit/search' && req.method === 'GET') {
+          const f: AuditFilter = {
+            ...(url.searchParams.get('user') ? { user: url.searchParams.get('user') as string } : {}),
+            ...(url.searchParams.get('patientRef') ? { patientRef: url.searchParams.get('patientRef') as string } : {}),
+            ...(url.searchParams.get('resourceType') ? { resourceType: url.searchParams.get('resourceType') as string } : {}),
+            ...(url.searchParams.get('action') ? { action: url.searchParams.get('action') as string } : {}),
+          };
+          return sendJson(res, 200, { events: await searchAudit(pool, f) });
+        }
+        if (p === '/api/audit/export' && req.method === 'POST') {
+          const b = (await readBody(req)) as { filter: AuditFilter; exportedBy: string };
+          return sendJson(res, 200, await exportAudit(pool, b.filter ?? {}, b.exportedBy));
         }
         if (p === '/api/debtors/ageing' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);

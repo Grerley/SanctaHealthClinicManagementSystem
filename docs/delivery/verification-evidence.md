@@ -15,9 +15,11 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 @sancta/cloud-worker  tests  7  pass  7  fail 0
 
 # Integration — real PostgreSQL 16 (edge + cloud) — npm run test:integration
-@sancta/clinic-edge   tests 40  pass 40  fail 0   (checkout, sync, resilience, concurrency,
+@sancta/clinic-edge   tests 58  pass 58  fail 0   (checkout, sync, resilience, concurrency,
                                                     cashier, patients, triage, debtors,
-                                                    scheduling, finance-period, billing, refund)
+                                                    scheduling, finance-period, billing, refund,
+                                                    orders/results, encounters, inventory,
+                                                    stocktake, management, audit)
 
 # End-to-end — real browser (Chromium) driving the real stack — npm run e2e
 @sancta/clinic-web    3 passed
@@ -26,8 +28,18 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 all workspaces: OK
 
 # Backlog coverage — npm run coverage
-functional 24.8% weighted · business rules 76.7% · measurable NFRs 25%
+functional 33.3% weighted · business rules 76.7% · measurable NFRs 25%
 ```
+
+## MVP modules built (each with real code + tests on real PostgreSQL)
+
+Patient registration/search/duplicate-check · triage vitals + plausible-range validation ·
+clinical encounter sign/addendum/entered-in-error · orders + results + critical-result
+acknowledgement · appointment scheduling (no double-book) · dispense→invoice→payment
+(atomic) · payment allocation/reallocation · refunds · cashier shift close · debtor ageing ·
+financial period close/reopen · goods receipt · stock alerts · stocktake · management
+command centre (KPIs + exceptions) · audit search + audited export · edge↔cloud sync ·
+offline resilience.
 
 Local reproduction (a PostgreSQL 16 on 127.0.0.1:5433 with role `sancta`):
 
