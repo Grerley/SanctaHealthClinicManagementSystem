@@ -114,6 +114,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/ops\/task(\/complete)?$/, permission: 'create' },
   { method: 'GET', test: /^\/api\/ops\//, permission: 'view_summary' },
   // Administration
+  { method: 'GET', test: /^\/api\/sites$/, permission: 'view_summary' }, // OPS-008 multi-site
+  { method: 'POST', test: /^\/api\/sites$/, permission: 'administer' },
   { method: 'POST', test: /^\/api\/devices/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/devices\/trusted$/, permission: 'view_summary' },
   { method: 'GET', test: /^\/api\/audit\/search$/, permission: 'view_summary' },

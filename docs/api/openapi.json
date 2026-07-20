@@ -88,6 +88,9 @@
       "name": "schedule"
     },
     {
+      "name": "sites"
+    },
+    {
       "name": "stock"
     },
     {
@@ -2977,6 +2980,46 @@
           "schedule"
         ],
         "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sites": {
+      "get": {
+        "operationId": "get_api_sites",
+        "summary": "GET /api/sites",
+        "tags": [
+          "sites"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_sites",
+        "summary": "POST /api/sites",
+        "tags": [
+          "sites"
+        ],
+        "x-permission": "administer",
         "responses": {
           "200": {
             "description": "Success"

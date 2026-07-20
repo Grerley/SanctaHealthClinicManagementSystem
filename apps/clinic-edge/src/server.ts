@@ -19,6 +19,7 @@ import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } f
 import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
 import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { instanceInfo } from './instance.ts';
+import { registerSite, listSitesForUser } from './site.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
@@ -125,8 +126,8 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const p = url.pathname;
     try {
       // Central deny-by-default authorisation for every protected /api/ route (ADM-001).
+      const ctx = authFromHeaders(req.headers as Record<string, string | string[] | undefined>);
       if (p.startsWith('/api/')) {
-        const ctx = authFromHeaders(req.headers as Record<string, string | string[] | undefined>);
         const missing = checkAuthorised(ctx, req.method ?? 'GET', p);
         if (missing) return sendJson(res, 403, { error: { code: 'forbidden', message: `permission required: ${missing}` } });
       }
@@ -181,6 +182,15 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/instance' && req.method === 'GET') {
           return sendJson(res, 200, instanceInfo());
+        }
+        if (p === '/api/sites' && req.method === 'GET') {
+          const siteHeader = req.headers['x-site'];
+          const userSite = Array.isArray(siteHeader) ? siteHeader[0] ?? null : siteHeader ?? null;
+          return sendJson(res, 200, { sites: await listSitesForUser(pool, ctx.roles, userSite) });
+        }
+        if (p === '/api/sites' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof registerSite>[1];
+          try { return sendJson(res, 201, await registerSite(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'site_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/fhir/metadata' && req.method === 'GET') {
           return sendJson(res, 200, capabilityStatement('0.1.0'));

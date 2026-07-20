@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Multi-site registry + authorisation matrix (real PostgreSQL) — OPS-008
+
+`packages/domain/src/site.ts` (authorisation matrix) + `apps/clinic-edge/{src/site.ts,test/site.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Central roles (manager/administrator/auditor) see the whole network; local users see only their own site | OPS-008 | ✅ |
+| A local user with no site sees no site-scoped data; unscoped (network) data is visible to any authenticated user | OPS-008 | ✅ |
+| `/api/sites` scopes visibility by the caller's roles + `x-site` | OPS-008, ADM-001 | ✅ |
+
+3 domain unit tests (the matrix) + 1 integration. **OPS module now 100%.**
+
 ## External-result reconciliation + cancel/correct without deleting (real PostgreSQL) — ORD-007, ORD-009
 
 `apps/clinic-edge/{src/orders.ts,test/orders-reconcile.itest.ts}`:
