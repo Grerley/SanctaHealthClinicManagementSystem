@@ -16,34 +16,55 @@ unless an authorised product decision overrides it (recorded in an ADR).
 
 ## Current status — Phase 1 (production foundation, in progress)
 
-Phase 0 (discovery) is complete and Phase 1 has begun with the **production foundation**:
-a workspace monorepo, a fully tested safety-critical **domain package**, the DB schema
-baseline, the Cloudflare Worker + clinic-edge skeletons, IaC stubs, CI and synthetic seed.
-The first end-to-end vertical slice (`docs/delivery/vertical-slice.md`) is the next step and
-begins in earnest once the blocking decisions in
-[`docs/delivery/decisions-required.md`](docs/delivery/decisions-required.md) have owners.
+Phase 0 (discovery) is complete and Phase 1 (operational MVP) is well under way. The
+offline-first vertical slice is proven end-to-end, and modules across all 17 areas of the
+pack are built with real code and tests. **Backlog coverage: ~42% of functional requirements
+(weighted), ~77% of business rules, ~25% of measurable NFRs** — run `npm run coverage` for the
+live figure ([`docs/requirements/COVERAGE.md`](docs/requirements/COVERAGE.md)). Production
+activation remains gated on the blocking decisions in
+[`docs/governance/decision-signoff-pack.md`](docs/governance/decision-signoff-pack.md).
 
 ### Build, typecheck and test
 
 ```bash
-npm install        # links workspaces
-npm run typecheck  # all workspaces
-npm test           # 71 unit tests: ledger, stock/FEFO, idempotency, state machines, dispense, sync ingress
+npm install          # links workspaces
+npm run typecheck    # all workspaces
+npm test             # unit tests (domain invariants, sync, worker) — no DB needed
+npm run coverage     # backlog coverage dashboard
+
+# Integration + E2E need a local PostgreSQL 16 (role `sancta`, port 5433):
+DATABASE_URL=postgres://sancta@127.0.0.1:5433/sancta_test \
+CLOUD_DATABASE_URL=postgres://sancta@127.0.0.1:5433/sancta_test \
+  npm run test:integration -w @sancta/clinic-edge      # ~79 tests on real PostgreSQL
 ```
 
-The domain package needs **no test framework and no build step** — tests run on Node's
-built-in runner via type-stripping (`node --test --experimental-strip-types`).
+Tests run on Node's built-in runner via type-stripping — **no test framework, no build step**.
+The current suite is **102 unit + 79 integration (real PostgreSQL) + 3 Playwright E2E**, all
+green; see [`docs/delivery/verification-evidence.md`](docs/delivery/verification-evidence.md).
 
-### Foundation now in place
+### Built and tested MVP modules
+
+Patient registration/search/duplicate-check · triage vitals + range validation · clinical
+encounter sign/addendum/entered-in-error · orders + results + critical-result acknowledgement ·
+appointment scheduling (no double-book) · visit check-in/queue/completion-validation ·
+atomic dispense→invoice→payment · payment allocation/reallocation · refunds · cashier shift
+close · debtor ageing · financial period close/reopen · trial balance + income statement ·
+goods receipt · stock alerts · stocktake · expenses + accounts payable · management command
+centre (KPIs + exceptions) · patient communication (consent suppression) · operations
+(staff credentials + task escalation) · document upload validation + disclosure · audit
+search + audited export · edge↔cloud sync · offline resilience.
+
+### Foundation
 
 | Area | Location |
 |------|----------|
-| Tested domain invariants (money, ledger, stock/FEFO, idempotency, state machines, duplicate detection, pricing, ageing) | [`packages/domain/`](packages/domain/) |
-| Canonical DB schema baseline (schemas, universal fields, append-only ledgers/audit/outbox) | [`packages/db/migrations/0001_init.sql`](packages/db/migrations/0001_init.sql) |
-| Cloud Worker: API + sync ingress + `no-store` cache-safety | [`apps/cloud-worker/`](apps/cloud-worker/) |
-| Clinic edge: local server + atomic dispense plan | [`apps/clinic-edge/`](apps/clinic-edge/) |
-| Cloudflare IaC (Terraform) + `wrangler.toml` | [`infra/cloudflare/`](infra/cloudflare/), [`apps/cloud-worker/wrangler.toml`](apps/cloud-worker/wrangler.toml) |
-| CI (lint · typecheck · test) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
+| Tested domain invariants (money, ledger, stock/FEFO, idempotency, state machines, dupes, pricing, ageing, cashier, vitals, results, documents) | [`packages/domain/`](packages/domain/) |
+| DB schema + forward migrations (0001–0012) | [`packages/db/`](packages/db/) |
+| Clinic edge: local API + all MVP module logic | [`apps/clinic-edge/`](apps/clinic-edge/) |
+| Cloud Worker + durable sync apply + `no-store` cache-safety | [`apps/cloud-worker/`](apps/cloud-worker/) |
+| Offline-first PWA (React + Vite) | [`apps/clinic-web/`](apps/clinic-web/) |
+| Cloudflare IaC + `wrangler.toml` | [`infra/cloudflare/`](infra/cloudflare/), [`apps/cloud-worker/wrangler.toml`](apps/cloud-worker/wrangler.toml) |
+| CI (lint · typecheck · unit · integration · e2e) | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 | Synthetic seed data (no PHI) | [`seed/synthetic-seed.sql`](seed/synthetic-seed.sql) |
 
 ### Discovery deliverables (Phase 0)
