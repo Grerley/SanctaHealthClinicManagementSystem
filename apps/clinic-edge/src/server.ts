@@ -33,7 +33,8 @@ import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks } from './ops.ts';
-import { VitalError, assertCan, AuthorisationError, type AppointmentState, type Role } from '@sancta/domain';
+import { VitalError, type AppointmentState } from '@sancta/domain';
+import { authFromHeaders, checkAuthorised } from './http-auth.ts';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -103,6 +104,12 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
     const p = url.pathname;
     try {
+      // Central deny-by-default authorisation for every protected /api/ route (ADM-001).
+      if (p.startsWith('/api/')) {
+        const ctx = authFromHeaders(req.headers as Record<string, string | string[] | undefined>);
+        const missing = checkAuthorised(ctx, req.method ?? 'GET', p);
+        if (missing) return sendJson(res, 403, { error: { code: 'forbidden', message: `permission required: ${missing}` } });
+      }
       if (p === '/api/management/dashboard' && req.method === 'GET') {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
         const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
@@ -110,14 +117,8 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       }
       if (p === '/api/management/export' && req.method === 'POST') {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
-        const b = (await readBody(req)) as { asOf?: string; exportedBy: string; roles?: Role[]; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
-        try {
-          // Deny-by-default: exporting a management pack requires the 'export' permission (ADM-001).
-          assertCan(b.roles ?? [], 'export');
-        } catch (err) {
-          if (err instanceof AuthorisationError) return sendJson(res, 403, { error: { code: 'forbidden', message: err.message } });
-          throw err;
-        }
+        const b = (await readBody(req)) as { asOf?: string; exportedBy: string; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
+        // Authorisation ('export') is enforced by the central guard above.
         return sendJson(res, 200, await exportDashboard(pool, { asOf: b.asOf ?? new Date().toISOString().slice(0, 10), exportedBy: b.exportedBy, ...(b.filters ? { filters: b.filters } : {}), ...(b.format ? { format: b.format } : {}) }));
       }
       if (p === '/healthz') return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true });
@@ -426,7 +427,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       return await serveStatic(res, p);
     } catch (e) {
       const cid = 'edge-' + Date.now().toString(36);
-      // Never leak internals or PHI (NFR-018/026).
+      // Log server-side for support (no PHI, NFR-025); never leak internals to the client (NFR-018/026).
+      // eslint-disable-next-line no-console
+      console.error(`[${cid}]`, e instanceof Error ? e.stack : e);
       sendJson(res, 500, { error: { code: 'internal', correlationId: cid } });
     }
   })();

@@ -1,8 +1,16 @@
 /** Thin client for the LAN edge API. Same-origin; the edge is on the clinic LAN. */
 export type Patient = { id: string; mrn: string; given_name: string; family_name: string; dob: string; sex: string };
 
+// In production these come from the authenticated, device-bound session. For the
+// demo shell the operator holds front-desk + clinical + cashier + stock roles.
+const SESSION_ROLES = 'reception,clinical,cashier,stock';
+const SESSION_USER = 'demo-operator';
+
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, { ...init, headers: { 'content-type': 'application/json', ...(init?.headers ?? {}) } });
+  const res = await fetch(url, {
+    ...init,
+    headers: { 'content-type': 'application/json', 'x-roles': SESSION_ROLES, 'x-user': SESSION_USER, ...(init?.headers ?? {}) },
+  });
   if (!res.ok && res.status !== 409) throw new Error(`${url} -> ${res.status}`);
   return (await res.json()) as T;
 }
