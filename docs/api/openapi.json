@@ -2229,6 +2229,27 @@
         }
       }
     },
+    "/api/ops/productivity": {
+      "get": {
+        "operationId": "get_api_ops_productivity",
+        "summary": "GET /api/ops/productivity",
+        "tags": [
+          "ops"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/ops/resource": {
       "post": {
         "operationId": "post_api_ops_resource",

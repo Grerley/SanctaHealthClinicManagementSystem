@@ -50,7 +50,7 @@ import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
-import { addStaff, checkCredential, createTask, completeTask, overdueTasks } from './ops.ts';
+import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 import { authFromHeaders, checkAuthorised } from './http-auth.ts';
@@ -558,6 +558,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/ops/maintenance/due' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
           return sendJson(res, 200, { due: await dueMaintenance(pool, asOf) });
+        }
+        if (p === '/api/ops/productivity' && req.method === 'GET') {
+          const from = url.searchParams.get('from') ?? '2026-01-01';
+          const to = url.searchParams.get('to') ?? '2027-01-01';
+          return sendJson(res, 200, { productivity: await staffProductivity(pool, { from, to }) });
         }
         if (p === '/api/comms/preference' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; purpose: Purpose; channel: Channel; allowed: boolean };
