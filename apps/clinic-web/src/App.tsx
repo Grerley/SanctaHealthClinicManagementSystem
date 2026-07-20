@@ -3,6 +3,8 @@ import { Dispense } from './screens/Dispense.tsx';
 import { Patients } from './screens/Patients.tsx';
 import { Queue } from './screens/Queue.tsx';
 import { Dashboard } from './screens/Dashboard.tsx';
+import { PatientBanner } from './PatientBanner.tsx';
+import type { Patient } from './api.ts';
 
 type Tab = 'dispense' | 'patients' | 'queue' | 'dashboard';
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -15,6 +17,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
 export function App() {
   const [tab, setTab] = useState<Tab>('dispense');
   const [online, setOnline] = useState<boolean>(navigator.onLine);
+  const [activePatient, setActivePatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     const on = () => setOnline(true);
@@ -36,6 +39,8 @@ export function App() {
         </span>
       </header>
 
+      <PatientBanner patient={activePatient} online={online} />
+
       <nav role="tablist" style={{ display: 'flex', gap: 4, margin: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
         {TABS.map((t) => (
           <button
@@ -52,7 +57,7 @@ export function App() {
       </nav>
 
       {tab === 'dispense' && <Dispense />}
-      {tab === 'patients' && <Patients />}
+      {tab === 'patients' && <Patients onSelect={setActivePatient} />}
       {tab === 'queue' && <Queue />}
       {tab === 'dashboard' && <Dashboard />}
     </main>

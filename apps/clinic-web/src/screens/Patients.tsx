@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, type Patient } from '../api.ts';
 
-export function Patients() {
+export function Patients({ onSelect }: { onSelect?: (p: Patient) => void } = {}) {
   const [q, setQ] = useState('');
   const [results, setResults] = useState<Patient[]>([]);
   const [given, setGiven] = useState('');
@@ -41,8 +41,14 @@ export function Patients() {
       <input data-testid="patient-search" aria-label="Search name, MRN or phone" placeholder="Search name, MRN or phone" value={q} onChange={(e) => search(e.target.value)} style={{ width: '100%', padding: 8 }} />
       <ul data-testid="patient-results" style={{ listStyle: 'none', padding: 0, marginTop: 8 }}>
         {results.map((p) => (
-          <li key={p.id} style={{ padding: 8, borderBottom: '1px solid #eee' }}>
-            <strong>{p.family_name}, {p.given_name}</strong> — {p.mrn}{p.dob ? ` · DOB ${p.dob}` : ''}
+          <li key={p.id} style={{ borderBottom: '1px solid #eee' }}>
+            <button
+              data-testid="patient-select"
+              onClick={() => onSelect?.(p)}
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: 8, border: 0, background: 'transparent', cursor: 'pointer', font: 'inherit' }}
+            >
+              <strong>{p.family_name}, {p.given_name}</strong> — {p.mrn}{p.dob ? ` · DOB ${p.dob}` : ''}
+            </button>
           </li>
         ))}
       </ul>

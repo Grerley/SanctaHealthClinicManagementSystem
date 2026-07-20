@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Persistent patient banner + stale-offline indicator (browser E2E) — EHR-001
+
+`apps/clinic-web/{src/PatientBanner.tsx,e2e/banner.spec.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Selecting a patient shows a banner (name + MRN + DOB) that persists across tab switches | EHR-001 | ✅ |
+| Going offline surfaces a "record may be stale" indicator; coming back online clears it | EHR-001, SYN-001 | ✅ |
+| The full accessibility suite still passes with the banner present | NFR-019 | ✅ |
+
+1 browser E2E (11 E2E total, all green). **EHR module now 100%.**
+
 ## Multi-site registry + authorisation matrix (real PostgreSQL) — OPS-008
 
 `packages/domain/src/site.ts` (authorisation matrix) + `apps/clinic-edge/{src/site.ts,test/site.itest.ts}`:
