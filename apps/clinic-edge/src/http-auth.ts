@@ -66,6 +66,10 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/triage\/summary$/, permission: 'view_clinical_detail' },
   { method: 'POST', test: /^\/api\/allergies$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/prescribe$/, permission: 'sign' },
+  { method: 'GET', test: /^\/api\/formulary$/, permission: 'view_summary' }, // MED-001
+  { method: 'GET', test: /^\/api\/dispense\/worklist$/, permission: 'view_summary' }, // MED-006
+  { method: 'POST', test: /^\/api\/dispense\/mark$/, permission: 'dispense' },
+  { method: 'POST', test: /^\/api\/prescription\/print$/, permission: 'view_clinical_detail' }, // MED-005
   { method: 'POST', test: /^\/api\/orders$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/orders\/(result|critical\/ack)$/, permission: 'amend' },
   { method: 'GET', test: /^\/api\/orders\/critical\/outstanding$/, permission: 'view_summary' },

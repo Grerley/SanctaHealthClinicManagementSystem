@@ -33,6 +33,7 @@ export type PrescribeBody = {
   frequency?: string;
   durationDays?: number;
   quantity?: number;
+  instructions?: string;
   prescribedBy: string;
   override?: boolean;
   overrideReason?: string;
@@ -68,8 +69,8 @@ export async function prescribe(pool: Pool, body: PrescribeBody): Promise<Prescr
 
     const requestId = uuidv7();
     await client.query(
-      `INSERT INTO clinical.medication_request (id, patient_id, encounter_id, medicine_code, substance_code, dose, route, frequency, duration_days, quantity, status, prescribed_by, override_reason, override_by)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'active',$11,$12,$13)`,
+      `INSERT INTO clinical.medication_request (id, patient_id, encounter_id, medicine_code, substance_code, dose, route, frequency, duration_days, quantity, instructions, status, prescribed_by, override_reason, override_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'active',$12,$13,$14)`,
       [
         requestId,
         body.patientId,
@@ -81,6 +82,7 @@ export async function prescribe(pool: Pool, body: PrescribeBody): Promise<Prescr
         body.frequency ?? null,
         body.durationDays ?? null,
         body.quantity ?? null,
+        body.instructions ?? null,
         body.prescribedBy,
         alerts.length > 0 ? body.overrideReason ?? null : null,
         alerts.length > 0 ? body.prescribedBy : null,

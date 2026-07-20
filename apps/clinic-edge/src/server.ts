@@ -27,6 +27,7 @@ import { generateVisitSummary, generatePrescription, generateSickNote, generateR
 import { sendHandover, acknowledgeHandover, inbox } from './handover.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
+import { searchFormulary, dispensingWorklist, markDispensed, generatePrescription as generateMedPrescription } from './medication.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
@@ -378,6 +379,20 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
             const out = await prescribe(pool, b);
             return sendJson(res, out.ok ? 201 : 409, out);
           } catch (err) { return sendJson(res, 422, { error: { code: 'prescribe_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/formulary' && req.method === 'GET') {
+          return sendJson(res, 200, { items: await searchFormulary(pool, url.searchParams.get('q') ?? '', url.searchParams.get('location') ?? undefined) });
+        }
+        if (p === '/api/dispense/worklist' && req.method === 'GET') {
+          return sendJson(res, 200, { worklist: await dispensingWorklist(pool) });
+        }
+        if (p === '/api/dispense/mark' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof markDispensed>[1];
+          try { return sendJson(res, 200, await markDispensed(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'dispense_mark_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/prescription/print' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof generateMedPrescription>[1];
+          try { return sendJson(res, 200, await generateMedPrescription(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'prescription_print_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/orders' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; category: string; code: string; priority?: string; indication?: string; requestedBy?: string };

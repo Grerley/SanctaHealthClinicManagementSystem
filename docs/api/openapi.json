@@ -37,6 +37,9 @@
       "name": "devices"
     },
     {
+      "name": "dispense"
+    },
+    {
       "name": "documents"
     },
     {
@@ -53,6 +56,9 @@
     },
     {
       "name": "forms"
+    },
+    {
+      "name": "formulary"
     },
     {
       "name": "instance"
@@ -74,6 +80,9 @@
     },
     {
       "name": "prescribe"
+    },
+    {
+      "name": "prescription"
     },
     {
       "name": "schedule"
@@ -647,6 +656,48 @@
         "summary": "GET /api/devices/trusted",
         "tags": [
           "devices"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/dispense/mark": {
+      "post": {
+        "operationId": "post_api_dispense_mark",
+        "summary": "POST /api/dispense/mark",
+        "tags": [
+          "dispense"
+        ],
+        "x-permission": "dispense",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/dispense/worklist": {
+      "get": {
+        "operationId": "get_api_dispense_worklist",
+        "summary": "GET /api/dispense/worklist",
+        "tags": [
+          "dispense"
         ],
         "x-permission": "view_summary",
         "responses": {
@@ -1893,6 +1944,27 @@
         }
       }
     },
+    "/api/formulary": {
+      "get": {
+        "operationId": "get_api_formulary",
+        "summary": "GET /api/formulary",
+        "tags": [
+          "formulary"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/instance": {
       "get": {
         "operationId": "get_api_instance",
@@ -2695,6 +2767,27 @@
           "prescribe"
         ],
         "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/prescription/print": {
+      "post": {
+        "operationId": "post_api_prescription_print",
+        "summary": "POST /api/prescription/print",
+        "tags": [
+          "prescription"
+        ],
+        "x-permission": "view_clinical_detail",
         "responses": {
           "200": {
             "description": "Success"

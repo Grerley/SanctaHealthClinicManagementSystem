@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Formulary search, dispensing worklist & printed prescription (real PostgreSQL) — MED-001/005/006
+
+`apps/clinic-edge/{src/medication.ts,test/medication.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Formulary search (offline, local DB) returns products with live on-hand from AVAILABLE lots via the derived balance view (1500 across two lots) | MED-001 | ✅ |
+| The dispensing worklist shows only signed, undispensed medication requests and clears when marked (cannot re-dispense) | MED-006 | ✅ |
+| A legally compliant prescription prints from signed requests with prescriber name + registration number and patient instructions | MED-005 | ✅ |
+
+3 integration tests. MED module 5/10 → 8/10.
+
 ## Clinical handover + specialty templates (real PostgreSQL) — EHR-012, EHR-010
 
 `apps/clinic-edge/{src/handover.ts,test/handover.itest.ts}` + migration 0027:
