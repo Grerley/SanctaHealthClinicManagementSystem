@@ -17,3 +17,4 @@ export * from './cashier.ts';
 export * from './vitals.ts';
 export * from './results.ts';
 export * from './documents.ts';
+export * from './rbac.ts';

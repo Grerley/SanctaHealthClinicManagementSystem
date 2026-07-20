@@ -33,7 +33,7 @@ import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks } from './ops.ts';
-import { VitalError, type AppointmentState } from '@sancta/domain';
+import { VitalError, assertCan, AuthorisationError, type AppointmentState, type Role } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
@@ -110,7 +110,14 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       }
       if (p === '/api/management/export' && req.method === 'POST') {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
-        const b = (await readBody(req)) as { asOf?: string; exportedBy: string; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
+        const b = (await readBody(req)) as { asOf?: string; exportedBy: string; roles?: Role[]; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
+        try {
+          // Deny-by-default: exporting a management pack requires the 'export' permission (ADM-001).
+          assertCan(b.roles ?? [], 'export');
+        } catch (err) {
+          if (err instanceof AuthorisationError) return sendJson(res, 403, { error: { code: 'forbidden', message: err.message } });
+          throw err;
+        }
         return sendJson(res, 200, await exportDashboard(pool, { asOf: b.asOf ?? new Date().toISOString().slice(0, 10), exportedBy: b.exportedBy, ...(b.filters ? { filters: b.filters } : {}), ...(b.format ? { format: b.format } : {}) }));
       }
       if (p === '/healthz') return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true });
