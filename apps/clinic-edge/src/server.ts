@@ -21,6 +21,7 @@ import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment 
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
+import { performStocktake } from './stocktake.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -115,6 +116,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/stock/alerts' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
           return sendJson(res, 200, { alerts: await stockAlerts(pool, asOf) });
+        }
+        if (p === '/api/stock/stocktake' && req.method === 'POST') {
+          const b = (await readBody(req)) as { lotId: string; countedQty: number; approver?: string };
+          try { return sendJson(res, 200, await performStocktake(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'stocktake_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/checkout' && req.method === 'POST') {
           const body = (await readBody(req)) as CheckoutApiBody;

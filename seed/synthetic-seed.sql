@@ -18,6 +18,7 @@ INSERT INTO finance.account (code, name, type) VALUES
   ('4000-SERVICE-REVENUE', 'Service revenue', 'revenue'),
   ('4010-MEDICINE-REVENUE', 'Medicine revenue', 'revenue'),
   ('5000-COGS', 'Cost of goods sold', 'expense'),
+  ('5100-SUPPLIES-EXPENSE', 'Supplies / inventory adjustment', 'expense'),
   ('6900-CASH-OVER-SHORT', 'Cash over/short', 'expense'),
   ('6910-BAD-DEBT', 'Bad debt expense', 'expense');
 
