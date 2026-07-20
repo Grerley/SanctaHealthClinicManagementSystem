@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Related persons + restricted-record access (real PostgreSQL) — PAT-005, PAT-009
+
+`packages/domain/src/patient-access.ts` + `apps/clinic-edge/{src/patient-relations.ts,test/patient-relations.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Guardians / emergency contacts / household relations are recorded and surfaced (guardians filtered for authority) | PAT-005 | ✅ |
+| Sensitive records need a stated purpose; restricted records need an authorised role + purpose; break-glass grants emergency access with a reason | PAT-009 | ✅ |
+| Every permitted sensitive/restricted/break-glass access is audited (with purpose) | PAT-009, BR-012 | ✅ |
+
+5 domain unit tests (the access matrix) + 2 integration. PAT module 6/10 → 8/10 (remaining: PAT-006 photo/QR, PAT-010 summary export — both S/P2).
+
 ## Config releases, feature flags & system health (real PostgreSQL) — ADM-003/005/006
 
 `packages/domain/src/feature.ts` + `apps/clinic-edge/{src/admin.ts,test/admin.itest.ts}`:

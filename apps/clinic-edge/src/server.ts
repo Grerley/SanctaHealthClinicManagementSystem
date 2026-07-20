@@ -15,6 +15,7 @@ import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashie
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { listPolicy, setFieldRule } from './demographics.ts';
 import { changeDemographic, markDeceased, patientIdentityHistory } from './identity-history.ts';
+import { addRelatedPerson, listRelatedPersons, accessPatient } from './patient-relations.ts';
 import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } from './integration-queue.ts';
 import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
 import { toFhirBundle, capabilityStatement } from '@sancta/domain';
@@ -187,6 +188,18 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/patients/history' && req.method === 'GET') {
           return sendJson(res, 200, { history: await patientIdentityHistory(pool, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/patients/related' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addRelatedPerson>[1];
+          try { return sendJson(res, 201, await addRelatedPerson(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'related_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/patients/related' && req.method === 'GET') {
+          return sendJson(res, 200, { related: await listRelatedPersons(pool, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/patients/access' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; purpose?: string; breakGlass?: boolean; breakGlassReason?: string };
+          try { return sendJson(res, 200, await accessPatient(pool, { patientId: b.patientId, roles: ctx.roles, user: ctx.user ?? 'unknown', ...(b.purpose ? { purpose: b.purpose } : {}), ...(b.breakGlass ? { breakGlass: true } : {}), ...(b.breakGlassReason ? { breakGlassReason: b.breakGlassReason } : {}) })); }
+          catch (err) { return sendJson(res, 403, { error: { code: 'access_denied', message: (err as Error).message } }); }
         }
         if (p === '/api/patients/demographic' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof changeDemographic>[1];

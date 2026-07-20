@@ -33,6 +33,9 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/patients\/policy$/, permission: 'view_summary' }, // PAT-004 capture policy
   { method: 'POST', test: /^\/api\/patients\/policy$/, permission: 'configure' },
   { method: 'GET', test: /^\/api\/patients\/history$/, permission: 'view_summary' }, // PAT-007 identity history
+  { method: 'POST', test: /^\/api\/patients\/related$/, permission: 'create' }, // PAT-005
+  { method: 'GET', test: /^\/api\/patients\/related$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/patients\/access$/, permission: 'view_clinical_detail' }, // PAT-009
   { method: 'GET', test: /^\/api\/fhir\/Patient$/, permission: 'view_clinical_detail' }, // SYN-009 FHIR read (metadata is public)
   { method: 'POST', test: /^\/api\/patients\/(demographic|deceased)$/, permission: 'amend' },
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },

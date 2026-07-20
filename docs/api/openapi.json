@@ -3101,6 +3101,27 @@
         }
       }
     },
+    "/api/patients/access": {
+      "post": {
+        "operationId": "post_api_patients_access",
+        "summary": "POST /api/patients/access",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/patients/deceased": {
       "post": {
         "operationId": "post_api_patients_deceased",
@@ -3212,6 +3233,46 @@
           "patients"
         ],
         "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/related": {
+      "get": {
+        "operationId": "get_api_patients_related",
+        "summary": "GET /api/patients/related",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_patients_related",
+        "summary": "POST /api/patients/related",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
