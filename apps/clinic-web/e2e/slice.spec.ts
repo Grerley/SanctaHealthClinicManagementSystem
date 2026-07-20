@@ -7,6 +7,9 @@
  *  - "Sync now" reconciles the change to the cloud (SYN-004) with no duplication.
  */
 import { test, expect } from '@playwright/test';
+import { resetDb } from './reset.ts';
+
+test.beforeEach(async () => { await resetDb(); });
 import pg from 'pg';
 
 const CLOUD_DATABASE_URL = process.env['CLOUD_DATABASE_URL'] ?? 'postgres://sancta@127.0.0.1:5433/sancta_cloud';
@@ -24,7 +27,7 @@ async function cloudCheckoutCount(): Promise<number> {
 
 test('app shell loads and shows initial stock and synced state', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /Dispense/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Sancta Clinic/i })).toBeVisible();
   await expect(page.getByTestId('stock')).toContainText('1500');
   await expect(page.getByTestId('sync-badge')).toContainText('All synced');
 });
@@ -42,7 +45,7 @@ test('the application shell renders offline from the service-worker cache (SYN-0
   await context.setOffline(true);
   await page.reload();
   // The shell still renders even though the network is down.
-  await expect(page.getByRole('heading', { name: /Dispense/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Sancta Clinic/i })).toBeVisible();
   await expect(page.getByTestId('net-status')).toContainText(/Offline/i);
   await context.setOffline(false);
 });

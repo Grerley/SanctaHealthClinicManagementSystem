@@ -15,8 +15,18 @@ async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+export type QueueRow = { visitId: string; token: number; station: string; priority: number; status: string; patientMrn: string | null };
+export type Kpi = { id: string; label: string; value: number; unit: string; owner: string; formula: string };
+export type Exception = { type: string; label: string; count: number; queue: string; owner: string };
+
 export const api = {
   patients: () => jsonFetch<{ patients: Patient[] }>('/api/patients'),
+  searchPatients: (q: string) => jsonFetch<{ patients: Patient[] }>(`/api/patients?q=${encodeURIComponent(q)}`),
+  registerPatient: (body: unknown) =>
+    jsonFetch<{ ok: boolean; id?: string; mrn?: string; duplicates?: Array<{ candidate: Patient; score: number; reasons: string[] }> }>(
+      '/api/patients',
+      { method: 'POST', body: JSON.stringify(body) },
+    ),
   stock: (sku: string) => jsonFetch<{ sku: string; onHand: number }>(`/api/stock?sku=${encodeURIComponent(sku)}`),
   syncStatus: () => jsonFetch<{ pending: number }>('/api/sync/status'),
   checkout: (body: unknown) =>
@@ -25,4 +35,8 @@ export const api = {
       { method: 'POST', body: JSON.stringify(body) },
     ),
   syncPush: () => jsonFetch<{ attempted: number; acknowledged: number; failed: number; deferred: number }>('/api/sync/push', { method: 'POST' }),
+  startVisit: (patientId: string, station: string) =>
+    jsonFetch<{ visitId: string; token: number }>('/api/visits/start', { method: 'POST', body: JSON.stringify({ patientId, station }) }),
+  queue: (station?: string) => jsonFetch<{ queue: QueueRow[] }>(`/api/visits/queue${station ? `?station=${encodeURIComponent(station)}` : ''}`),
+  dashboard: () => jsonFetch<{ asOf: string; kpis: Kpi[]; exceptions: Exception[] }>('/api/management/dashboard'),
 };
