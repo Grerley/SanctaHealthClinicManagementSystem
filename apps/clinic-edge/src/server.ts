@@ -29,6 +29,7 @@ import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnte
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { dashboard, exportDashboard } from './management.ts';
+import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
@@ -439,6 +440,17 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/sync/push' && req.method === 'POST') {
           if (!CLOUD_INGRESS_URL) return sendJson(res, 200, { attempted: 0, acknowledged: 0, failed: 0, deferred: 0, note: 'no cloud configured' });
           return sendJson(res, 200, await syncPush(pool, CLOUD_INGRESS_URL, SITE_ID));
+        }
+        if (p === '/api/sync/conflicts' && req.method === 'GET') return sendJson(res, 200, { conflicts: await listOpenConflicts(pool) });
+        if (p === '/api/sync/demographic-update' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof applyDemographicUpdate>[1];
+          try { return sendJson(res, 200, await applyDemographicUpdate(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'demographic_update_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/sync/conflicts/resolve' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof resolveConflictCase>[1];
+          try { return sendJson(res, 200, await resolveConflictCase(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'conflict_resolve_rejected', message: (err as Error).message } }); }
         }
         return sendJson(res, 404, { error: { code: 'not_found' } });
       }

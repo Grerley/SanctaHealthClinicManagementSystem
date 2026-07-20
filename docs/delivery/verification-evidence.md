@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Sync conflict handling (real PostgreSQL) — SYN-006, pack §15.5
+
+`packages/domain/src/conflict.ts` (field-level 3-way merge) +
+`apps/clinic-edge/{src/conflict.ts,test/conflict.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A one-sided offline demographic edit merges automatically; entity_version bumps once | SYN-006 | ✅ |
+| Two sites changing the same identity field differently open a conflict case — central value untouched, **never last-write-wins** | SYN-006, BR-002, pack §15.5 | ✅ |
+| The conflict case preserves BOTH the local and incoming values for a human decision | SYN-006, MGT-003 | ✅ |
+| A human resolution writes the chosen value, closes the case and is audited; a closed case cannot be re-resolved; resolution requires a resolver | SYN-006, BR-004 | ✅ |
+| Open conflicts surface as a management exception linking to the resolution queue | MGT-003 | ✅ |
+
 ## Concurrency safety (real PostgreSQL) — INV-005
 
 `apps/clinic-edge/test/resilience.itest.ts`:

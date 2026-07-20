@@ -31,6 +31,10 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/patients$/, permission: 'discover' },
   { method: 'POST', test: /^\/api\/patients$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },
+  // Sync conflict queue (SYN-006): identity edits and human resolution are privileged.
+  { method: 'GET', test: /^\/api\/sync\/conflicts$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/sync\/demographic-update$/, permission: 'administer' },
+  { method: 'POST', test: /^\/api\/sync\/conflicts\/resolve$/, permission: 'approve' },
   // Clinical
   { method: 'POST', test: /^\/api\/encounters\/(sign)$/, permission: 'sign' },
   { method: 'POST', test: /^\/api\/encounters\/(addendum|entered-in-error|draft)$/, permission: 'amend' },
