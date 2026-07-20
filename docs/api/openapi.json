@@ -1655,6 +1655,48 @@
         }
       }
     },
+    "/api/finance/budget": {
+      "post": {
+        "operationId": "post_api_finance_budget",
+        "summary": "POST /api/finance/budget",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/budget-variance": {
+      "get": {
+        "operationId": "get_api_finance_budget_variance",
+        "summary": "GET /api/finance/budget-variance",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/finance/chart": {
       "get": {
         "operationId": "get_api_finance_chart",

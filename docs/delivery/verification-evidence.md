@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Multi-currency conversion + budgets & variance (real PostgreSQL) — FIN-013, FIN-007
+
+`packages/domain/src/currency.ts` + `apps/clinic-edge/{src/finance-budget.ts,test/finance-budget.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A foreign amount converts to base USD by a bps rate in exact integer minor units (no float drift); the original is retained; base converts 1:1 | FIN-013 | ✅ |
+| A budget upserts per account + period; an unknown account is rejected | FIN-007 | ✅ |
+| Variance compares the budget to the ACTUAL debit-positive net posted to the ledger in the period (reconciles to the GL) | FIN-007, FIN-002 | ✅ |
+
+4 domain unit tests (currency) + 2 integration (budgets). FIN module 11/14 → 13/14.
+
 ## Document generation snapshot, versioning & retention (real PostgreSQL) — DOC-002/003/005
 
 `apps/clinic-edge/{src/document-lifecycle.ts,test/document-lifecycle.itest.ts}`:

@@ -39,6 +39,7 @@ import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
 import { balanceSheet, monthlyClose } from './finance-close.ts';
+import { setBudget, budgetVariance } from './finance-budget.ts';
 import { createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions } from './chart.ts';
 import { quotePrice, chargeService, defineFee, listFees } from './pricing.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
@@ -819,6 +820,13 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/finance/balance-sheet' && req.method === 'GET') {
           return sendJson(res, 200, await balanceSheet(pool));
+        }
+        if (p === '/api/finance/budget' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setBudget>[1];
+          try { return sendJson(res, 201, await setBudget(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'budget_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/budget-variance' && req.method === 'GET') {
+          return sendJson(res, 200, await budgetVariance(pool, { periodId: url.searchParams.get('periodId') ?? '' }));
         }
         if (p === '/api/finance/chart' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);

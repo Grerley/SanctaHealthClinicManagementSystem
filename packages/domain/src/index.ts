@@ -31,3 +31,4 @@ export * from './docgen.ts';
 export * from './site.ts';
 export * from './kpi.ts';
 export * from './notification.ts';
+export * from './currency.ts';
