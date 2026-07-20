@@ -14,12 +14,17 @@ edge container and cloud database land.
 
 ## Edge hub
 
-1. Nightly encrypted `pg_dump`/physical backup to (a) local removable media and (b)
-   encrypted R2 backup bucket (CLD-006) — object storage is not the only copy.
+1. Nightly encrypted `pg_dump` (custom format) via `@sancta/clinic-edge` `backupEdge()`
+   to (a) local removable media and (b) an encrypted R2 backup bucket (CLD-006) — object
+   storage is not the only copy.
 2. WAL archiving for point-in-time recovery; UPS enables graceful shutdown (NFR-031).
-3. Restore: provision replacement mini-PC, run edge container installer, restore latest
-   verified backup + WAL, verify transaction/attachment/user/audit integrity (UAT-16),
-   re-register device, resume outbox sync.
+3. Restore: provision replacement mini-PC, run edge container installer, restore the latest
+   verified backup with `restoreEdge()` (+ WAL), verify transaction/audit/stock integrity
+   and that the ledgers still balance (UAT-16), re-register device, resume outbox sync.
+
+**Automated evidence:** `apps/clinic-edge/test/backup.itest.ts` takes a backup, simulates
+catastrophic loss (drops all schemas), restores, and asserts the invoice, stock movements,
+audit trail and a zero-net trial balance all return — run in CI with `PG_BIN_DIR` set.
 
 ## Cloud plane
 

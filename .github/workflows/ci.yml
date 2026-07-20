@@ -58,12 +58,15 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - run: npm ci
-      - name: Vertical-slice + sync integration tests (dispense → invoice → payment → journals → edge↔cloud sync → replay)
+      - name: Install PostgreSQL client (pg_dump/pg_restore for the backup/restore test)
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client-16 || sudo apt-get install -y postgresql-client
+      - name: Integration tests (dispense→pay→journals→sync→replay, all modules, backup/restore UAT-16)
         run: npm run test:integration -w @sancta/clinic-edge
         env:
           DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
           # The cloud store lives in an isolated `cloud` schema; one instance suffices in CI.
           CLOUD_DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
+          PG_BIN_DIR: /usr/lib/postgresql/16/bin
 
   e2e:
     name: e2e (PWA offline → dispense → pay → reconcile)
