@@ -76,8 +76,9 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/orders\/(external-result|external-result\/reconcile|cancel|result\/correct)$/, permission: 'amend' }, // ORD-007/009
   { method: 'GET', test: /^\/api\/orders\/unmatched$/, permission: 'view_summary' },
   // Flow
-  { method: 'POST', test: /^\/api\/visits\/(start|transfer|complete)$/, permission: 'create' },
-  { method: 'GET', test: /^\/api\/visits\/queue$/, permission: 'discover' },
+  { method: 'POST', test: /^\/api\/visits\/(start|transfer|complete|hold|resume|outcome)$/, permission: 'create' },
+  { method: 'POST', test: /^\/api\/visits\/escalate$/, permission: 'amend' }, // VIS-004
+  { method: 'GET', test: /^\/api\/visits\/(queue|durations)$/, permission: 'discover' },
   // Billing / cashier
   { method: 'POST', test: /^\/api\/checkout$/, permission: 'dispense' },
   { method: 'GET', test: /^\/api\/billing\/(price|fees)$/, permission: 'view_summary' }, // pricing quote / schedule (BIL-001)

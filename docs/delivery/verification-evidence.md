@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Visit escalation, event log & outcomes (real PostgreSQL) — VIS-004/006/007
+
+`apps/clinic-edge/{src/visit-lifecycle.ts,test/visit-lifecycle.itest.ts}` + migration 0031:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Emergency escalation raises priority (visit + queue) with a required reason, audited | VIS-004 | ✅ |
+| An append-only visit-event log yields derived wait/total durations that reconcile to history (never stored totals) | VIS-006 | ✅ |
+| Hold/resume respect the visit state machine; terminal outcomes (left-before-seen / refused / cancelled) require a reason, end the visit and clear the queue | VIS-007, BR-003 | ✅ |
+
+3 integration tests. VIS module 4/9 → 7/9.
+
 ## Persistent patient banner + stale-offline indicator (browser E2E) — EHR-001
 
 `apps/clinic-web/{src/PatientBanner.tsx,e2e/banner.spec.ts}`:

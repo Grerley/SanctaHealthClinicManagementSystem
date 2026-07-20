@@ -51,6 +51,7 @@ import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from '
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
+import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
@@ -519,6 +520,25 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { visitId: string; override?: boolean; reason?: string; user?: string };
           const out = await completeVisit(pool, b);
           return sendJson(res, out.ok ? 200 : 409, out);
+        }
+        if (p === '/api/visits/escalate' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof escalateVisit>[1];
+          try { return sendJson(res, 200, await escalateVisit(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'escalate_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/hold' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof holdVisit>[1];
+          try { return sendJson(res, 200, await holdVisit(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'hold_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/resume' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof resumeVisit>[1];
+          try { return sendJson(res, 200, await resumeVisit(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'resume_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/outcome' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof endVisitWithOutcome>[1];
+          try { return sendJson(res, 200, await endVisitWithOutcome(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'outcome_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/durations' && req.method === 'GET') {
+          try { return sendJson(res, 200, await visitDurations(pool, url.searchParams.get('visitId') ?? '')); } catch (err) { return sendJson(res, 404, { error: { code: 'visit_not_found', message: (err as Error).message } }); }
         }
         if (p === '/api/devices' && req.method === 'POST') {
           const b = (await readBody(req)) as { label: string; site?: string; softwareVersion?: string };

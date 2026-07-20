@@ -3369,6 +3369,90 @@
         }
       }
     },
+    "/api/visits/durations": {
+      "get": {
+        "operationId": "get_api_visits_durations",
+        "summary": "GET /api/visits/durations",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/escalate": {
+      "post": {
+        "operationId": "post_api_visits_escalate",
+        "summary": "POST /api/visits/escalate",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/hold": {
+      "post": {
+        "operationId": "post_api_visits_hold",
+        "summary": "POST /api/visits/hold",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/outcome": {
+      "post": {
+        "operationId": "post_api_visits_outcome",
+        "summary": "POST /api/visits/outcome",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/visits/queue": {
       "get": {
         "operationId": "get_api_visits_queue",
@@ -3377,6 +3461,27 @@
           "visits"
         ],
         "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/resume": {
+      "post": {
+        "operationId": "post_api_visits_resume",
+        "summary": "POST /api/visits/resume",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
