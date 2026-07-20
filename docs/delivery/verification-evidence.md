@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Instance mode marking + no-PHI telemetry — ADM-007, NFR-018, NFR-025
+
+`apps/clinic-edge/src/instance.ts` + `packages/domain/src/telemetry.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Production is recognised; anything not explicitly "production" fails safe to a marked non-production instance | ADM-007 | ✅ |
+| Non-production instances are clearly marked (banner, `nonProduction`, `syntheticDataOnly`) at `/healthz` and `/api/instance` | ADM-007 | ✅ |
+| Telemetry redaction masks PHI-keyed values (name, DOB, phone, content, mrn…) in nested objects/arrays while keeping ids/counts | NFR-018 | ✅ |
+| `containsPhi` confirms a redacted record is clean; the 500 handler logs stack + correlation id only (no request body/PHI) and returns only a correlation id | NFR-025, NFR-018 | ✅ |
+
+6 unit tests (2 instance, 4 telemetry).
+
 ## FHIR-compatible read layer + locale conventions — SYN-009, NFR-020
 
 `packages/domain/src/{fhir.ts,locale.ts}` + `apps/clinic-edge/{src/fhir.ts,test/fhir.itest.ts}`:

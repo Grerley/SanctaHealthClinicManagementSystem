@@ -25,3 +25,4 @@ export * from './demographics.ts';
 export * from './forms.ts';
 export * from './fhir.ts';
 export * from './locale.ts';
+export * from './telemetry.ts';

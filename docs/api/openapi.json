@@ -52,6 +52,9 @@
       "name": "forms"
     },
     {
+      "name": "instance"
+    },
+    {
       "name": "integrations"
     },
     {
@@ -1437,6 +1440,27 @@
           "forms"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/instance": {
+      "get": {
+        "operationId": "get_api_instance",
+        "summary": "GET /api/instance",
+        "tags": [
+          "instance"
+        ],
+        "x-permission": null,
         "responses": {
           "200": {
             "description": "Success"

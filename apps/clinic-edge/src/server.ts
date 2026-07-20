@@ -18,6 +18,7 @@ import { changeDemographic, markDeceased, patientIdentityHistory } from './ident
 import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } from './integration-queue.ts';
 import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
 import { toFhirBundle, capabilityStatement } from '@sancta/domain';
+import { instanceInfo } from './instance.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
@@ -134,7 +135,10 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         // Authorisation ('export') is enforced by the central guard above.
         return sendJson(res, 200, await exportDashboard(pool, { asOf: b.asOf ?? new Date().toISOString().slice(0, 10), exportedBy: b.exportedBy, ...(b.filters ? { filters: b.filters } : {}), ...(b.format ? { format: b.format } : {}) }));
       }
-      if (p === '/healthz') return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true });
+      if (p === '/healthz') {
+        const inst = instanceInfo();
+        return sendJson(res, 200, { status: 'ok', plane: 'edge', offlineCapable: true, mode: inst.mode, nonProduction: inst.nonProduction, banner: inst.banner });
+      }
       if (p === '/readyz') return sendJson(res, 200, { status: pool ? 'ready' : 'no-db' });
 
       if (p.startsWith('/api/')) {
@@ -168,6 +172,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/patients/policy' && req.method === 'GET') {
           return sendJson(res, 200, { fields: await listPolicy(pool) });
+        }
+        if (p === '/api/instance' && req.method === 'GET') {
+          return sendJson(res, 200, instanceInfo());
         }
         if (p === '/api/fhir/metadata' && req.method === 'GET') {
           return sendJson(res, 200, capabilityStatement('0.1.0'));
