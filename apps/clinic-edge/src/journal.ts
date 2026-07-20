@@ -6,6 +6,7 @@
 import type { PoolClient } from 'pg';
 import { uuidv7, type JournalBatch } from '@sancta/domain';
 import { ensurePeriod, assertPeriodOpen } from './finance.ts';
+import { assertCostCentreActive } from './chart.ts';
 
 export async function insertJournalBatch(client: PoolClient, batch: JournalBatch, periodId: string): Promise<void> {
   // Posting choke point: auto-create the period, then reject if it is closed
@@ -13,6 +14,10 @@ export async function insertJournalBatch(client: PoolClient, batch: JournalBatch
   // the whole business transaction back.
   await ensurePeriod(client, periodId);
   await assertPeriodOpen(client, periodId);
+  // FIN-001: any cost centre tagged on a line must be a known, active one.
+  for (const cc of new Set(batch.lines.map((l) => l.costCentre).filter((c): c is string => !!c))) {
+    await assertCostCentreActive(client, cc);
+  }
   await client.query(
     `INSERT INTO finance.journal_batch (id, origin, source_type, source_id, currency, posting_date, period_id, reverses)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,

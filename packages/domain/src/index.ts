@@ -20,3 +20,4 @@ export * from './documents.ts';
 export * from './rbac.ts';
 export * from './conflict.ts';
 export * from './close.ts';
+export * from './chart.ts';

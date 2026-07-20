@@ -13,7 +13,7 @@ import { insertJournalBatch } from './journal.ts';
 
 export class ManualJournalError extends Error {}
 
-export type DraftLine = { accountCode: string; debitMinor: number; creditMinor: number; memo?: string };
+export type DraftLine = { accountCode: string; debitMinor: number; creditMinor: number; memo?: string; costCentre?: string };
 export type Attachment = { name: string; ref: string };
 
 function toBatch(id: string, currency: string, periodId: string, lines: readonly DraftLine[]): JournalBatch {
@@ -22,6 +22,7 @@ function toBatch(id: string, currency: string, periodId: string, lines: readonly
     debit: money(l.debitMinor, currency),
     credit: money(l.creditMinor, currency),
     ...(l.memo === undefined ? {} : { memo: l.memo }),
+    ...(l.costCentre === undefined ? {} : { costCentre: l.costCentre }),
   }));
   return { id, origin: 'manual', source: { type: 'manual_journal', id }, currency, postingDate: `${periodId}-01`, lines: journalLines };
 }

@@ -752,6 +752,67 @@
         }
       }
     },
+    "/api/finance/account": {
+      "get": {
+        "operationId": "get_api_finance_account",
+        "summary": "GET /api/finance/account",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_finance_account",
+        "summary": "POST /api/finance/account",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/account/revise": {
+      "post": {
+        "operationId": "post_api_finance_account_revise",
+        "summary": "POST /api/finance/account/revise",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/finance/ap-reconciliation": {
       "get": {
         "operationId": "get_api_finance_ap_reconciliation",
@@ -777,6 +838,132 @@
       "get": {
         "operationId": "get_api_finance_balance_sheet",
         "summary": "GET /api/finance/balance-sheet",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/chart": {
+      "get": {
+        "operationId": "get_api_finance_chart",
+        "summary": "GET /api/finance/chart",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/cost-centre": {
+      "post": {
+        "operationId": "post_api_finance_cost_centre",
+        "summary": "POST /api/finance/cost-centre",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/cost-centres": {
+      "get": {
+        "operationId": "get_api_finance_cost_centres",
+        "summary": "GET /api/finance/cost-centres",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/dimension": {
+      "post": {
+        "operationId": "post_api_finance_dimension",
+        "summary": "POST /api/finance/dimension",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/dimension/value": {
+      "post": {
+        "operationId": "post_api_finance_dimension_value",
+        "summary": "POST /api/finance/dimension/value",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/dimensions": {
+      "get": {
+        "operationId": "get_api_finance_dimensions",
+        "summary": "GET /api/finance/dimensions",
         "tags": [
           "finance"
         ],

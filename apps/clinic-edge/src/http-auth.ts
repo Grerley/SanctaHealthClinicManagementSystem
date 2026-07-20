@@ -61,6 +61,7 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/stock\/stocktake$/, permission: 'approve' },
   { method: 'GET', test: /^\/api\/stock(\/alerts)?$/, permission: 'view_summary' },
   // Finance
+  { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value)$/, permission: 'configure' }, // chart/reference data (FIN-001)
   { method: 'POST', test: /^\/api\/finance\/journal\/draft$/, permission: 'create' }, // maker drafts (FIN-003)
   { method: 'POST', test: /^\/api\/finance\/(expense|pay-supplier|period\/close|period\/reopen|journal\/post|journal\/reject|monthly-close)$/, permission: 'approve' }, // checker/approver
   { method: 'GET', test: /^\/api\/finance\//, permission: 'view_summary' },

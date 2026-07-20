@@ -23,6 +23,7 @@ import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
 import { balanceSheet, monthlyClose } from './finance-close.ts';
+import { createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions } from './chart.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
@@ -436,6 +437,47 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/finance/balance-sheet' && req.method === 'GET') {
           return sendJson(res, 200, await balanceSheet(pool));
+        }
+        if (p === '/api/finance/chart' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { asOf, accounts: await chartOfAccounts(pool, asOf) });
+        }
+        if (p === '/api/finance/account' && req.method === 'GET') {
+          const code = url.searchParams.get('code') ?? '';
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          try { return sendJson(res, 200, await accountAsOf(pool, code, asOf)); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'account_not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/account' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof defineAccount>[1];
+          try { return sendJson(res, 201, await defineAccount(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'account_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/account/revise' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof reviseAccount>[1];
+          try { return sendJson(res, 200, await reviseAccount(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'account_revise_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/cost-centres' && req.method === 'GET') {
+          return sendJson(res, 200, { costCentres: await listCostCentres(pool) });
+        }
+        if (p === '/api/finance/cost-centre' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createCostCentre>[1];
+          try { return sendJson(res, 201, await createCostCentre(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'cost_centre_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/dimensions' && req.method === 'GET') {
+          return sendJson(res, 200, { dimensions: await listDimensions(pool) });
+        }
+        if (p === '/api/finance/dimension' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createDimension>[1];
+          try { return sendJson(res, 201, await createDimension(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'dimension_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/dimension/value' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addDimensionValue>[1];
+          try { return sendJson(res, 201, await addDimensionValue(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'dimension_value_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/finance/journal' && req.method === 'GET') {
           const st = url.searchParams.get('status') ?? undefined;

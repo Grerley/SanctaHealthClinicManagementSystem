@@ -139,6 +139,20 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Versioned chart of accounts, cost centres & dimensions (real PostgreSQL) — FIN-001
+
+`packages/domain/src/chart.ts` (effective-dated resolver + code/type validation) +
+`apps/clinic-edge/{src/chart.ts,test/chart.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The whole chart is versioned; each account carries an effective-dated definition (v1 backfill) | FIN-001 | ✅ |
+| Defining an account rejects duplicate codes and invalid code/type formats | FIN-001, BR-009 | ✅ |
+| Revising an account adds a new version and resolves the correct definition by date; history is never rewritten; a revision must move forward in time; deactivation drops it from the as-of chart | FIN-001 | ✅ |
+| Cost centres are governed reference data; a journal tagged with an unknown/inactive cost centre is blocked at the posting choke point, a known active one posts | FIN-001, BR-010 | ✅ |
+| Accounting dimensions are a managed registry (dimension + values); an unknown dimension is rejected | FIN-001 | ✅ |
+| Every chart/cost-centre/dimension change is audited as a config action | BR-012 | ✅ |
+
 ## API contract gate (CI-enforced) — SYN-009, pack §22
 
 `docs/api/openapi.json` (versioned contract) + `scripts/{gen-openapi,contract-check}.ts`:

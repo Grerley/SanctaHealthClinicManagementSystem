@@ -23,6 +23,13 @@ INSERT INTO finance.account (code, name, type) VALUES
   ('6900-CASH-OVER-SHORT', 'Cash over/short', 'expense'),
   ('6910-BAD-DEBT', 'Bad debt expense', 'expense');
 
+-- Version every account (FIN-001). The migration backfill runs before this seed
+-- inserts the chart, so version each account here if not already versioned.
+INSERT INTO finance.account_version (id, code, version, name, type, active, effective_from)
+SELECT gen_random_uuid(), a.code, 1, a.name, a.type, a.active, DATE '2026-01-01'
+FROM finance.account a
+WHERE NOT EXISTS (SELECT 1 FROM finance.account_version v WHERE v.code = a.code);
+
 INSERT INTO finance.financial_period (id, status) VALUES ('2026-07', 'open');
 
 -- --- Fee schedule (effective-dated) -----------------------------------------
