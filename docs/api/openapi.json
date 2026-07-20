@@ -3014,6 +3014,27 @@
         }
       }
     },
+    "/api/schedule/reminder": {
+      "post": {
+        "operationId": "post_api_schedule_reminder",
+        "summary": "POST /api/schedule/reminder",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/schedule/slot": {
       "post": {
         "operationId": "post_api_schedule_slot",

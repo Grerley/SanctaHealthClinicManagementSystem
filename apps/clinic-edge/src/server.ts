@@ -34,6 +34,7 @@ import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
+import { appointmentReminder } from '@sancta/domain';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
@@ -519,6 +520,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           } catch (err) {
             return sendJson(res, 409, { error: { code: 'illegal_transition', message: (err as Error).message } });
           }
+        }
+        if (p === '/api/schedule/reminder' && req.method === 'POST') {
+          const b = (await readBody(req)) as { when: string; time?: string; location?: string; reason?: string; sensitive?: boolean };
+          // APT-009: a sensitive appointment's reason is never placed in the message.
+          return sendJson(res, 200, { message: appointmentReminder({ when: b.when, ...(b.time ? { time: b.time } : {}), ...(b.location ? { location: b.location } : {}), ...(b.reason ? { reason: b.reason } : {}), sensitive: b.sensitive === true }) });
         }
         if (p === '/api/visits/start' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; station?: string; priority?: number };

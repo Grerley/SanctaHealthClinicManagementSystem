@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Sensitive-reason-safe appointment notifications — APT-009
+
+`packages/domain/src/notification.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A sensitive appointment's reason is **never** placed in the reminder message (verified with a disclosure check) | APT-009, NFR-018 | ✅ |
+| Logistics (date DD/MM/YYYY, time, location) are still present; a non-sensitive reason may be included | APT-009 | ✅ |
+| Exposed via `/api/schedule/reminder`, which only ever returns the safe message | APT-009 | ✅ |
+
+3 domain unit tests. APT module 4/9 → 5/9.
+
 ## KPI targets & period comparison (real PostgreSQL) — MGT-004, MGT-005
 
 `packages/domain/src/kpi.ts` (targets/banding/comparison) + `apps/clinic-edge/{src/kpi.ts,test/kpi.itest.ts}`:
