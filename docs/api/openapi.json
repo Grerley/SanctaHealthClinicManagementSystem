@@ -725,6 +725,132 @@
         }
       }
     },
+    "/api/ehr/care-plan": {
+      "post": {
+        "operationId": "post_api_ehr_care_plan",
+        "summary": "POST /api/ehr/care-plan",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/care-plan/followup": {
+      "post": {
+        "operationId": "post_api_ehr_care_plan_followup",
+        "summary": "POST /api/ehr/care-plan/followup",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/care-plan/followup/complete": {
+      "post": {
+        "operationId": "post_api_ehr_care_plan_followup_complete",
+        "summary": "POST /api/ehr/care-plan/followup/complete",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/care-plan/goal": {
+      "post": {
+        "operationId": "post_api_ehr_care_plan_goal",
+        "summary": "POST /api/ehr/care-plan/goal",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/care-plan/overdue": {
+      "get": {
+        "operationId": "get_api_ehr_care_plan_overdue",
+        "summary": "GET /api/ehr/care-plan/overdue",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/care-plans": {
+      "get": {
+        "operationId": "get_api_ehr_care_plans",
+        "summary": "GET /api/ehr/care-plans",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/ehr/diagnosis": {
       "get": {
         "operationId": "get_api_ehr_diagnosis",
@@ -769,6 +895,90 @@
       "get": {
         "operationId": "get_api_ehr_diagnosis_codes",
         "summary": "GET /api/ehr/diagnosis-codes",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/document/prescription": {
+      "post": {
+        "operationId": "post_api_ehr_document_prescription",
+        "summary": "POST /api/ehr/document/prescription",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/document/referral": {
+      "post": {
+        "operationId": "post_api_ehr_document_referral",
+        "summary": "POST /api/ehr/document/referral",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/document/sick-note": {
+      "post": {
+        "operationId": "post_api_ehr_document_sick_note",
+        "summary": "POST /api/ehr/document/sick-note",
+        "tags": [
+          "ehr"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/ehr/document/visit-summary": {
+      "post": {
+        "operationId": "post_api_ehr_document_visit_summary",
+        "summary": "POST /api/ehr/document/visit-summary",
         "tags": [
           "ehr"
         ],

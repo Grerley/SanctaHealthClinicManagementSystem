@@ -27,3 +27,4 @@ export * from './fhir.ts';
 export * from './locale.ts';
 export * from './telemetry.ts';
 export * from './triage.ts';
+export * from './docgen.ts';

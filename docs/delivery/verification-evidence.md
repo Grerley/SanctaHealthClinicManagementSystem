@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Care plans + clinical document generation (real PostgreSQL) — EHR-006, EHR-011
+
+`packages/domain/src/docgen.ts` (pure generators) +
+`apps/clinic-edge/{src/care-plan.ts,src/docgen.ts,test/care-plan.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A care plan carries goals + dated follow-ups; overdue follow-ups surface on a queue and clear when completed (cannot re-complete) | EHR-006 | ✅ |
+| A visit summary assembles from the encounter's real diagnoses + plan | EHR-011 | ✅ |
+| Prescription (≥1 item), sick note (end ≥ start) and referral (destination required) generate from patient data, DD/MM/YYYY | EHR-011, NFR-020 | ✅ |
+
+4 domain unit tests (generator validation) + 3 integration. EHR module 7/12 → 9/12.
+
 ## Clinical history, coded diagnoses & draft recovery (real PostgreSQL) — EHR-004/005/007
 
 `apps/clinic-edge/{src/ehr.ts,test/ehr.itest.ts}`:

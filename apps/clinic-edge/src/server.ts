@@ -22,6 +22,8 @@ import { instanceInfo } from './instance.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
+import { createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps } from './care-plan.ts';
+import { generateVisitSummary, generatePrescription, generateSickNote, generateReferral } from './docgen.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
@@ -284,6 +286,47 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/ehr/draft/autosave' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof autosaveDraft>[1];
           try { return sendJson(res, 200, await autosaveDraft(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'autosave_rejected', message: (err as Error).message } }); }
+        }
+        // Care plans (EHR-006)
+        if (p === '/api/ehr/care-plan' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createCarePlan>[1];
+          try { return sendJson(res, 201, await createCarePlan(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'care_plan_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/care-plan/goal' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addGoal>[1];
+          try { return sendJson(res, 201, await addGoal(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'goal_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/care-plan/followup' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addFollowUp>[1];
+          try { return sendJson(res, 201, await addFollowUp(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'followup_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/care-plan/followup/complete' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof completeFollowUp>[1];
+          try { return sendJson(res, 200, await completeFollowUp(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'followup_complete_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/care-plans' && req.method === 'GET') {
+          return sendJson(res, 200, { carePlans: await listCarePlans(pool, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/ehr/care-plan/overdue' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { overdue: await overdueFollowUps(pool, asOf) });
+        }
+        // Clinical document generation (EHR-011)
+        if (p === '/api/ehr/document/visit-summary' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof generateVisitSummary>[1];
+          try { return sendJson(res, 200, await generateVisitSummary(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'docgen_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/document/prescription' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof generatePrescription>[1];
+          try { return sendJson(res, 200, await generatePrescription(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'docgen_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/document/sick-note' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof generateSickNote>[1];
+          try { return sendJson(res, 200, await generateSickNote(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'docgen_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/ehr/document/referral' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof generateReferral>[1];
+          try { return sendJson(res, 200, await generateReferral(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'docgen_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/encounters/attach-form' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachForm>[1];

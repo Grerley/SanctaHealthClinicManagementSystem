@@ -51,6 +51,10 @@ const RULES: Rule[] = [
   // EHR history / diagnoses / drafts (EHR-004/005/007)
   { method: 'POST', test: /^\/api\/ehr\/(history|history\/status|diagnosis|draft\/open|draft\/autosave)$/, permission: 'amend' },
   { method: 'GET', test: /^\/api\/ehr\/(history|diagnosis|diagnosis-codes)$/, permission: 'view_clinical_detail' },
+  // Care plans (EHR-006) + clinical document generation (EHR-011)
+  { method: 'POST', test: /^\/api\/ehr\/care-plan(\/(goal|followup|followup\/complete))?$/, permission: 'amend' },
+  { method: 'GET', test: /^\/api\/ehr\/care-plans?(\/overdue)?$/, permission: 'view_clinical_detail' },
+  { method: 'POST', test: /^\/api\/ehr\/document\/(visit-summary|prescription|sick-note|referral)$/, permission: 'view_clinical_detail' },
   { method: 'GET', test: /^\/api\/patients\/timeline$/, permission: 'view_clinical_detail' }, // EHR-002
   { method: 'GET', test: /^\/api\/forms(\/get)?$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/forms$/, permission: 'configure' }, // EHR-003 form admin
