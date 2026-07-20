@@ -7,19 +7,20 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 
 ```
 # Unit — npm test
-@sancta/domain        tests 74  pass 74  fail 0   (money, ledger, stock/FEFO, idempotency,
+@sancta/domain        tests 85  pass 85  fail 0   (money, ledger, stock/FEFO, idempotency,
                                                     state machines, dupes, pricing, ageing,
-                                                    cashier, vitals)
+                                                    cashier, vitals, results, documents)
 @sancta/sync          tests  6  pass  6  fail 0
 @sancta/clinic-edge   tests  4  pass  4  fail 0
 @sancta/cloud-worker  tests  7  pass  7  fail 0
 
 # Integration — real PostgreSQL 16 (edge + cloud) — npm run test:integration
-@sancta/clinic-edge   tests 58  pass 58  fail 0   (checkout, sync, resilience, concurrency,
+@sancta/clinic-edge   tests 72  pass 72  fail 0   (checkout, sync, resilience, concurrency,
                                                     cashier, patients, triage, debtors,
                                                     scheduling, finance-period, billing, refund,
                                                     orders/results, encounters, inventory,
-                                                    stocktake, management, audit)
+                                                    stocktake, management, audit, documents,
+                                                    visits/queue, finance-statements, comms)
 
 # End-to-end — real browser (Chromium) driving the real stack — npm run e2e
 @sancta/clinic-web    3 passed
@@ -28,7 +29,7 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 all workspaces: OK
 
 # Backlog coverage — npm run coverage
-functional 33.3% weighted · business rules 76.7% · measurable NFRs 25%
+functional 40.0% weighted · business rules 76.7% · measurable NFRs 25%
 ```
 
 ## MVP modules built (each with real code + tests on real PostgreSQL)

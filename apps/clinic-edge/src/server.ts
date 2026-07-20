@@ -27,6 +27,7 @@ import { dashboard } from './management.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
+import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -239,6 +240,22 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { visitId: string; override?: boolean; reason?: string; user?: string };
           const out = await completeVisit(pool, b);
           return sendJson(res, out.ok ? 200 : 409, out);
+        }
+        if (p === '/api/comms/preference' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; purpose: Purpose; channel: Channel; allowed: boolean };
+          await setPreference(pool, b); return sendJson(res, 200, { ok: true });
+        }
+        if (p === '/api/comms/message' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; purpose: Purpose; channel: Channel; template: string; dedupKey: string };
+          return sendJson(res, 201, await queueMessage(pool, b));
+        }
+        if (p === '/api/comms/sent' && req.method === 'POST') {
+          const b = (await readBody(req)) as { messageId: string };
+          try { await markSent(pool, b.messageId); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'not_sendable', message: (err as Error).message } }); }
+        }
+        if (p === '/api/comms/pending' && req.method === 'GET') {
+          return sendJson(res, 200, { messages: await pendingMessages(pool) });
         }
         if (p === '/api/documents' && req.method === 'POST') {
           const b = (await readBody(req)) as UploadBody;
