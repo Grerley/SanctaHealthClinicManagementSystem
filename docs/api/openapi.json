@@ -49,6 +49,9 @@
       "name": "forms"
     },
     {
+      "name": "integrations"
+    },
+    {
       "name": "management"
     },
     {
@@ -1387,6 +1390,69 @@
         "summary": "GET /api/forms/get",
         "tags": [
           "forms"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/integrations/dead": {
+      "get": {
+        "operationId": "get_api_integrations_dead",
+        "summary": "GET /api/integrations/dead",
+        "tags": [
+          "integrations"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/integrations/replay": {
+      "post": {
+        "operationId": "post_api_integrations_replay",
+        "summary": "POST /api/integrations/replay",
+        "tags": [
+          "integrations"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/integrations/status": {
+      "get": {
+        "operationId": "get_api_integrations_status",
+        "summary": "GET /api/integrations/status",
+        "tags": [
+          "integrations"
         ],
         "x-permission": "view_summary",
         "responses": {

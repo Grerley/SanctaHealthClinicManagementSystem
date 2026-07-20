@@ -15,6 +15,7 @@ import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashie
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { listPolicy, setFieldRule } from './demographics.ts';
 import { changeDemographic, markDeceased, patientIdentityHistory } from './identity-history.ts';
+import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } from './integration-queue.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
@@ -590,6 +591,15 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/sync/push' && req.method === 'POST') {
           if (!CLOUD_INGRESS_URL) return sendJson(res, 200, { attempted: 0, acknowledged: 0, failed: 0, deferred: 0, note: 'no cloud configured' });
           return sendJson(res, 200, await syncPush(pool, CLOUD_INGRESS_URL, SITE_ID));
+        }
+        if (p === '/api/integrations/status' && req.method === 'GET') return sendJson(res, 200, await integrationQueueStatus(pool));
+        if (p === '/api/integrations/dead' && req.method === 'GET') return sendJson(res, 200, { deadLetters: await deadLetters(pool) });
+        if (p === '/api/integrations/replay' && req.method === 'POST') {
+          const b = (await readBody(req)) as { id: string; by: string };
+          // Delivery is the cloud plane's responsibility; the edge hands off when connected.
+          const deliver: Deliver = async () => { if (!CLOUD_INGRESS_URL) throw new Error('cloud not configured; integration remains queued'); };
+          try { return sendJson(res, 200, await replayDeadLetter(pool, b, deliver)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'replay_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/sync/conflicts' && req.method === 'GET') return sendJson(res, 200, { conflicts: await listOpenConflicts(pool) });
         if (p === '/api/sync/demographic-update' && req.method === 'POST') {

@@ -36,6 +36,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/patients\/(demographic|deceased)$/, permission: 'amend' },
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },
   // Sync conflict queue (SYN-006): identity edits and human resolution are privileged.
+  { method: 'GET', test: /^\/api\/integrations\/(status|dead)$/, permission: 'view_summary' }, // SYN-010/CLD-003 queue
+  { method: 'POST', test: /^\/api\/integrations\/replay$/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/sync\/conflicts$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/sync\/demographic-update$/, permission: 'administer' },
   { method: 'POST', test: /^\/api\/sync\/conflicts\/resolve$/, permission: 'approve' },

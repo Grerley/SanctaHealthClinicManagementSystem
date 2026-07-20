@@ -139,6 +139,17 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Online-integration queue: never blocks local, retry/DLQ/replay (real PostgreSQL) — SYN-010, CLD-003
+
+`apps/clinic-edge/{src/integration-queue.ts,test/integration-queue.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An integration is enqueued inside the local transaction; a failing delivery never rolls back the local write | SYN-010, NFR-038 | ✅ |
+| Delivery has bounded retry and dead-letters after max attempts; the DLQ transition is audited | CLD-003, NFR-036 | ✅ |
+| A dead-lettered item replays idempotently and is delivered exactly once; an already-delivered item cannot be replayed | CLD-003, NFR-010 | ✅ |
+| A duplicate idempotency key is never enqueued or delivered twice | NFR-010, SYN-003 | ✅ |
+
 ## Versioned structured clinical forms + patient timeline (real PostgreSQL) — EHR-003, EHR-002
 
 `packages/domain/src/forms.ts` (schema + validator) +
