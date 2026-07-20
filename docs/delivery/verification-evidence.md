@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Document generation snapshot, versioning & retention (real PostgreSQL) — DOC-002/003/005
+
+`apps/clinic-edge/{src/document-lifecycle.ts,test/document-lifecycle.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A generated document retains an immutable content snapshot + SHA-256 hash | DOC-002 | ✅ |
+| Documents supersede/version; a superseded document can't be superseded again; entered-in-error is retained | DOC-003, BR-003 | ✅ |
+| Disposal is driven by retention class/date; a legal hold blocks it; disposal within the retention period is refused; disposed content is cleared but metadata + hash retained | DOC-005 | ✅ |
+
+3 integration tests. DOC module 3/7 → 6/7.
+
 ## Sensitive-reason-safe appointment notifications — APT-009
 
 `packages/domain/src/notification.ts`:

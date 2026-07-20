@@ -52,6 +52,7 @@ import { dashboard, exportDashboard } from './management.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
+import { storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument } from './document-lifecycle.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
@@ -677,6 +678,34 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/documents/disclosures' && req.method === 'GET') {
           return sendJson(res, 200, { disclosures: await disclosureLog(pool, url.searchParams.get('id') ?? '') });
+        }
+        if (p === '/api/documents/generate' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof storeGeneratedDocument>[1];
+          return sendJson(res, 201, await storeGeneratedDocument(pool, b));
+        }
+        if (p === '/api/documents/supersede' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof supersedeDocument>[1];
+          try { return sendJson(res, 200, await supersedeDocument(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'supersede_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/entered-in-error' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof markDocumentEnteredInError>[1];
+          try { return sendJson(res, 200, await markDocumentEnteredInError(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'eie_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/legal-hold' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setLegalHold>[1];
+          try { return sendJson(res, 200, await setLegalHold(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'legal_hold_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/retention' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setRetention>[1];
+          try { return sendJson(res, 200, await setRetention(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'retention_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/disposal-candidates' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { candidates: await disposalCandidates(pool, asOf) });
+        }
+        if (p === '/api/documents/dispose' && req.method === 'POST') {
+          const b = (await readBody(req)) as { documentId: string; asOf?: string; by: string };
+          try { return sendJson(res, 200, await disposeDocument(pool, { documentId: b.documentId, asOf: b.asOf ?? new Date().toISOString().slice(0, 10), by: b.by })); } catch (err) { return sendJson(res, 409, { error: { code: 'dispose_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/audit/search' && req.method === 'GET') {
           const f: AuditFilter = {

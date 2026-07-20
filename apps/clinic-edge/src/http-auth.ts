@@ -102,6 +102,9 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/documents$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/documents\/open$/, permission: 'view_summary' },
   { method: 'GET', test: /^\/api\/documents\/disclosures$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/documents\/generate$/, permission: 'create' }, // DOC-002
+  { method: 'POST', test: /^\/api\/documents\/(supersede|entered-in-error|legal-hold|retention|dispose)$/, permission: 'administer' }, // DOC-003/005
+  { method: 'GET', test: /^\/api\/documents\/disposal-candidates$/, permission: 'view_summary' },
   // Management
   { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison)$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/management\/export$/, permission: 'export' },

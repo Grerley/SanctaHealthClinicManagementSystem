@@ -758,6 +758,111 @@
         }
       }
     },
+    "/api/documents/disposal-candidates": {
+      "get": {
+        "operationId": "get_api_documents_disposal_candidates",
+        "summary": "GET /api/documents/disposal-candidates",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/dispose": {
+      "post": {
+        "operationId": "post_api_documents_dispose",
+        "summary": "POST /api/documents/dispose",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/entered-in-error": {
+      "post": {
+        "operationId": "post_api_documents_entered_in_error",
+        "summary": "POST /api/documents/entered-in-error",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/generate": {
+      "post": {
+        "operationId": "post_api_documents_generate",
+        "summary": "POST /api/documents/generate",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/legal-hold": {
+      "post": {
+        "operationId": "post_api_documents_legal_hold",
+        "summary": "POST /api/documents/legal-hold",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/documents/open": {
       "post": {
         "operationId": "post_api_documents_open",
@@ -766,6 +871,48 @@
           "documents"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/retention": {
+      "post": {
+        "operationId": "post_api_documents_retention",
+        "summary": "POST /api/documents/retention",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/supersede": {
+      "post": {
+        "operationId": "post_api_documents_supersede",
+        "summary": "POST /api/documents/supersede",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "administer",
         "responses": {
           "200": {
             "description": "Success"
