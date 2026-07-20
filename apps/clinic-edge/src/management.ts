@@ -10,6 +10,7 @@ import { uuidv7 } from '@sancta/domain';
 import { ageingReport } from './debtors.ts';
 import { stockAlerts } from './inventory.ts';
 import { outstandingCriticalResults } from './orders.ts';
+import { chargeCaptureReport } from './billing-completeness.ts';
 import { PgOutboxStore } from './outbox-store.ts';
 
 export type Kpi = { id: string; label: string; value: number; unit: string; owner: string; formula: string };
@@ -22,11 +23,12 @@ async function scalar(pool: Pool, sql: string, params: unknown[] = []): Promise<
 }
 
 export async function dashboard(pool: Pool, asOf: string): Promise<Dashboard> {
-  const [ageing, alerts, critical, pendingSync] = await Promise.all([
+  const [ageing, alerts, critical, pendingSync, charge] = await Promise.all([
     ageingReport(pool, asOf),
     stockAlerts(pool, asOf),
     outstandingCriticalResults(pool),
     new PgOutboxStore(pool).pendingCount(),
+    chargeCaptureReport(pool),
   ]);
 
   const visits = await scalar(pool, `SELECT count(*)::int AS n FROM flow.visit`);
@@ -48,10 +50,12 @@ export async function dashboard(pool: Pool, asOf: string): Promise<Dashboard> {
     { id: 'pending_sync', label: 'Pending sync items', value: pendingSync, unit: 'count', owner: 'System administrator', formula: 'count(outbox items in queued state)' },
     { id: 'completed_visits', label: 'Completed visits', value: completedVisits, unit: 'count', owner: 'Clinic manager', formula: "count(visits with status='complete')" },
     { id: 'invoiced_encounters', label: 'Finalised invoices', value: invoicedEncounters, unit: 'count', owner: 'Finance officer', formula: 'count(invoices finalised/part-paid/paid)' },
+    { id: 'charge_capture_completeness', label: 'Charge-capture completeness', value: charge.completenessPct, unit: '%', owner: 'Finance officer', formula: '(charged + authorised exceptions) / billable completed encounters' },
   ];
 
   // Exceptions first — each links to an actionable queue (MGT-003).
   const exceptions: Exception[] = [];
+  if (charge.gaps.length > 0) exceptions.push({ type: 'unbilled_encounters', label: 'Billable completed encounters with no charge outcome', count: charge.gaps.length, queue: '/api/billing/charge-capture', owner: 'Finance officer' });
   if (critical.length > 0) exceptions.push({ type: 'open_critical_results', label: 'Unacknowledged critical results', count: critical.length, queue: '/api/orders/critical/outstanding', owner: 'Clinical lead' });
   if (alerts.length > 0) exceptions.push({ type: 'stock_alerts', label: 'Stock alerts (stockout/low/expiry)', count: alerts.length, queue: '/api/stock/alerts', owner: 'Stock controller' });
   if (ageing.workQueue.length > 0) exceptions.push({ type: 'debtors', label: 'Patients with outstanding balances', count: ageing.workQueue.length, queue: '/api/debtors/ageing', owner: 'Finance officer' });

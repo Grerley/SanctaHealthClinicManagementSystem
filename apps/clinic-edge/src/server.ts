@@ -23,6 +23,7 @@ import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
+import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
@@ -373,6 +374,24 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { paymentId: string; fromInvoiceId: string; toInvoiceId: string; amountMinor: number };
           try { await reallocate(pool, b); return sendJson(res, 200, { ok: true }); }
           catch (err) { return sendJson(res, 409, { error: { code: 'reallocation_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/mark-billable' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string };
+          try { await markBillable(pool, b.encounterId); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/link-charge' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; invoiceId: string };
+          try { await linkCharge(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 404, { error: { code: 'not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/charge-exception' && req.method === 'POST') {
+          const b = (await readBody(req)) as { encounterId: string; outcome: ChargeException; reason: string; approver: string };
+          try { await authoriseException(pool, b); return sendJson(res, 200, { ok: true }); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'exception_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/charge-capture' && req.method === 'GET') {
+          return sendJson(res, 200, await chargeCaptureReport(pool));
         }
         if (p === '/api/billing/refund' && req.method === 'POST') {
           const b = (await readBody(req)) as { paymentId: string; amountMinor: number; method: 'cash' | 'bank' | 'mobile'; reason: string; approver?: string };

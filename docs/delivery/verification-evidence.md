@@ -40,9 +40,9 @@ prevention + merge), UAT-03 (implausible vital confirmation), UAT-04 (sign + add
 UAT-05 (allergy override), UAT-06 (critical result acknowledgement), UAT-08 (payment
 reallocation), UAT-09 (cashier variance approval), UAT-10 (FEFO dispense + COGS + expiry
 block), UAT-11 (offline stocktake + bulk reconnect), UAT-12 (expense→payable→payment→GL),
-UAT-13 (period close/reopen). Remaining: UAT-07 (day-close charge-capture exception — partial
-via management exceptions), UAT-14 (device revocation), UAT-15 (management export),
-UAT-16 (edge restore).
+UAT-13 (period close/reopen), UAT-14 (device revocation), UAT-15 (management export),
+UAT-16 (edge restore), and **UAT-07 (day-close charge-capture exception)**. All 16 UAT
+scenarios are now automated.
 
 ## MVP modules built (each with real code + tests on real PostgreSQL)
 
