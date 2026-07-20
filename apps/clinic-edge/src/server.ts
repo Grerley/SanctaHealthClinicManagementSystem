@@ -20,6 +20,7 @@ import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter } from './encounters.ts';
+import { receiveGoods, stockAlerts } from './inventory.ts';
 import { VitalError, type AppointmentState } from '@sancta/domain';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -106,6 +107,15 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           return sendJson(res, out.ok ? 201 : 409, out);
         }
         if (p === '/api/stock' && req.method === 'GET') return sendJson(res, 200, await stockForSku(pool, url.searchParams.get('sku') ?? ''));
+        if (p === '/api/stock/receive' && req.method === 'POST') {
+          const b = (await readBody(req)) as { sku: string; expiryDate: string; unitCostMinor: number; quantity: number; supplier?: string; poRef?: string };
+          try { return sendJson(res, 201, await receiveGoods(pool, b)); }
+          catch (err) { return sendJson(res, 400, { error: { code: 'receipt_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/stock/alerts' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { alerts: await stockAlerts(pool, asOf) });
+        }
         if (p === '/api/checkout' && req.method === 'POST') {
           const body = (await readBody(req)) as CheckoutApiBody;
           const out = await doCheckout(pool, body);
