@@ -94,7 +94,7 @@ export async function searchPatients(pool: Pool, q: string, limit = 20): Promise
   const res = await pool.query(
     `SELECT id, mrn, given_name, family_name, to_char(date_of_birth,'DD/MM/YYYY') AS dob, sex
      FROM identity.patient
-     WHERE mrn ILIKE $1 OR given_name ILIKE $1 OR family_name ILIKE $1 OR phone ILIKE $1
+     WHERE merged_into IS NULL AND (mrn ILIKE $1 OR given_name ILIKE $1 OR family_name ILIKE $1 OR phone ILIKE $1)
      ORDER BY family_name, given_name
      LIMIT $2`,
     [term, limit],

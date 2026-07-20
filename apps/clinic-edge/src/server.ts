@@ -13,6 +13,7 @@ import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
+import { mergePatients, unmergePatients } from './merge.ts';
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
@@ -119,6 +120,16 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const body = (await readBody(req)) as RegisterBody;
           const out = await registerPatient(pool, body);
           return sendJson(res, out.ok ? 201 : 409, out);
+        }
+        if (p === '/api/patients/merge' && req.method === 'POST') {
+          const b = (await readBody(req)) as { survivorId: string; mergedId: string; mergedBy: string };
+          try { return sendJson(res, 200, await mergePatients(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'merge_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/patients/unmerge' && req.method === 'POST') {
+          const b = (await readBody(req)) as { mergeId: string; user: string };
+          try { return sendJson(res, 200, await unmergePatients(pool, b)); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'unmerge_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/stock' && req.method === 'GET') return sendJson(res, 200, await stockForSku(pool, url.searchParams.get('sku') ?? ''));
         if (p === '/api/stock/receive' && req.method === 'POST') {
