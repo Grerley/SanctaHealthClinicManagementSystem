@@ -1,5 +1,5 @@
 {
-  "$comment": "Source of truth for backlog coverage. 'built' = implemented with passing tests; 'partial' = schema/domain/endpoint present but flow or acceptance evidence incomplete. Update as modules land, then run `npm run coverage`.",
+  "$comment": "Source of truth for backlog coverage. 'built' = implemented with passing tests in CI; 'partial' = schema/domain/endpoint present but flow or acceptance evidence incomplete. The remaining partials (CLD-001/002/004, NFR-015) are deploy-gated on a live Cloudflare account + decisions B2/B3 — see docs/delivery/partials-disposition.md. Update as modules land, then run `npm run coverage`.",
   "moduleTotals": {
     "PAT": 10,
     "APT": 9,
