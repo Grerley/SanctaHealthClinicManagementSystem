@@ -29,3 +29,4 @@ export * from './telemetry.ts';
 export * from './triage.ts';
 export * from './docgen.ts';
 export * from './site.ts';
+export * from './kpi.ts';

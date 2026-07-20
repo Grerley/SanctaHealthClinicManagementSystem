@@ -139,6 +139,18 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## KPI targets & period comparison (real PostgreSQL) — MGT-004, MGT-005
+
+`packages/domain/src/kpi.ts` (targets/banding/comparison) + `apps/clinic-edge/{src/kpi.ts,test/kpi.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| KPI targets/thresholds are effective-dated config (forward-versioned, audited) | MGT-004 | ✅ |
+| A value bands green/amber/red against the effective thresholds, respecting higher-better vs lower-better | MGT-004 | ✅ |
+| A current period compares to the prior with delta + trend + RAG band + refresh time; snapshots upsert per period | MGT-005 | ✅ |
+
+5 domain unit tests + 3 integration. MGT module 4/10 → 6/10.
+
 ## Visit escalation, event log & outcomes (real PostgreSQL) — VIS-004/006/007
 
 `apps/clinic-edge/{src/visit-lifecycle.ts,test/visit-lifecycle.itest.ts}` + migration 0031:

@@ -20,6 +20,7 @@ import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
 import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { instanceInfo } from './instance.ts';
 import { registerSite, listSitesForUser } from './site.ts';
+import { setKpiTarget, recordSnapshot, kpiComparison } from './kpi.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
@@ -142,6 +143,21 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         const b = (await readBody(req)) as { asOf?: string; exportedBy: string; filters?: Record<string, string>; format?: 'json' | 'csv' | 'pdf' };
         // Authorisation ('export') is enforced by the central guard above.
         return sendJson(res, 200, await exportDashboard(pool, { asOf: b.asOf ?? new Date().toISOString().slice(0, 10), exportedBy: b.exportedBy, ...(b.filters ? { filters: b.filters } : {}), ...(b.format ? { format: b.format } : {}) }));
+      }
+      if (p === '/api/management/kpi-target' && req.method === 'POST') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const b = (await readBody(req)) as Parameters<typeof setKpiTarget>[1];
+        try { return sendJson(res, 201, await setKpiTarget(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'kpi_target_rejected', message: (err as Error).message } }); }
+      }
+      if (p === '/api/management/kpi-snapshot' && req.method === 'POST') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const b = (await readBody(req)) as Parameters<typeof recordSnapshot>[1];
+        return sendJson(res, 201, await recordSnapshot(pool, b));
+      }
+      if (p === '/api/management/kpi-comparison' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        try { return sendJson(res, 200, await kpiComparison(pool, { kpiId: url.searchParams.get('kpiId') ?? '', period: url.searchParams.get('period') ?? '', priorPeriod: url.searchParams.get('priorPeriod') ?? '' })); }
+        catch (err) { return sendJson(res, 404, { error: { code: 'kpi_comparison_unavailable', message: (err as Error).message } }); }
       }
       if (p === '/healthz') {
         const inst = instanceInfo();

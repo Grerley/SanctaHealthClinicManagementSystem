@@ -103,8 +103,10 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/documents\/open$/, permission: 'view_summary' },
   { method: 'GET', test: /^\/api\/documents\/disclosures$/, permission: 'view_summary' },
   // Management
-  { method: 'GET', test: /^\/api\/management\/dashboard$/, permission: 'view_summary' },
+  { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison)$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/management\/export$/, permission: 'export' },
+  { method: 'POST', test: /^\/api\/management\/kpi-target$/, permission: 'configure' }, // MGT-004
+  { method: 'POST', test: /^\/api\/management\/kpi-snapshot$/, permission: 'view_summary' }, // MGT-005
   // Communication
   { method: 'POST', test: /^\/api\/comms\//, permission: 'create' },
   { method: 'GET', test: /^\/api\/comms\//, permission: 'view_summary' },
