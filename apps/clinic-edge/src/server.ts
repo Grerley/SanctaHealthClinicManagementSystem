@@ -14,6 +14,7 @@ import pg from 'pg';
 import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
+import { recordAllergy, prescribe } from './prescribing.ts';
 import { recordVitals, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
@@ -177,6 +178,17 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/encounters/get' && req.method === 'GET') {
           return sendJson(res, 200, await getEncounter(pool, url.searchParams.get('id') ?? ''));
+        }
+        if (p === '/api/allergies' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; substanceCode: string; severity?: 'low' | 'high' | 'critical' };
+          return sendJson(res, 201, await recordAllergy(pool, b));
+        }
+        if (p === '/api/prescribe' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof prescribe>[1];
+          try {
+            const out = await prescribe(pool, b);
+            return sendJson(res, out.ok ? 201 : 409, out);
+          } catch (err) { return sendJson(res, 422, { error: { code: 'prescribe_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/orders' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; category: string; code: string; priority?: string; indication?: string; requestedBy?: string };
