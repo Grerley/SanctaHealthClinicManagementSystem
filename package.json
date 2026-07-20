@@ -17,6 +17,7 @@
     "test:integration": "npm run test:integration -w @sancta/clinic-edge",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "echo \"lint: eslint config lands with app code in Phase 1 — placeholder\" && exit 0",
+    "security": "node scripts/secret-scan.mjs && npm audit --omit=dev --audit-level=high",
     "coverage": "node scripts/coverage.mjs"
   },
   "devDependencies": {

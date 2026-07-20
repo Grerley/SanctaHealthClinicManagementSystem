@@ -68,8 +68,27 @@ jobs:
           CLOUD_DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
           PG_BIN_DIR: /usr/lib/postgresql/16/bin
 
+  security:
+    name: security gate (secret scan · dependency audit — NFR-014)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - name: Secret scan (no secrets / non-synthetic credentials in tracked source)
+        run: node scripts/secret-scan.mjs
+      - name: Dependency audit (production runtime — fail on high/critical)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Dependency audit (dev tooling — advisory only)
+        run: npm audit --audit-level=critical || echo "::warning::dev-dependency advisories present (build tooling only, not shipped)"
+
   e2e:
-    name: e2e (PWA offline → dispense → pay → reconcile)
+    name: e2e + accessibility (offline → dispense → pay → reconcile · WCAG 2.2 AA)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -96,7 +115,7 @@ jobs:
         run: npm run build -w @sancta/clinic-web
       - name: Install Playwright Chromium
         run: npx --workspace @sancta/clinic-web playwright install --with-deps chromium
-      - name: Run offline-first E2E (SYN-001, UAT-01)
+      - name: Run offline-first E2E + accessibility gate (SYN-001, UAT-01, NFR-019)
         run: npm run e2e -w @sancta/clinic-web
         env:
           DATABASE_URL: postgres://sancta:sancta@localhost:5432/sancta_test
@@ -105,7 +124,7 @@ jobs:
   # Reserved gates that expand as modules land (pack §22). Kept green so the
   # required-checks contract is stable while real suites are added per phase.
   future-gates:
-    name: reserved gates (contract · security · e2e · a11y · offline-resilience)
+    name: reserved gates (contract · offline-resilience)
     runs-on: ubuntu-latest
     steps:
-      - run: echo "OpenAPI/FHIR contract, security (ASVS 5.0 L2), Playwright e2e + accessibility, and 72h offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md)."
+      - run: echo "OpenAPI/FHIR contract and full 72h offline-resilience suites are added per delivery phase (see docs/delivery/implementation-plan.md). Security (NFR-014) and accessibility (NFR-019) gates are now enforced in the 'security' and 'e2e + accessibility' jobs."

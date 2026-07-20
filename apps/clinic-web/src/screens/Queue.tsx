@@ -37,10 +37,10 @@ export function Queue() {
     <section>
       <h2 style={{ fontSize: 16 }}>Check in</h2>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <select data-testid="queue-patient" value={patientId} onChange={(e) => setPatientId(e.target.value)} style={{ padding: 6 }}>
+        <select data-testid="queue-patient" aria-label="Patient to check in" value={patientId} onChange={(e) => setPatientId(e.target.value)} style={{ padding: 6 }}>
           {patients.map((p) => (<option key={p.id} value={p.id}>{p.family_name}, {p.given_name} ({p.mrn})</option>))}
         </select>
-        <button data-testid="checkin" disabled={!patientId} onClick={checkIn} style={{ padding: '8px 14px', background: '#0b5', color: '#fff', border: 0, borderRadius: 6 }}>Check in</button>
+        <button data-testid="checkin" disabled={!patientId} onClick={checkIn} style={{ padding: '8px 14px', background: '#047857', color: '#fff', border: 0, borderRadius: 6 }}>Check in</button>
         <button data-testid="queue-refresh" onClick={refresh} style={{ padding: '8px 14px' }}>Refresh</button>
       </div>
       <p data-testid="queue-message" role="status" aria-live="polite" style={{ minHeight: 20 }}>{message}</p>
@@ -54,7 +54,7 @@ export function Queue() {
               <td><strong>{r.token}</strong></td><td>{r.station}</td><td>{r.patientMrn}</td><td>{r.status}</td>
             </tr>
           ))}
-          {rows.length === 0 && (<tr><td colSpan={4} style={{ color: '#888', padding: 8 }}>Queue is empty.</td></tr>)}
+          {rows.length === 0 && (<tr><td colSpan={4} style={{ color: '#595959', padding: 8 }}>Queue is empty.</td></tr>)}
         </tbody>
       </table>
     </section>

@@ -87,7 +87,7 @@ export function Dispense() {
         <label>Payment (cents)<input data-testid="payment" type="number" value={payment} min={0} onChange={(e) => setPayment(Number(e.target.value))} style={{ display: 'block', width: 120, padding: 6 }} /></label>
       </div>
       <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
-        <button data-testid="checkout" disabled={busy || !patientId} onClick={doCheckout} style={{ padding: '8px 14px', background: '#0b5', color: '#fff', border: 0, borderRadius: 6 }}>Dispense &amp; take payment</button>
+        <button data-testid="checkout" disabled={busy || !patientId} onClick={doCheckout} style={{ padding: '8px 14px', background: '#047857', color: '#fff', border: 0, borderRadius: 6 }}>Dispense &amp; take payment</button>
         <button data-testid="sync" disabled={busy} onClick={syncNow} style={{ padding: '8px 14px', background: '#334155', color: '#fff', border: 0, borderRadius: 6 }}>Sync now</button>
       </div>
       <p data-testid="message" role="status" aria-live="polite" style={{ marginTop: 12, minHeight: 20 }}>{message}</p>

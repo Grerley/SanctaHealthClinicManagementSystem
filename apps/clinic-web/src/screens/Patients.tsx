@@ -38,7 +38,7 @@ export function Patients() {
   return (
     <section>
       <h2 style={{ fontSize: 16 }}>Find a patient</h2>
-      <input data-testid="patient-search" placeholder="Search name, MRN or phone" value={q} onChange={(e) => search(e.target.value)} style={{ width: '100%', padding: 8 }} />
+      <input data-testid="patient-search" aria-label="Search name, MRN or phone" placeholder="Search name, MRN or phone" value={q} onChange={(e) => search(e.target.value)} style={{ width: '100%', padding: 8 }} />
       <ul data-testid="patient-results" style={{ listStyle: 'none', padding: 0, marginTop: 8 }}>
         {results.map((p) => (
           <li key={p.id} style={{ padding: 8, borderBottom: '1px solid #eee' }}>
@@ -49,10 +49,10 @@ export function Patients() {
 
       <h2 style={{ fontSize: 16, marginTop: 20 }}>Register a new patient</h2>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <input data-testid="reg-given" placeholder="Given name" value={given} onChange={(e) => setGiven(e.target.value)} style={{ padding: 8 }} />
-        <input data-testid="reg-family" placeholder="Family name" value={family} onChange={(e) => setFamily(e.target.value)} style={{ padding: 8 }} />
-        <input data-testid="reg-dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={{ padding: 8 }} />
-        <button data-testid="reg-submit" disabled={!given || !family} onClick={() => register(false)} style={{ padding: '8px 14px', background: '#0b5', color: '#fff', border: 0, borderRadius: 6 }}>Register</button>
+        <input data-testid="reg-given" aria-label="Given name" placeholder="Given name" value={given} onChange={(e) => setGiven(e.target.value)} style={{ padding: 8 }} />
+        <input data-testid="reg-family" aria-label="Family name" placeholder="Family name" value={family} onChange={(e) => setFamily(e.target.value)} style={{ padding: 8 }} />
+        <input data-testid="reg-dob" aria-label="Date of birth" type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={{ padding: 8 }} />
+        <button data-testid="reg-submit" disabled={!given || !family} onClick={() => register(false)} style={{ padding: '8px 14px', background: '#047857', color: '#fff', border: 0, borderRadius: 6 }}>Register</button>
       </div>
 
       {duplicates.length > 0 && (

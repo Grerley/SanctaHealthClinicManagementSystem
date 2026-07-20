@@ -26,9 +26,9 @@
 | CLD | 12 | 1 | 5 | 6 | 29% |
 | **Total** | **165** | **70** | **14** | **81** | **46.7%** |
 
-## Non-functional requirements — 32.9% weighted
+## Non-functional requirements — 38.2% weighted
 
-Built 9/38, partial 7. Built: NFR-001, NFR-002, NFR-010, NFR-031, NFR-035, NFR-038, NFR-011, NFR-012, NFR-013.
+Built 11/38, partial 7. Built: NFR-001, NFR-002, NFR-010, NFR-031, NFR-035, NFR-038, NFR-011, NFR-012, NFR-013, NFR-014, NFR-019.
 
 ## Business rules — 83.3% weighted
 
@@ -38,7 +38,7 @@ Built 12/15, partial 1. Built: BR-001, BR-002, BR-003, BR-005, BR-006, BR-007, B
 
 - **Functional backlog (breadth):** 46.7% weighted (70 built + 14 partial of 165).
 - **Safety-critical business rules:** 83.3%.
-- **Measurable NFRs:** 32.9%.
+- **Measurable NFRs:** 38.2%.
 
 Coverage is deliberately deepest on the highest-risk foundations (offline-first
 architecture, synchronisation, ledgers, atomic transactions) — see

@@ -139,6 +139,19 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Release gates: security + accessibility (CI-enforced) — NFR-014, NFR-019
+
+`scripts/secret-scan.mjs`, `npm run security`, `apps/clinic-web/e2e/a11y.spec.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| No secrets or non-synthetic credentials in tracked source (private keys, cloud tokens, provider keys, real connection-string passwords) — fails the build otherwise | NFR-014, pack §17 | ✅ |
+| Production dependency audit clean at high/critical (`npm audit --omit=dev`); dev-tooling advisories reported non-blocking | NFR-014 | ✅ |
+| Every PWA tab (Dispense, Patients, Queue, Command centre) has zero serious/critical WCAG 2.2 AA violations via axe-core in a real browser | NFR-019 | ✅ |
+| The gate caught and drove fixes for real defects: sub-4.5:1 button/text contrast and unlabelled form controls | NFR-019 | ✅ |
+
+Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
+
 ## Sync conflict handling (real PostgreSQL) — SYN-006, pack §15.5
 
 `packages/domain/src/conflict.ts` (field-level 3-way merge) +

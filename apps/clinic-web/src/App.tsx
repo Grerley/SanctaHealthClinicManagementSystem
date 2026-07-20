@@ -44,7 +44,7 @@ export function App() {
             aria-selected={tab === t.id}
             data-testid={`tab-${t.id}`}
             onClick={() => setTab(t.id)}
-            style={{ padding: '8px 12px', border: 0, borderBottom: tab === t.id ? '2px solid #0b5' : '2px solid transparent', background: 'transparent', fontWeight: tab === t.id ? 700 : 400, cursor: 'pointer' }}
+            style={{ padding: '8px 12px', border: 0, borderBottom: tab === t.id ? '2px solid #047857' : '2px solid transparent', background: 'transparent', fontWeight: tab === t.id ? 700 : 400, cursor: 'pointer' }}
           >
             {t.label}
           </button>
