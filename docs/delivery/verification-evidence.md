@@ -15,12 +15,13 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 @sancta/cloud-worker  tests  7  pass  7  fail 0
 
 # Integration — real PostgreSQL 16 (edge + cloud) — npm run test:integration
-@sancta/clinic-edge   tests 72  pass 72  fail 0   (checkout, sync, resilience, concurrency,
+@sancta/clinic-edge   tests 86  pass 86  fail 0   (checkout, sync, resilience, concurrency,
                                                     cashier, patients, triage, debtors,
                                                     scheduling, finance-period, billing, refund,
                                                     orders/results, encounters, inventory,
                                                     stocktake, management, audit, documents,
-                                                    visits/queue, finance-statements, comms)
+                                                    visits/queue, finance-statements, comms,
+                                                    ops, payables, merge, prescribing)
 
 # End-to-end — real browser (Chromium) driving the real stack — npm run e2e
 @sancta/clinic-web    3 passed
@@ -29,8 +30,19 @@ shown; CI runs the same suites (`.github/workflows/ci.yml`).
 all workspaces: OK
 
 # Backlog coverage — npm run coverage
-functional 40.0% weighted · business rules 76.7% · measurable NFRs 25%
+functional 43.9% weighted · business rules 76.7% · measurable NFRs 25%
 ```
+
+## UAT scenarios exercised (pack §22.1)
+
+Automated tests now cover UAT-01 (offline register→dispense→pay→sync), UAT-02 (duplicate
+prevention + merge), UAT-03 (implausible vital confirmation), UAT-04 (sign + addendum),
+UAT-05 (allergy override), UAT-06 (critical result acknowledgement), UAT-08 (payment
+reallocation), UAT-09 (cashier variance approval), UAT-10 (FEFO dispense + COGS + expiry
+block), UAT-11 (offline stocktake + bulk reconnect), UAT-12 (expense→payable→payment→GL),
+UAT-13 (period close/reopen). Remaining: UAT-07 (day-close charge-capture exception — partial
+via management exceptions), UAT-14 (device revocation), UAT-15 (management export),
+UAT-16 (edge restore).
 
 ## MVP modules built (each with real code + tests on real PostgreSQL)
 
