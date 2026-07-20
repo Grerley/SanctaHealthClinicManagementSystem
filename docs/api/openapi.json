@@ -2268,6 +2268,111 @@
         }
       }
     },
+    "/api/triage/assessment": {
+      "post": {
+        "operationId": "post_api_triage_assessment",
+        "summary": "POST /api/triage/assessment",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/triage/intervention": {
+      "post": {
+        "operationId": "post_api_triage_intervention",
+        "summary": "POST /api/triage/intervention",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/triage/queue": {
+      "get": {
+        "operationId": "get_api_triage_queue",
+        "summary": "GET /api/triage/queue",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/triage/sign": {
+      "post": {
+        "operationId": "post_api_triage_sign",
+        "summary": "POST /api/triage/sign",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/triage/summary": {
+      "get": {
+        "operationId": "get_api_triage_summary",
+        "summary": "GET /api/triage/summary",
+        "tags": [
+          "triage"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/triage/vitals": {
       "post": {
         "operationId": "post_api_triage_vitals",

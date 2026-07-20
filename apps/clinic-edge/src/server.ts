@@ -24,7 +24,7 @@ import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe } from './prescribing.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
-import { recordVitals, type RecordVitalsBody } from './triage.ts';
+import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
@@ -312,6 +312,27 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
             if (err instanceof VitalError) return sendJson(res, 422, { error: { code: 'vitals_need_confirmation', message: err.message } });
             throw err;
           }
+        }
+        if (p === '/api/triage/assessment' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordTriageAssessment>[1];
+          try { return sendJson(res, 201, await recordTriageAssessment(pool, b)); }
+          catch (err) { if (err instanceof TriageError) return sendJson(res, 422, { error: { code: 'triage_rejected', message: err.message } }); throw err; }
+        }
+        if (p === '/api/triage/intervention' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordIntervention>[1];
+          try { return sendJson(res, 201, await recordIntervention(pool, b)); }
+          catch (err) { if (err instanceof TriageError) return sendJson(res, 422, { error: { code: 'intervention_rejected', message: err.message } }); throw err; }
+        }
+        if (p === '/api/triage/sign' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof signTriage>[1];
+          try { return sendJson(res, 200, await signTriage(pool, b)); }
+          catch (err) { if (err instanceof TriageError) return sendJson(res, 409, { error: { code: 'triage_sign_rejected', message: err.message } }); throw err; }
+        }
+        if (p === '/api/triage/queue' && req.method === 'GET') {
+          return sendJson(res, 200, { queue: await openTriageQueue(pool) });
+        }
+        if (p === '/api/triage/summary' && req.method === 'GET') {
+          return sendJson(res, 200, await triageSummary(pool, url.searchParams.get('encounterId') ?? ''));
         }
         if (p === '/api/cashier/open' && req.method === 'POST') {
           const body = (await readBody(req)) as { cashier: string; site?: string; openingFloatMinor: number };

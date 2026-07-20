@@ -139,6 +139,22 @@ loaded from `packages/db/migrations/0001_init.sql` + `seed/synthetic-seed.sql`:
 | Variance above tolerance cannot close without a supervisor; then posts Dr cash-over/short / Cr cash | BIL-009 | ✅ |
 | A closed shift cannot be closed again | BIL-009 | ✅ |
 
+## Triage assessment, danger signs & sign/hand-off (real PostgreSQL) — TRI-001/004/005/006/007/008
+
+`packages/domain/src/triage.ts` (danger signs + early-warning score) +
+`apps/clinic-edge/{src/triage.ts,test/triage-assessment.itest.ts}`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The assessment captures reason/symptoms/pain(0–10)/allergy review/infection screen | TRI-001 | ✅ |
+| Danger signs are computed from captured vitals as visible escalations — **never a diagnosis** (no diagnosis field; `action:'escalate'`) | TRI-005 | ✅ |
+| A transparent early-warning score carries its components + rule version and bands low/medium/high | TRI-004 | ✅ |
+| Nursing interventions + the patient's response are recorded | TRI-006 | ✅ |
+| Repeat observations produce a per-parameter trend within the encounter | TRI-007 | ✅ |
+| An **unsigned triage stays in the queue** (highest EWS first) and leaves it only when signed; cannot sign twice or without an assessment | TRI-008 | ✅ |
+
+6 domain unit tests (danger-sign severity ordering, no-diagnosis invariant, score transparency/banding) + 3 integration. TRI module now 100%.
+
 ## IaC integrity + forward-only migrations (CI-enforced) — CLD-012, NFR-037, NFR-024
 
 `scripts/iac-check.mjs` (`npm run iac`) + `packages/db/src/migrations.test.ts`:

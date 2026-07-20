@@ -51,7 +51,10 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/patients\/timeline$/, permission: 'view_clinical_detail' }, // EHR-002
   { method: 'GET', test: /^\/api\/forms(\/get)?$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/forms$/, permission: 'configure' }, // EHR-003 form admin
-  { method: 'POST', test: /^\/api\/triage\/vitals$/, permission: 'create' },
+  { method: 'POST', test: /^\/api\/triage\/(vitals|assessment|intervention)$/, permission: 'create' },
+  { method: 'POST', test: /^\/api\/triage\/sign$/, permission: 'sign' },
+  { method: 'GET', test: /^\/api\/triage\/queue$/, permission: 'discover' },
+  { method: 'GET', test: /^\/api\/triage\/summary$/, permission: 'view_clinical_detail' },
   { method: 'POST', test: /^\/api\/allergies$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/prescribe$/, permission: 'sign' },
   { method: 'POST', test: /^\/api\/orders$/, permission: 'create' },
