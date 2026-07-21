@@ -69,7 +69,7 @@ import { setPreference, queueMessage, markSent, pendingMessages, recordInbound, 
 import { issueToken, revokeToken, selfSummary, requestBooking, recordPayIntent, listBookingRequests, confirmBooking } from './selfservice.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
-import { VitalError, type AppointmentState, type DrillTarget } from '@sancta/domain';
+import { VitalError, StockError, type AppointmentState, type DrillTarget } from '@sancta/domain';
 import { authFromHeaders, checkAuthorised } from './http-auth.ts';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -368,8 +368,14 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/checkout' && req.method === 'POST') {
           const body = (await readBody(req)) as CheckoutApiBody;
-          const out = await doCheckout(pool, body);
-          return sendJson(res, out.ok ? 201 : 409, out);
+          try {
+            const out = await doCheckout(pool, body);
+            return sendJson(res, out.ok ? 201 : 409, out);
+          } catch (err) {
+            // Insufficient stock is an expected business rejection, not a server fault.
+            if (err instanceof StockError) return sendJson(res, 409, { ok: false, error: { code: 'insufficient_stock', message: err.message } });
+            throw err;
+          }
         }
         if (p === '/api/encounters' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string };

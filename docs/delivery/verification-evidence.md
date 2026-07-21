@@ -688,6 +688,17 @@ Backend `apps/clinic-edge/test/appointments-extend.itest.ts` (real PostgreSQL) a
 | Confirming a request twice is rejected | COM-006 | ✅ |
 | A payment intent is recorded PENDING reconciliation (never a self-authorised payment); a non-positive amount and a bad token are rejected | COM-006 | ✅ |
 
+## Hardening — broad patient journey, load & performance (NFR-005, NFR-006)
+
+Broad browser E2E `apps/clinic-web/e2e/journey.spec.ts` and load harness `apps/clinic-edge/test/load.itest.ts` (opt-in via `RUN_LOAD=1`), both against the real stack.
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A single synthetic patient travels the whole front-of-house flow in one E2E: register → select (persistent banner) → check in (queue token) → appointment booked and shown on the calendar with their MRN → dispense & part-payment → sync to cloud → the debtor exception surfaces on the command centre | integration (all modules) | ✅ |
+| Read load: 800 requests at concurrency 40 across health/patients/stock/dashboard — **~700 req/s, p95 ≈ 170–185 ms** (budget < 500 ms), **zero failures** | NFR-005 (interactive performance) | ✅ |
+| Write contention: 30 concurrent checkouts against a **scarce** SKU (20 units, demand up to 60) — the cap bites (only ~11 succeed), exactly 20 units dispensed, on-hand ends at 0 and **never goes negative**; the ledger stays **balanced** under load | NFR-006 (save performance), INV-005, BR-007 | ✅ |
+| Rejected checkouts return a graceful **409 insufficient_stock**, never a 500 — a hardening fix: an out-of-stock checkout previously propagated `StockError` to a 500 | correctness, NFR-006 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to
