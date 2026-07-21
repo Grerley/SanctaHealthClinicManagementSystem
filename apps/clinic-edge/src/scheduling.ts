@@ -18,13 +18,58 @@ import {
 
 export class SchedulingError extends Error {}
 
-export async function createSlot(pool: Pool, args: { provider: string; site?: string; startsAt: string; endsAt: string }): Promise<{ slotId: string }> {
+export async function createSlot(pool: Pool, args: { provider: string; site?: string; startsAt: string; endsAt: string; room?: string; serviceCode?: string }): Promise<{ slotId: string }> {
   const slotId = uuidv7();
   await pool.query(
-    `INSERT INTO scheduling.slot (id, provider, site_id, starts_at, ends_at, status) VALUES ($1,$2,$3,$4,$5,'open')`,
-    [slotId, args.provider, args.site ?? null, args.startsAt, args.endsAt],
+    `INSERT INTO scheduling.slot (id, provider, site_id, starts_at, ends_at, status, room, service_code) VALUES ($1,$2,$3,$4,$5,'open',$6,$7)`,
+    [slotId, args.provider, args.site ?? null, args.startsAt, args.endsAt, args.room ?? null, args.serviceCode ?? null],
   );
   return { slotId };
+}
+
+export type CalendarEntry = {
+  slotId: string;
+  provider: string;
+  room: string | null;
+  serviceCode: string | null;
+  startsAt: string;
+  endsAt: string;
+  day: string; // YYYY-MM-DD (local slice of startsAt)
+  status: string;
+  patientMrn: string | null;
+};
+
+/**
+ * Calendar feed for a date window (APT-008). Returns every slot (with any booking)
+ * between `from` and `to` inclusive, ordered by time, so the client can render
+ * day/week views grouped by provider, room or service. Reads locally cached data
+ * so the calendar works offline.
+ */
+export async function calendarView(pool: Pool, args: { from: string; to: string }): Promise<CalendarEntry[]> {
+  const r = await pool.query(
+    `SELECT s.id, s.provider, s.room, s.service_code,
+            to_char(s.starts_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') AS starts_at,
+            to_char(s.ends_at   AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') AS ends_at,
+            to_char(s.starts_at AT TIME ZONE 'UTC','YYYY-MM-DD') AS day,
+            s.status, p.mrn AS patient_mrn
+     FROM scheduling.slot s
+     LEFT JOIN scheduling.appointment a ON a.slot_id = s.id AND a.status NOT IN ('cancelled','no_show','left_before_seen')
+     LEFT JOIN identity.patient p ON p.id = a.patient_id
+     WHERE s.starts_at >= $1::date AND s.starts_at < ($2::date + interval '1 day')
+     ORDER BY s.starts_at, s.provider`,
+    [args.from, args.to],
+  );
+  return r.rows.map((x) => ({
+    slotId: x.id,
+    provider: x.provider,
+    room: x.room,
+    serviceCode: x.service_code,
+    startsAt: x.starts_at,
+    endsAt: x.ends_at,
+    day: x.day,
+    status: x.status,
+    patientMrn: x.patient_mrn,
+  }));
 }
 
 export type BookResult = { ok: true; appointmentId: string } | { ok: false; reason: 'slot_unavailable' };

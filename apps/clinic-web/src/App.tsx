@@ -3,14 +3,16 @@ import { Dispense } from './screens/Dispense.tsx';
 import { Patients } from './screens/Patients.tsx';
 import { Queue } from './screens/Queue.tsx';
 import { Dashboard } from './screens/Dashboard.tsx';
+import { Calendar } from './screens/Calendar.tsx';
 import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 
-type Tab = 'dispense' | 'patients' | 'queue' | 'dashboard';
+type Tab = 'dispense' | 'patients' | 'queue' | 'calendar' | 'dashboard';
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'dispense', label: 'Dispense & Pay' },
   { id: 'patients', label: 'Patients' },
   { id: 'queue', label: 'Queue' },
+  { id: 'calendar', label: 'Calendar' },
   { id: 'dashboard', label: 'Command centre' },
 ];
 
@@ -59,6 +61,7 @@ export function App() {
       {tab === 'dispense' && <Dispense />}
       {tab === 'patients' && <Patients onSelect={setActivePatient} />}
       {tab === 'queue' && <Queue />}
+      {tab === 'calendar' && <Calendar />}
       {tab === 'dashboard' && <Dashboard />}
     </main>
   );

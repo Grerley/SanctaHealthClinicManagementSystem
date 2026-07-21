@@ -35,7 +35,7 @@ import { searchFormulary, dispensingWorklist, markDispensed, generatePrescriptio
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
-import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType } from './scheduling.ts';
+import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, calendarView } from './scheduling.ts';
 import { appointmentReminder } from '@sancta/domain';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport } from './finance-reports.ts';
@@ -670,8 +670,13 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           }
         }
         if (p === '/api/schedule/slot' && req.method === 'POST') {
-          const b = (await readBody(req)) as { provider: string; site?: string; startsAt: string; endsAt: string };
+          const b = (await readBody(req)) as { provider: string; site?: string; startsAt: string; endsAt: string; room?: string; serviceCode?: string };
           return sendJson(res, 201, await createSlot(pool, b));
+        }
+        if (p === '/api/schedule/calendar' && req.method === 'GET') {
+          const from = url.searchParams.get('from') ?? new Date().toISOString().slice(0, 10);
+          const to = url.searchParams.get('to') ?? from;
+          return sendJson(res, 200, { entries: await calendarView(pool, { from, to }) });
         }
         if (p === '/api/schedule/book' && req.method === 'POST') {
           const b = (await readBody(req)) as { slotId: string; patientId: string; serviceCode?: string; reason?: string };

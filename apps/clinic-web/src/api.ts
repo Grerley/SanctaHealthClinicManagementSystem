@@ -16,6 +16,7 @@ async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export type QueueRow = { visitId: string; token: number; station: string; priority: number; status: string; patientMrn: string | null };
+export type CalendarEntry = { slotId: string; provider: string; room: string | null; serviceCode: string | null; startsAt: string; endsAt: string; day: string; status: string; patientMrn: string | null };
 export type Kpi = { id: string; label: string; value: number; unit: string; owner: string; formula: string };
 export type Exception = { type: string; label: string; count: number; queue: string; owner: string };
 
@@ -39,4 +40,7 @@ export const api = {
     jsonFetch<{ visitId: string; token: number }>('/api/visits/start', { method: 'POST', body: JSON.stringify({ patientId, station }) }),
   queue: (station?: string) => jsonFetch<{ queue: QueueRow[] }>(`/api/visits/queue${station ? `?station=${encodeURIComponent(station)}` : ''}`),
   dashboard: () => jsonFetch<{ asOf: string; kpis: Kpi[]; exceptions: Exception[] }>('/api/management/dashboard'),
+  calendar: (from: string, to: string) => jsonFetch<{ entries: CalendarEntry[] }>(`/api/schedule/calendar?from=${from}&to=${to}`),
+  createSlot: (body: { provider: string; startsAt: string; endsAt: string; room?: string; serviceCode?: string }) =>
+    jsonFetch<{ slotId: string }>('/api/schedule/slot', { method: 'POST', body: JSON.stringify(body) }),
 };

@@ -652,6 +652,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | The margin report derives per-SKU margin from revenue (finalised invoice lines) and ACTUAL consumption (stock issued at lot cost); zero revenue yields 0% without divide-by-zero | FIN-011 | ✅ |
 | The clinic margin total ties out to the income statement (revenue less COGS) | FIN-011 | ✅ |
 
+## Calendar views — day/week × provider/room/service (browser E2E + perf) — APT-008
+
+Backend `apps/clinic-edge/test/appointments-extend.itest.ts` (real PostgreSQL) and browser E2E `apps/clinic-web/e2e/calendar.spec.ts` (real Chromium driving the real stack):
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The calendar feed returns exactly the slots within a date window (day and week), each carrying provider, room and service | APT-008 | ✅ |
+| A booked slot surfaces the patient MRN on the calendar; a cancelled booking does not | APT-008 | ✅ |
+| The Calendar tab renders day and week views and regroups by provider, room and service | APT-008 | ✅ |
+| The calendar day view loads and renders within the **2-second** budget (measured in-browser over ~42 seeded slots) | APT-008, perf | ✅ |
+| The Calendar tab has no serious/critical WCAG 2.2 AA violations (axe-core) | APT-008, NFR-019 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

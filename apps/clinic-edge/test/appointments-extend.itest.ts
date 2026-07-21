@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import pg from 'pg';
 import { allMigrationsSql } from '@sancta/db/migrations';
-import { createSlot, bookAppointment, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError } from '../src/scheduling.ts';
+import { createSlot, bookAppointment, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, calendarView, SchedulingError } from '../src/scheduling.ts';
 
 const DATABASE_URL = process.env['DATABASE_URL'];
 const skip = !DATABASE_URL;
@@ -111,4 +111,30 @@ test('appointment types version forward with effective dating (APT-007)', { skip
 
   // Unknown/too-early → null.
   assert.equal(await resolveAppointmentType(pool, { code: 'GP', asOf: '2025-12-01' }), null);
+});
+
+test('the calendar returns windowed slots with room/service for day & week views (APT-008)', { skip }, async () => {
+  const day = '2026-09-01';
+  await createSlot(pool, { provider: PROVIDER, startsAt: `${day}T09:00:00Z`, endsAt: `${day}T09:30:00Z`, room: 'Room 1', serviceCode: 'GP' });
+  await createSlot(pool, { provider: PROVIDER, startsAt: `${day}T10:00:00Z`, endsAt: `${day}T10:30:00Z`, room: 'Room 2', serviceCode: 'DENTAL' });
+  // A slot outside the day window.
+  await createSlot(pool, { provider: PROVIDER, startsAt: `2026-09-08T09:00:00Z`, endsAt: `2026-09-08T09:30:00Z`, room: 'Room 1', serviceCode: 'GP' });
+
+  // Day view: only the two slots on 01/09.
+  const dayView = await calendarView(pool, { from: day, to: day });
+  assert.equal(dayView.length, 2);
+  assert.equal(dayView[0]!.day, day);
+  assert.equal(dayView[0]!.room, 'Room 1');
+  assert.equal(dayView[0]!.serviceCode, 'GP');
+
+  // Week view: includes the later slot too.
+  const weekView = await calendarView(pool, { from: day, to: '2026-09-08' });
+  assert.equal(weekView.length, 3);
+
+  // A booked slot surfaces the patient MRN; a cancelled booking does not.
+  const book = await bookAppointment(pool, { slotId: (await calendarView(pool, { from: day, to: day }))[0]!.slotId, patientId: PATIENT_LOW });
+  assert.ok(book.ok);
+  const booked = (await calendarView(pool, { from: day, to: day })).find((e) => e.status === 'booked');
+  assert.ok(booked);
+  assert.ok(booked!.patientMrn !== null);
 });
