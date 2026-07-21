@@ -38,7 +38,8 @@ import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType } from './scheduling.ts';
 import { appointmentReminder } from '@sancta/domain';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
-import { trialBalance, incomeStatement } from './finance-reports.ts';
+import { trialBalance, incomeStatement, exportApprovedLedger } from './finance-reports.ts';
+import { breakEven, investmentRecovery } from '@sancta/domain';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
 import { balanceSheet, monthlyClose } from './finance-close.ts';
 import { setBudget, budgetVariance } from './finance-budget.ts';
@@ -917,6 +918,21 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/finance/income-statement' && req.method === 'GET') {
           return sendJson(res, 200, await incomeStatement(pool));
+        }
+        if (p === '/api/finance/ledger-export' && req.method === 'GET') {
+          const periodId = url.searchParams.get('periodId') ?? '';
+          try { return sendJson(res, 200, await exportApprovedLedger(pool, { periodId, ...(ctx.user ? { exportedBy: ctx.user } : {}) })); }
+          catch (err) { return sendJson(res, 422, { error: { code: 'ledger_export_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/break-even' && req.method === 'POST') {
+          const b = (await readBody(req)) as { fixedCostMinor: number; unitPriceMinor: number; unitVariableCostMinor: number; investmentMinor?: number; fundingMinor?: number; monthlyNetMinor?: number };
+          try {
+            const be = breakEven({ fixedCostMinor: b.fixedCostMinor, unitPriceMinor: b.unitPriceMinor, unitVariableCostMinor: b.unitVariableCostMinor });
+            const recovery = b.investmentMinor !== undefined
+              ? investmentRecovery({ investmentMinor: b.investmentMinor, fundingMinor: b.fundingMinor ?? 0, monthlyNetMinor: b.monthlyNetMinor ?? 0 })
+              : null;
+            return sendJson(res, 200, { breakEven: be, recovery });
+          } catch (err) { return sendJson(res, 422, { error: { code: 'break_even_unreachable', message: (err as Error).message } }); }
         }
         if (p === '/api/finance/balance-sheet' && req.method === 'GET') {
           return sendJson(res, 200, await balanceSheet(pool));

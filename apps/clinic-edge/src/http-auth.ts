@@ -104,6 +104,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value|budget)$/, permission: 'configure' }, // chart/reference data (FIN-001) + budgets (FIN-007)
   { method: 'POST', test: /^\/api\/finance\/journal\/draft$/, permission: 'create' }, // maker drafts (FIN-003)
   { method: 'POST', test: /^\/api\/finance\/(expense|pay-supplier|period\/close|period\/reopen|journal\/post|journal\/reject|monthly-close)$/, permission: 'approve' }, // checker/approver
+  { method: 'POST', test: /^\/api\/finance\/break-even$/, permission: 'view_summary' }, // FIN-012 planning calc (no writes)
+  { method: 'GET', test: /^\/api\/finance\/ledger-export$/, permission: 'export' }, // FIN-014 accounting-data export
   { method: 'GET', test: /^\/api\/finance\//, permission: 'view_summary' },
   // Documents
   { method: 'POST', test: /^\/api\/documents$/, permission: 'create' },

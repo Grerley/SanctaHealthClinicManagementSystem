@@ -547,6 +547,19 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | Appointment types version forward with effective dating; an out-of-order effective date is rejected; resolution as-of a date picks the covering version (duration, prep, deposit) | APT-007 | ✅ |
 | Scheduling routes are now deny-by-default (RBAC): booking/capacity require `create`, versioned type config requires `configure`, reads require `view_summary` | APT, ADM-001 | ✅ |
 
+## Break-even planning & approved-data export (real PostgreSQL) — FIN-012, FIN-014
+
+`packages/domain/src/breakeven.test.ts` (unit) and `apps/clinic-edge/test/finance-export.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Break-even rounds up to whole units and reports the covering revenue; a non-divisible fixed cost rounds up (no fractional units) | FIN-012 | ✅ |
+| A unit with no positive contribution margin (price ≤ variable cost) makes break-even unreachable — reported explicitly, never a divide-by-zero | FIN-012 | ✅ |
+| Investment recovery: funding offsets the up-front investment, a positive monthly surplus recovers the remainder in whole months, and a non-positive surplus reports "never recovers" (null) | FIN-012 | ✅ |
+| An approved-data export of a period's posted journal lines always balances (Σ debits = Σ credits); an unbalanced ledger is refused rather than exported | FIN-014 | ✅ |
+| The export is idempotent — re-exporting an unchanged period yields the same SHA-256 idempotencyKey (computed over accounting content, never the wall-clock); a new posting changes the key | FIN-014 | ✅ |
+| An unknown period is rejected; each export is audited | FIN-014 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

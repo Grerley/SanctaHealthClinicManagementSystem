@@ -1803,6 +1803,27 @@
         }
       }
     },
+    "/api/finance/break-even": {
+      "post": {
+        "operationId": "post_api_finance_break_even",
+        "summary": "POST /api/finance/break-even",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/finance/budget": {
       "post": {
         "operationId": "post_api_finance_budget",
@@ -2084,6 +2105,27 @@
           "finance"
         ],
         "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/ledger-export": {
+      "get": {
+        "operationId": "get_api_finance_ledger_export",
+        "summary": "GET /api/finance/ledger-export",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "export",
         "responses": {
           "200": {
             "description": "Success"
