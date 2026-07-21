@@ -38,6 +38,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/patients\/access$/, permission: 'view_clinical_detail' }, // PAT-009
   { method: 'GET', test: /^\/api\/fhir\/Patient$/, permission: 'view_clinical_detail' }, // SYN-009 FHIR read (metadata is public)
   { method: 'POST', test: /^\/api\/patients\/(demographic|deceased)$/, permission: 'amend' },
+  { method: 'POST', test: /^\/api\/patients\/summary\/export$/, permission: 'export' }, // PAT-010 authorised disclosure
+  { method: 'GET', test: /^\/api\/patients\/disclosures$/, permission: 'view_summary' }, // PAT-010 disclosure log
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },
   // Sync conflict queue (SYN-006): identity edits and human resolution are privileged.
   { method: 'GET', test: /^\/api\/integrations\/(status|dead)$/, permission: 'view_summary' }, // SYN-010/CLD-003 queue
@@ -126,6 +128,8 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/documents\/disposal-candidates$/, permission: 'view_summary' },
   // Management
   { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison|scope|drill|commentary)$/, permission: 'view_summary' }, // scope MGT-002, drill MGT-006 (detail re-gated in-handler)
+  { method: 'GET', test: /^\/api\/management\/analytical-extract$/, permission: 'export' }, // MGT-009 de-identified dataset
+  { method: 'GET', test: /^\/api\/public\/queue$/, permission: 'discover' }, // VIS-009 de-identified public queue (content carries no PHI)
   { method: 'POST', test: /^\/api\/management\/export$/, permission: 'export' },
   { method: 'POST', test: /^\/api\/management\/kpi-target$/, permission: 'configure' }, // MGT-004
   { method: 'POST', test: /^\/api\/management\/kpi-snapshot$/, permission: 'view_summary' }, // MGT-005

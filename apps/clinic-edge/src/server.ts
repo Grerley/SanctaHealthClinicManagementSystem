@@ -54,6 +54,7 @@ import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { reorderSuggestions, stockMovementReport } from './inventory-reports.ts';
 import { dashboard, exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError } from './management.ts';
+import { publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclosures, DisclosureError } from './privacy.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
@@ -188,6 +189,11 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         const b = (await readBody(req)) as Parameters<typeof addCommentary>[1];
         try { return sendJson(res, 201, await addCommentary(pool, { ...b, ...(ctx.user ? { authoredBy: ctx.user } : {}) })); }
         catch (err) { if (err instanceof ManagementScopeError) return sendJson(res, 400, { error: { code: 'commentary_rejected', message: err.message } }); throw err; }
+      }
+      if (p === '/api/management/analytical-extract' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+        return sendJson(res, 200, await analyticalExtract(pool, { asOf, ...(ctx.user ? { exportedBy: ctx.user } : {}) }));
       }
       if (p === '/healthz') {
         const inst = instanceInfo();
@@ -570,6 +576,17 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/referrals/open' && req.method === 'GET') {
           return sendJson(res, 200, { referrals: await listOpenReferrals(pool) });
+        }
+        if (p === '/api/public/queue' && req.method === 'GET') {
+          return sendJson(res, 200, { queue: await publicQueue(pool) }); // VIS-009 de-identified
+        }
+        if (p === '/api/patients/summary/export' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; purpose: string; recipient?: string; format?: string };
+          try { return sendJson(res, 201, await exportPatientSummary(pool, { ...b, ...(ctx.user ? { disclosedBy: ctx.user } : {}) })); }
+          catch (err) { if (err instanceof DisclosureError) return sendJson(res, 400, { error: { code: 'disclosure_rejected', message: err.message } }); throw err; }
+        }
+        if (p === '/api/patients/disclosures' && req.method === 'GET') {
+          return sendJson(res, 200, { disclosures: await listPatientDisclosures(pool, { patientId: url.searchParams.get('patientId') ?? '' }) });
         }
         if (p === '/api/triage/vitals' && req.method === 'POST') {
           const body = (await readBody(req)) as RecordVitalsBody;

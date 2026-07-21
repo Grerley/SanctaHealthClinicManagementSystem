@@ -88,6 +88,9 @@
       "name": "prescription"
     },
     {
+      "name": "public"
+    },
+    {
       "name": "referrals"
     },
     {
@@ -2434,6 +2437,27 @@
         }
       }
     },
+    "/api/management/analytical-extract": {
+      "get": {
+        "operationId": "get_api_management_analytical_extract",
+        "summary": "GET /api/management/analytical-extract",
+        "tags": [
+          "management"
+        ],
+        "x-permission": "export",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/management/commentary": {
       "get": {
         "operationId": "get_api_management_commentary",
@@ -3354,6 +3378,27 @@
         }
       }
     },
+    "/api/patients/disclosures": {
+      "get": {
+        "operationId": "get_api_patients_disclosures",
+        "summary": "GET /api/patients/disclosures",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/patients/history": {
       "get": {
         "operationId": "get_api_patients_history",
@@ -3463,6 +3508,27 @@
           "patients"
         ],
         "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/summary/export": {
+      "post": {
+        "operationId": "post_api_patients_summary_export",
+        "summary": "POST /api/patients/summary/export",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "export",
         "responses": {
           "200": {
             "description": "Success"
@@ -3631,6 +3697,27 @@
           "prescription"
         ],
         "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/public/queue": {
+      "get": {
+        "operationId": "get_api_public_queue",
+        "summary": "GET /api/public/queue",
+        "tags": [
+          "public"
+        ],
+        "x-permission": "discover",
         "responses": {
           "200": {
             "description": "Success"

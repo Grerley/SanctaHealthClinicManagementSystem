@@ -583,6 +583,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | A medication administration record captures time, dose, route, site and performer; multiple doses accumulate as append-only history | MED-009 | ✅ |
 | A not-given administration must carry a reason (DB CHECK + guard); an unknown request is rejected; each administration is audited | MED-009 | ✅ |
 
+## De-identified views & authorised disclosure (real PostgreSQL) — PAT-010, VIS-009, MGT-009
+
+`packages/domain/src/deidentify.test.ts` (unit) and `apps/clinic-edge/test/privacy.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The public waiting-room queue exposes only token/station/status/wait — patient identity is never joined, so the serialised screen contains no patient id or name | VIS-009 | ✅ |
+| The analytical extract is pseudonymous (hashed id, never the real id) and age-banded — no exact DOB or direct identifier survives the projection; the extract is audited as a bulk export | MGT-009 | ✅ |
+| An age band generalises the DOB and never exposes the exact date (unit-tested across bands and the not-yet-had-birthday case) | MGT-009 | ✅ |
+| A patient-summary export requires a lawful purpose, returns the summary with a content hash, and writes an append-only disclosure-log row (who/purpose/recipient/when); the disclosure is audited against the patient | PAT-010 | ✅ |
+| An unknown patient and an empty purpose are rejected | PAT-010 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to
