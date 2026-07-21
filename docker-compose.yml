@@ -1,0 +1,40 @@
+# Phase 1 — local edge hub on a clinic computer (e.g. your laptop). One command
+# brings up PostgreSQL + the edge server; the app is then reachable on the LAN so
+# a phone/tablet on the same Wi-Fi can use it. Works fully offline. When the
+# machine is online, set CLOUD_INGRESS_URL to sync up to the Phase-0 cloud.
+#
+#   docker compose up -d          # start
+#   (optional) load demo data:    docker compose exec edge npm run db:seed
+#   open http://<this-computer-LAN-IP>:8080 on any device on the same network
+#
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sancta
+      POSTGRES_PASSWORD: sancta
+      POSTGRES_DB: sancta
+    volumes:
+      - sancta-db:/var/lib/postgresql/data   # data persists across restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sancta"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  edge:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://sancta:sancta@db:5432/sancta
+      EDGE_PORT: "8080"
+      SITE_ID: "00000000-0000-7000-8000-0000000000f1"
+      INSTANCE_MODE: "training"          # non-production; allows the demo seed
+      # CLOUD_INGRESS_URL: "https://<your-cloud-worker-or-host>/sync/ingress"
+    ports:
+      - "8080:8080"                       # reachable on the LAN as http://<host-ip>:8080
+
+volumes:
+  sancta-db:

@@ -72,7 +72,8 @@ import { addResource, setResourceStatus, listResources, availableCapacity, defin
 import { VitalError, StockError, type AppointmentState, type DrillTarget } from '@sancta/domain';
 import { authFromHeaders, checkAuthorised } from './http-auth.ts';
 
-const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
+// EDGE_PORT for the LAN edge; PORT is the convention most cloud hosts inject.
+const PORT = Number(process.env['EDGE_PORT'] ?? process.env['PORT'] ?? 8787);
 const SITE_ID = process.env['SITE_ID'] ?? '00000000-0000-7000-8000-0000000000f1';
 const CLOUD_INGRESS_URL = process.env['CLOUD_INGRESS_URL'] ?? '';
 const WEB_DIST = process.env['WEB_DIST'] ?? '';

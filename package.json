@@ -21,7 +21,10 @@
     "iac": "node scripts/iac-check.mjs",
     "openapi:gen": "node --experimental-strip-types scripts/gen-openapi.ts",
     "contract": "node --experimental-strip-types scripts/contract-check.ts",
-    "coverage": "node scripts/coverage.mjs"
+    "coverage": "node scripts/coverage.mjs",
+    "db:migrate": "node --experimental-strip-types scripts/migrate.ts",
+    "db:seed": "node --experimental-strip-types scripts/seed.ts",
+    "start": "npm start -w @sancta/clinic-edge"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
