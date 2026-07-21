@@ -109,10 +109,11 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/documents\/(supersede|entered-in-error|legal-hold|retention|dispose)$/, permission: 'administer' }, // DOC-003/005
   { method: 'GET', test: /^\/api\/documents\/disposal-candidates$/, permission: 'view_summary' },
   // Management
-  { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison)$/, permission: 'view_summary' },
+  { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison|scope|drill|commentary)$/, permission: 'view_summary' }, // scope MGT-002, drill MGT-006 (detail re-gated in-handler)
   { method: 'POST', test: /^\/api\/management\/export$/, permission: 'export' },
   { method: 'POST', test: /^\/api\/management\/kpi-target$/, permission: 'configure' }, // MGT-004
   { method: 'POST', test: /^\/api\/management\/kpi-snapshot$/, permission: 'view_summary' }, // MGT-005
+  { method: 'POST', test: /^\/api\/management\/commentary$/, permission: 'view_summary' }, // MGT-010 (any dashboard viewer may annotate)
   // Communication
   { method: 'POST', test: /^\/api\/comms\//, permission: 'create' },
   { method: 'GET', test: /^\/api\/comms\//, permission: 'view_summary' },

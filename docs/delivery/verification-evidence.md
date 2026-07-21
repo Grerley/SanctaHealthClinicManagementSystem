@@ -521,6 +521,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 |-----------|-------------|--------|
 | Two concurrent dispenses of the same lot near depletion: exactly one succeeds, the other is rejected — no oversell to negative (FOR UPDATE row lock) | INV-005, BR-007 | ✅ |
 
+## Scoped management filters, drill-through & KPI commentary (real PostgreSQL) — MGT-002, MGT-006, MGT-010
+
+`packages/domain/src/mgmt.test.ts` (unit) and `apps/clinic-edge/test/management-scope.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A central role (manager) may narrow the dashboard to any site; a local role (reception) is silently constrained to its own site — a requested out-of-scope site is reported as `rejected`, never returned | MGT-002 | ✅ |
+| No requested filter resolves to all sites the caller may see (central sees the whole network) | MGT-002 | ✅ |
+| A clinical role may drill from a summary KPI to patient/clinical detail; a summary-only manager is **denied** and the denial is audited — a dashboard is never a back door to patient detail | MGT-006 | ✅ |
+| Operational drill-through stays open to a manager (summary-level detail) | MGT-006 | ✅ |
+| KPI commentary is append-only: a second note for the same KPI/period preserves the first; corrective action, owner and due date persist; empty commentary is rejected | MGT-010 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

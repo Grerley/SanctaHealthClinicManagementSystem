@@ -52,7 +52,7 @@ import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnte
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
 import { reorderSuggestions, stockMovementReport } from './inventory-reports.ts';
-import { dashboard, exportDashboard } from './management.ts';
+import { dashboard, exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError } from './management.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
@@ -62,7 +62,7 @@ import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurati
 import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
-import { VitalError, type AppointmentState } from '@sancta/domain';
+import { VitalError, type AppointmentState, type DrillTarget } from '@sancta/domain';
 import { authFromHeaders, checkAuthorised } from './http-auth.ts';
 
 const PORT = Number(process.env['EDGE_PORT'] ?? 8787);
@@ -164,6 +164,29 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
         try { return sendJson(res, 200, await kpiComparison(pool, { kpiId: url.searchParams.get('kpiId') ?? '', period: url.searchParams.get('period') ?? '', priorPeriod: url.searchParams.get('priorPeriod') ?? '' })); }
         catch (err) { return sendJson(res, 404, { error: { code: 'kpi_comparison_unavailable', message: (err as Error).message } }); }
+      }
+      if (p === '/api/management/scope' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const siteHeader = req.headers['x-site'];
+        const userSite = Array.isArray(siteHeader) ? siteHeader[0] ?? null : siteHeader ?? null;
+        const requested = url.searchParams.getAll('site');
+        return sendJson(res, 200, await resolveSiteScope(pool, { roles: ctx.roles, userSite, requestedSites: requested }));
+      }
+      if (p === '/api/management/drill' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const target = url.searchParams.get('target') as DrillTarget;
+        try { return sendJson(res, 200, await drillThrough(pool, { roles: ctx.roles, target, ...(ctx.user ? { actor: ctx.user } : {}) })); }
+        catch (err) { return sendJson(res, 403, { error: { code: 'drill_forbidden', message: (err as Error).message } }); }
+      }
+      if (p === '/api/management/commentary' && req.method === 'GET') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        return sendJson(res, 200, { commentary: await listCommentary(pool, { kpiId: url.searchParams.get('kpiId') ?? '', period: url.searchParams.get('period') ?? '' }) });
+      }
+      if (p === '/api/management/commentary' && req.method === 'POST') {
+        if (!pool) return sendJson(res, 503, { error: { code: 'no_database' } });
+        const b = (await readBody(req)) as Parameters<typeof addCommentary>[1];
+        try { return sendJson(res, 201, await addCommentary(pool, { ...b, ...(ctx.user ? { authoredBy: ctx.user } : {}) })); }
+        catch (err) { if (err instanceof ManagementScopeError) return sendJson(res, 400, { error: { code: 'commentary_rejected', message: err.message } }); throw err; }
       }
       if (p === '/healthz') {
         const inst = instanceInfo();
