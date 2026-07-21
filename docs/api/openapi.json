@@ -417,6 +417,90 @@
         }
       }
     },
+    "/api/billing/claim": {
+      "post": {
+        "operationId": "post_api_billing_claim",
+        "summary": "POST /api/billing/claim",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "bill",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/claim/adjudicate": {
+      "post": {
+        "operationId": "post_api_billing_claim_adjudicate",
+        "summary": "POST /api/billing/claim/adjudicate",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/coverage": {
+      "post": {
+        "operationId": "post_api_billing_coverage",
+        "summary": "POST /api/billing/coverage",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/eligibility": {
+      "get": {
+        "operationId": "get_api_billing_eligibility",
+        "summary": "GET /api/billing/eligibility",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/billing/fee": {
       "post": {
         "operationId": "post_api_billing_fee",
@@ -543,6 +627,27 @@
         }
       }
     },
+    "/api/billing/payer": {
+      "post": {
+        "operationId": "post_api_billing_payer",
+        "summary": "POST /api/billing/payer",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/billing/payment": {
       "post": {
         "operationId": "post_api_billing_payment",
@@ -551,6 +656,48 @@
           "billing"
         ],
         "x-permission": "receive_payment",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/preauth": {
+      "post": {
+        "operationId": "post_api_billing_preauth",
+        "summary": "POST /api/billing/preauth",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/preauth/decide": {
+      "post": {
+        "operationId": "post_api_billing_preauth_decide",
+        "summary": "POST /api/billing/preauth/decide",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "approve",
         "responses": {
           "200": {
             "description": "Success"

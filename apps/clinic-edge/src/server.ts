@@ -61,6 +61,7 @@ import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from '
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, type UploadBody } from './documents.ts';
 import { printReceipt, printInvoice, printStatement } from './billing-print.ts';
+import { registerPayer, addCoverage, checkEligibility, requestPreauth, decidePreauth, submitClaim, adjudicateClaim } from './payer.ts';
 import { storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument } from './document-lifecycle.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
@@ -917,6 +918,34 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/billing/statement/print' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; date?: string };
           try { return sendJson(res, 200, await printStatement(pool, { ...b, ...(ctx.user ? { printedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'statement_print_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/payer' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof registerPayer>[1];
+          try { return sendJson(res, 201, await registerPayer(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'payer_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/coverage' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addCoverage>[1];
+          try { return sendJson(res, 201, await addCoverage(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'coverage_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/eligibility' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, await checkEligibility(pool, { patientId: url.searchParams.get('patientId') ?? '', asOf }));
+        }
+        if (p === '/api/billing/preauth' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof requestPreauth>[1];
+          try { return sendJson(res, 201, await requestPreauth(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'preauth_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/preauth/decide' && req.method === 'POST') {
+          const b = (await readBody(req)) as { preauthId: string; approve: boolean; authorisation?: string };
+          try { return sendJson(res, 200, await decidePreauth(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'preauth_decision_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/claim' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof submitClaim>[1];
+          try { return sendJson(res, 201, await submitClaim(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'claim_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/claim/adjudicate' && req.method === 'POST') {
+          const b = (await readBody(req)) as { claimId: string; accept: boolean; paidMinor?: number; reason?: string };
+          try { return sendJson(res, 200, await adjudicateClaim(pool, { ...b, ...(ctx.user ? { user: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'adjudication_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/documents/generate' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof storeGeneratedDocument>[1];

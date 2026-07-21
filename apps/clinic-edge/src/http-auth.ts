@@ -111,6 +111,13 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/billing\/refund$/, permission: 'reverse' },
   { method: 'GET', test: /^\/api\/billing\/invoice-outstanding$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/billing\/(receipt|invoice|statement)\/print$/, permission: 'view_summary' }, // BIL-007 print/reprint (copy-marked)
+  // Payer coverage & claims (BIL-011, optional third-party billing)
+  { method: 'POST', test: /^\/api\/billing\/payer$/, permission: 'configure' }, // payer master (reference data)
+  { method: 'POST', test: /^\/api\/billing\/(coverage|preauth)$/, permission: 'create' },
+  { method: 'GET', test: /^\/api\/billing\/eligibility$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/billing\/preauth\/decide$/, permission: 'approve' },
+  { method: 'POST', test: /^\/api\/billing\/claim$/, permission: 'bill' },
+  { method: 'POST', test: /^\/api\/billing\/claim\/adjudicate$/, permission: 'receive_payment' }, // records the payer remittance
   { method: 'POST', test: /^\/api\/cashier\/(open|close)$/, permission: 'receive_payment' },
   { method: 'GET', test: /^\/api\/debtors\/ageing$/, permission: 'view_summary' },
   // Inventory

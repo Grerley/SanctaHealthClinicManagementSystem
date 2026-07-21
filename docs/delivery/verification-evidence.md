@@ -664,6 +664,18 @@ Backend `apps/clinic-edge/test/appointments-extend.itest.ts` (real PostgreSQL) a
 | The calendar day view loads and renders within the **2-second** budget (measured in-browser over ~42 seeded slots) | APT-008, perf | ✅ |
 | The Calendar tab has no serious/critical WCAG 2.2 AA violations (axe-core) | APT-008, NFR-019 | ✅ |
 
+## Payer coverage, pre-auth & claims (real PostgreSQL) — BIL-011
+
+`apps/clinic-edge/test/payer.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Eligibility reflects active coverage as-of a date; a date before the coverage window is not eligible | BIL-011 | ✅ |
+| Pre-authorisation has a request → approve/decline lifecycle; a decided pre-auth cannot be decided again | BIL-011 | ✅ |
+| A PAID claim settles through the ledger — a payer bank payment is allocated to the invoice, so the invoice balance drops (1000 → 200 after an 800 payment); the disallowed 200 is recorded as an adjustment | BIL-011 | ✅ |
+| A REJECTED claim leaves the balance with the patient (unchanged); a claim cannot be adjudicated twice; claiming more than outstanding is rejected | BIL-011 | ✅ |
+| The remittance is linked to the real settling payment (no shadow balance) | BIL-011 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to
