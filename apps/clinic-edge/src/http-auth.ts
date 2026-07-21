@@ -40,6 +40,9 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/patients\/(demographic|deceased)$/, permission: 'amend' },
   { method: 'POST', test: /^\/api\/patients\/summary\/export$/, permission: 'export' }, // PAT-010 authorised disclosure
   { method: 'GET', test: /^\/api\/patients\/disclosures$/, permission: 'view_summary' }, // PAT-010 disclosure log
+  { method: 'GET', test: /^\/api\/patients\/card$/, permission: 'view_summary' }, // PAT-006 patient card (QR is PHI-free)
+  { method: 'POST', test: /^\/api\/patients\/card\/resolve$/, permission: 'discover' }, // PAT-006 scan card
+  { method: 'GET', test: /^\/api\/visits\/check-in$/, permission: 'view_summary' }, // VIS-002 reception view (no clinical detail)
   { method: 'POST', test: /^\/api\/patients\/(un)?merge$/, permission: 'administer' },
   // Sync conflict queue (SYN-006): identity edits and human resolution are privileged.
   { method: 'GET', test: /^\/api\/integrations\/(status|dead)$/, permission: 'view_summary' }, // SYN-010/CLD-003 queue

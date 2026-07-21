@@ -40,3 +40,4 @@ export * from './waitlist.ts';
 export * from './breakeven.ts';
 export * from './labels.ts';
 export * from './deidentify.ts';
+export * from './patient-card.ts';

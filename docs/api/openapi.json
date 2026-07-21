@@ -3405,6 +3405,48 @@
         }
       }
     },
+    "/api/patients/card": {
+      "get": {
+        "operationId": "get_api_patients_card",
+        "summary": "GET /api/patients/card",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/patients/card/resolve": {
+      "post": {
+        "operationId": "post_api_patients_card_resolve",
+        "summary": "POST /api/patients/card/resolve",
+        "tags": [
+          "patients"
+        ],
+        "x-permission": "discover",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/patients/deceased": {
       "post": {
         "operationId": "post_api_patients_deceased",
@@ -4518,6 +4560,27 @@
           "triage"
         ],
         "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/visits/check-in": {
+      "get": {
+        "operationId": "get_api_visits_check_in",
+        "summary": "GET /api/visits/check-in",
+        "tags": [
+          "visits"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

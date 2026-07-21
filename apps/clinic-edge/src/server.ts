@@ -56,6 +56,7 @@ import { performStocktake } from './stocktake.ts';
 import { reorderSuggestions, stockMovementReport } from './inventory-reports.ts';
 import { dashboard, exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError } from './management.ts';
 import { publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclosures, DisclosureError } from './privacy.ts';
+import { patientCard, resolveCard, checkInView } from './frontdesk.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
 import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
@@ -613,6 +614,16 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/patients/disclosures' && req.method === 'GET') {
           return sendJson(res, 200, { disclosures: await listPatientDisclosures(pool, { patientId: url.searchParams.get('patientId') ?? '' }) });
+        }
+        if (p === '/api/patients/card' && req.method === 'GET') {
+          try { return sendJson(res, 200, await patientCard(pool, url.searchParams.get('patientId') ?? '')); } catch (err) { return sendJson(res, 404, { error: { code: 'patient_not_found', message: (err as Error).message } }); }
+        }
+        if (p === '/api/patients/card/resolve' && req.method === 'POST') {
+          const b = (await readBody(req)) as { payload: string };
+          try { return sendJson(res, 200, await resolveCard(pool, b.payload)); } catch (err) { return sendJson(res, 404, { error: { code: 'card_unresolved', message: (err as Error).message } }); }
+        }
+        if (p === '/api/visits/check-in' && req.method === 'GET') {
+          try { return sendJson(res, 200, await checkInView(pool, url.searchParams.get('visitId') ?? '')); } catch (err) { return sendJson(res, 404, { error: { code: 'visit_not_found', message: (err as Error).message } }); }
         }
         if (p === '/api/triage/vitals' && req.method === 'POST') {
           const body = (await readBody(req)) as RecordVitalsBody;

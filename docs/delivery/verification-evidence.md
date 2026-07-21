@@ -606,6 +606,17 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | A purchase order can only be raised from an approved requisition; raising it flips the requisition to ordered | INV-003 | ✅ |
 | The equipment register tracks service events (append-only history) and rolls the next-service date; overdue equipment appears on the due list until serviced; unknown equipment and a duplicate asset tag are rejected | INV-010 | ✅ |
 
+## Patient card/QR & reception check-in view (real PostgreSQL) — PAT-006, VIS-002
+
+`packages/domain/src/patient-card.test.ts` (unit) and `apps/clinic-edge/test/frontdesk.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The patient-card QR encodes only an opaque reference (`SANCTA:PT:<id>`) — building it from the id alone makes it structurally impossible to leak name/DOB into the code | PAT-006 | ✅ |
+| A scanned card resolves back to the patient; a foreign scheme, empty id or unknown id is rejected | PAT-006 | ✅ |
+| The reception check-in view shows identity, logistical tasks and account balance — and never clinical detail; the serialised view contains no diagnosis/encounter/result/allergy/medication/vitals field | VIS-002 | ✅ |
+| An unknown visit is rejected | VIS-002 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to
