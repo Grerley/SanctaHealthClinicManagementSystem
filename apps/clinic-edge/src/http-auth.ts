@@ -63,6 +63,10 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/patients\/timeline$/, permission: 'view_clinical_detail' }, // EHR-002
   { method: 'GET', test: /^\/api\/forms(\/get)?$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/forms$/, permission: 'configure' }, // EHR-003 form admin
+  // Scheduling (APT). Deny-by-default (ADM-001): booking/capacity is a write, config is versioned.
+  { method: 'GET', test: /^\/api\/schedule\/(next|type)$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/schedule\/(slot|book|status|reminder|waitlist|fill|reminder-queue)$/, permission: 'create' }, // incl. APT-004/005
+  { method: 'POST', test: /^\/api\/schedule\/type$/, permission: 'configure' }, // APT-007 versioned types
   { method: 'POST', test: /^\/api\/triage\/(vitals|assessment|intervention)$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/triage\/sign$/, permission: 'sign' },
   { method: 'GET', test: /^\/api\/triage\/queue$/, permission: 'discover' },

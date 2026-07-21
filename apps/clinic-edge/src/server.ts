@@ -35,7 +35,7 @@ import { searchFormulary, dispensingWorklist, markDispensed, generatePrescriptio
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
-import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus } from './scheduling.ts';
+import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType } from './scheduling.ts';
 import { appointmentReminder } from '@sancta/domain';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
 import { trialBalance, incomeStatement } from './finance-reports.ts';
@@ -601,6 +601,32 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const b = (await readBody(req)) as { when: string; time?: string; location?: string; reason?: string; sensitive?: boolean };
           // APT-009: a sensitive appointment's reason is never placed in the message.
           return sendJson(res, 200, { message: appointmentReminder({ when: b.when, ...(b.time ? { time: b.time } : {}), ...(b.location ? { location: b.location } : {}), ...(b.reason ? { reason: b.reason } : {}), sensitive: b.sensitive === true }) });
+        }
+        if (p === '/api/schedule/waitlist' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof addToWaitlist>[1];
+          return sendJson(res, 201, await addToWaitlist(pool, { ...b, ...(ctx.user ? { user: ctx.user } : {}) }));
+        }
+        if (p === '/api/schedule/fill' && req.method === 'POST') {
+          const b = (await readBody(req)) as { slotId: string };
+          const out = await fillReleasedSlot(pool, { slotId: b.slotId, ...(ctx.user ? { user: ctx.user } : {}) });
+          return sendJson(res, out.filled ? 201 : 200, out);
+        }
+        if (p === '/api/schedule/reminder-queue' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof queueReminder>[1];
+          const out = await queueReminder(pool, b);
+          return sendJson(res, out.enqueued ? 201 : 200, out);
+        }
+        if (p === '/api/schedule/type' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof setAppointmentType>[1];
+          try { return sendJson(res, 201, await setAppointmentType(pool, { ...b, ...(ctx.user ? { by: ctx.user } : {}) })); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'appointment_type_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/schedule/type' && req.method === 'GET') {
+          const code = url.searchParams.get('code') ?? '';
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          const t = await resolveAppointmentType(pool, { code, asOf });
+          if (!t) return sendJson(res, 404, { error: { code: 'appointment_type_not_found' } });
+          return sendJson(res, 200, t);
         }
         if (p === '/api/visits/start' && req.method === 'POST') {
           const b = (await readBody(req)) as { patientId: string; station?: string; priority?: number };

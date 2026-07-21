@@ -533,6 +533,20 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | Operational drill-through stays open to a manager (summary-level detail) | MGT-006 | ✅ |
 | KPI commentary is append-only: a second note for the same KPI/period preserves the first; corrective action, owner and due date persist; empty commentary is rejected | MGT-010 | ✅ |
 
+## Appointment waiting list, reminder de-duplication & versioned types (real PostgreSQL) — APT-004, APT-005, APT-007
+
+`packages/domain/src/waitlist.test.ts` (unit) and `apps/clinic-edge/test/appointments-extend.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Waiting-list order is deterministic: higher clinical priority first, first-come (FIFO) within a priority; a released slot is offered to the top *compatible* entry (unspecified service matches any) | APT-004 | ✅ |
+| A cancelled appointment re-opens its slot, and `fillReleasedSlot` books the highest-priority waiter into it under a slot lock; filling an already-booked slot is a no-op | APT-004 | ✅ |
+| A released slot is re-bookable — the total `UNIQUE(slot_id)` is replaced with a partial unique on *active* appointments, preserving the APT-001 no-double-book guarantee | APT-001, APT-004 | ✅ |
+| A reminder queues exactly once per (appointment, kind); a replayed offline-created reminder does not duplicate (idempotent enqueue) | APT-005 | ✅ |
+| A reminder for a sensitive appointment never discloses the clinical reason in its body | APT-005, APT-009 | ✅ |
+| Appointment types version forward with effective dating; an out-of-order effective date is rejected; resolution as-of a date picks the covering version (duration, prep, deposit) | APT-007 | ✅ |
+| Scheduling routes are now deny-by-default (RBAC): booking/capacity require `create`, versioned type config requires `configure`, reads require `view_summary` | APT, ADM-001 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

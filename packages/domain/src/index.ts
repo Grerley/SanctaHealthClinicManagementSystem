@@ -36,3 +36,4 @@ export * from './feature.ts';
 export * from './patient-access.ts';
 export * from './reorder.ts';
 export * from './mgmt.ts';
+export * from './waitlist.ts';

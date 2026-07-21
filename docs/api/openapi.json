@@ -3459,7 +3459,28 @@
         "tags": [
           "schedule"
         ],
-        "x-permission": null,
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/fill": {
+      "post": {
+        "operationId": "post_api_schedule_fill",
+        "summary": "POST /api/schedule/fill",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
@@ -3480,7 +3501,7 @@
         "tags": [
           "schedule"
         ],
-        "x-permission": null,
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"
@@ -3501,7 +3522,28 @@
         "tags": [
           "schedule"
         ],
-        "x-permission": null,
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/reminder-queue": {
+      "post": {
+        "operationId": "post_api_schedule_reminder_queue",
+        "summary": "POST /api/schedule/reminder-queue",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
@@ -3522,7 +3564,7 @@
         "tags": [
           "schedule"
         ],
-        "x-permission": null,
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
@@ -3543,7 +3585,68 @@
         "tags": [
           "schedule"
         ],
-        "x-permission": null,
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/type": {
+      "get": {
+        "operationId": "get_api_schedule_type",
+        "summary": "GET /api/schedule/type",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
+      "post": {
+        "operationId": "post_api_schedule_type",
+        "summary": "POST /api/schedule/type",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/schedule/waitlist": {
+      "post": {
+        "operationId": "post_api_schedule_waitlist",
+        "summary": "POST /api/schedule/waitlist",
+        "tags": [
+          "schedule"
+        ],
+        "x-permission": "create",
         "responses": {
           "200": {
             "description": "Success"
