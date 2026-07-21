@@ -103,3 +103,112 @@ export async function prescribe(pool: Pool, body: PrescribeBody): Promise<Prescr
     client.release();
   }
 }
+
+// --- Protocol templates / favourites (MED-004) ------------------------------
+
+export type RxTemplateItem = {
+  medicineCode: string;
+  substanceCode: string;
+  dose?: string;
+  route?: string;
+  frequency?: string;
+  durationDays?: number;
+  quantity?: number;
+  instructions?: string;
+};
+
+/** Define/replace a reusable prescribing protocol/favourite (MED-004). */
+export async function defineRxTemplate(pool: Pool, args: { code: string; name: string; items: RxTemplateItem[] }): Promise<{ code: string; itemCount: number }> {
+  if (!args.code?.trim() || !args.name?.trim()) throw new PrescribingError('template code and name are required');
+  if (!args.items?.length) throw new PrescribingError('a protocol template needs at least one item');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`INSERT INTO clinical.rx_template (code, name) VALUES ($1,$2) ON CONFLICT (code) DO UPDATE SET name=$2, active=true`, [args.code, args.name]);
+    await client.query(`DELETE FROM clinical.rx_template_item WHERE template_code=$1`, [args.code]);
+    for (const it of args.items) {
+      await client.query(
+        `INSERT INTO clinical.rx_template_item (id, template_code, medicine_code, substance_code, dose, route, frequency, duration_days, quantity, instructions)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        [uuidv7(), args.code, it.medicineCode, it.substanceCode, it.dose ?? null, it.route ?? null, it.frequency ?? null, it.durationDays ?? null, it.quantity ?? null, it.instructions ?? null],
+      );
+    }
+    await client.query('COMMIT');
+    return { code: args.code, itemCount: args.items.length };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+export type RxProposal = RxTemplateItem & { requiresConfirmation: true };
+
+/**
+ * Apply a protocol template (MED-004). Returns PROPOSED lines only — it does NOT
+ * create medication requests. Each proposal must be confirmed via `prescribe`,
+ * which runs the allergy/override safety, so a template can never bypass per-
+ * patient prescribing checks.
+ */
+export async function applyRxTemplate(pool: Pool, args: { templateCode: string }): Promise<{ templateCode: string; proposals: RxProposal[] }> {
+  const r = await pool.query(
+    `SELECT medicine_code, substance_code, dose, route, frequency, duration_days, quantity, instructions
+     FROM clinical.rx_template_item WHERE template_code=$1 ORDER BY medicine_code`,
+    [args.templateCode],
+  );
+  if (r.rows.length === 0) throw new PrescribingError(`protocol template not found or empty: ${args.templateCode}`);
+  const proposals: RxProposal[] = r.rows.map((x) => ({
+    medicineCode: x.medicine_code,
+    substanceCode: x.substance_code,
+    ...(x.dose ? { dose: x.dose } : {}),
+    ...(x.route ? { route: x.route } : {}),
+    ...(x.frequency ? { frequency: x.frequency } : {}),
+    ...(x.duration_days === null ? {} : { durationDays: x.duration_days }),
+    ...(x.quantity === null ? {} : { quantity: x.quantity }),
+    ...(x.instructions ? { instructions: x.instructions } : {}),
+    requiresConfirmation: true,
+  }));
+  return { templateCode: args.templateCode, proposals };
+}
+
+// --- Medication administration record (MED-009) -----------------------------
+
+/**
+ * Record a medicine administration against a request (MED-009). Captures time,
+ * dose, route, site, performer and the given/not-given outcome. A not-given event
+ * must carry a reason (enforced by a CHECK). Append-only.
+ */
+export async function recordAdministration(
+  pool: Pool,
+  args: { requestId: string; performer?: string; dose?: string; route?: string; site?: string; status?: 'given' | 'not_given'; reason?: string; administeredAt?: string },
+): Promise<{ id: string }> {
+  const status = args.status ?? 'given';
+  if (status === 'not_given' && !args.reason?.trim()) throw new PrescribingError('a not-given administration requires a reason');
+  const req = await pool.query(`SELECT patient_id FROM clinical.medication_request WHERE id=$1`, [args.requestId]);
+  if (req.rows.length === 0) throw new PrescribingError('medication request not found');
+  const id = uuidv7();
+  await pool.query(
+    `INSERT INTO clinical.medication_administration (id, request_id, patient_id, administered_at, dose, route, site, performer, status, reason)
+     VALUES ($1,$2,$3,COALESCE($4, now()),$5,$6,$7,$8,$9,$10)`,
+    [id, args.requestId, req.rows[0].patient_id, args.administeredAt ?? null, args.dose ?? null, args.route ?? null, args.site ?? null, args.performer ?? null, status, args.reason ?? null],
+  );
+  await pool.query(
+    `INSERT INTO audit.audit_event (id, actor_user, action, resource_type, resource_id, patient_ref, outcome, reason, captured_at, event_hash)
+     VALUES ($1,$2,'create','medication_administration',$3,$4,'success',$5, now(), $6)`,
+    [uuidv7(), args.performer ?? null, id, req.rows[0].patient_id, `${status}${args.reason ? ': ' + args.reason : ''}`, 'mar:' + id],
+  );
+  return { id };
+}
+
+export type AdministrationRow = { id: string; administeredAt: string; dose: string | null; route: string | null; site: string | null; status: string; reason: string | null };
+
+/** Administration history for a medication request, oldest first (MED-009). */
+export async function listAdministrations(pool: Pool, args: { requestId: string }): Promise<AdministrationRow[]> {
+  const r = await pool.query(
+    `SELECT id, to_char(administered_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS"Z"') AS administered_at, dose, route, site, status, reason
+     FROM clinical.medication_administration WHERE request_id=$1 ORDER BY administered_at`,
+    [args.requestId],
+  );
+  return r.rows.map((x) => ({ id: x.id, administeredAt: x.administered_at, dose: x.dose, route: x.route, site: x.site, status: x.status, reason: x.reason }));
+}

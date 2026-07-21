@@ -3539,6 +3539,90 @@
         }
       }
     },
+    "/api/prescribe/administer": {
+      "post": {
+        "operationId": "post_api_prescribe_administer",
+        "summary": "POST /api/prescribe/administer",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": "dispense",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/prescribe/administrations": {
+      "get": {
+        "operationId": "get_api_prescribe_administrations",
+        "summary": "GET /api/prescribe/administrations",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/prescribe/template": {
+      "post": {
+        "operationId": "post_api_prescribe_template",
+        "summary": "POST /api/prescribe/template",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/prescribe/template/apply": {
+      "post": {
+        "operationId": "post_api_prescribe_template_apply",
+        "summary": "POST /api/prescribe/template/apply",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/prescription/print": {
       "post": {
         "operationId": "post_api_prescription_print",

@@ -30,7 +30,7 @@ import { createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, 
 import { generateVisitSummary, generatePrescription, generateSickNote, generateReferral } from './docgen.ts';
 import { sendHandover, acknowledgeHandover, inbox } from './handover.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
-import { recordAllergy, prescribe } from './prescribing.ts';
+import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations } from './prescribing.ts';
 import { searchFormulary, dispensingWorklist, markDispensed, generatePrescription as generateMedPrescription } from './medication.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
@@ -484,6 +484,21 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
             const out = await prescribe(pool, b);
             return sendJson(res, out.ok ? 201 : 409, out);
           } catch (err) { return sendJson(res, 422, { error: { code: 'prescribe_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/prescribe/template' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof defineRxTemplate>[1];
+          try { return sendJson(res, 201, await defineRxTemplate(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'rx_template_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/prescribe/template/apply' && req.method === 'POST') {
+          const b = (await readBody(req)) as { templateCode: string };
+          try { return sendJson(res, 200, await applyRxTemplate(pool, b)); } catch (err) { return sendJson(res, 404, { error: { code: 'rx_template_apply_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/prescribe/administer' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordAdministration>[1];
+          try { return sendJson(res, 201, await recordAdministration(pool, { ...b, ...(ctx.user ? { performer: ctx.user } : {}) })); } catch (err) { return sendJson(res, 422, { error: { code: 'administration_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/prescribe/administrations' && req.method === 'GET') {
+          return sendJson(res, 200, { administrations: await listAdministrations(pool, { requestId: url.searchParams.get('requestId') ?? '' }) });
         }
         if (p === '/api/formulary' && req.method === 'GET') {
           return sendJson(res, 200, { items: await searchFormulary(pool, url.searchParams.get('q') ?? '', url.searchParams.get('location') ?? undefined) });

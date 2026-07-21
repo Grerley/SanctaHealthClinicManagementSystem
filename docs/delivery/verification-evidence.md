@@ -572,6 +572,17 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | Accessions are unique, gapless and zero-padded (SPN-000123) | ORD-004 | ✅ |
 | An outbound referral tracks its lifecycle sent → accepted → closed with feedback; a closed referral drops off the open queue; illegal transitions and a missing facility are rejected | ORD-008 | ✅ |
 
+## Prescribing protocol templates & medication administration (real PostgreSQL) — MED-004, MED-009
+
+`apps/clinic-edge/test/medication-extend.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Applying a protocol template returns PROPOSED lines only and creates zero medication requests — a template never auto-prescribes | MED-004 | ✅ |
+| Confirming a proposed line still runs the allergy check: an amoxicillin proposal is blocked for an allergic patient, while a safe line confirms — the template cannot bypass per-patient safety | MED-004, MED-003 | ✅ |
+| A medication administration record captures time, dose, route, site and performer; multiple doses accumulate as append-only history | MED-009 | ✅ |
+| A not-given administration must carry a reason (DB CHECK + guard); an unknown request is rejected; each administration is audited | MED-009 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

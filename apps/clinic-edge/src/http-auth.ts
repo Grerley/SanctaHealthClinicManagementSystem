@@ -73,6 +73,10 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/triage\/summary$/, permission: 'view_clinical_detail' },
   { method: 'POST', test: /^\/api\/allergies$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/prescribe$/, permission: 'sign' },
+  { method: 'POST', test: /^\/api\/prescribe\/template$/, permission: 'configure' }, // MED-004 define protocol
+  { method: 'POST', test: /^\/api\/prescribe\/template\/apply$/, permission: 'view_clinical_detail' }, // MED-004 proposes only; confirm via /prescribe
+  { method: 'POST', test: /^\/api\/prescribe\/administer$/, permission: 'dispense' }, // MED-009
+  { method: 'GET', test: /^\/api\/prescribe\/administrations$/, permission: 'view_clinical_detail' }, // MED-009 MAR
   { method: 'GET', test: /^\/api\/formulary$/, permission: 'view_summary' }, // MED-001
   { method: 'GET', test: /^\/api\/dispense\/worklist$/, permission: 'view_summary' }, // MED-006
   { method: 'POST', test: /^\/api\/dispense\/mark$/, permission: 'dispense' },
