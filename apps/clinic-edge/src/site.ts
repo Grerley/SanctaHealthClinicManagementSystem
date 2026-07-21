@@ -4,7 +4,7 @@
  * users see their own site and central roles see the whole network.
  */
 import type { Pool } from 'pg';
-import { uuidv7, accessibleSites, type Role } from '@sancta/domain';
+import { uuidv7, accessibleSites, planReplication, type Role, type ReplicationScope } from '@sancta/domain';
 
 export class SiteError extends Error {}
 
@@ -30,4 +30,29 @@ export async function listSitesForUser(pool: Pool, roles: Role[], userSiteId: st
   const sites = await allSites(pool);
   const allowed = new Set(accessibleSites(roles, userSiteId, sites.map((s) => s.id)));
   return sites.filter((s) => allowed.has(s.id));
+}
+
+/**
+ * Plan which patient records replicate to a node with the given scope (SYN-008).
+ * Applies the domain replication rules (site, sensitivity ceiling, recency window)
+ * to the local patients and returns counts — the transport layer uses the same
+ * decision when building a delta so a node never receives out-of-scope data.
+ */
+export async function replicationPlan(
+  pool: Pool,
+  args: { scope: ReplicationScope; asOf: string },
+): Promise<{ replicated: number; withheld: number; sample: Array<{ patientId: string; siteId: string | null; sensitivity: string }> }> {
+  const r = await pool.query(
+    `SELECT id, site_id, sensitivity::text AS sensitivity,
+            GREATEST(0, ($1::date - updated_at::date))::int AS age_days
+     FROM identity.patient`,
+    [args.asOf],
+  );
+  const records = r.rows.map((x) => ({ patientId: x.id, siteId: x.site_id as string | null, sensitivity: x.sensitivity as 'normal' | 'sensitive' | 'restricted', ageDays: Number(x.age_days) }));
+  const { replicated, withheld } = planReplication(records, args.scope);
+  return {
+    replicated: replicated.length,
+    withheld: withheld.length,
+    sample: replicated.slice(0, 10).map((x) => ({ patientId: x.patientId, siteId: x.siteId, sensitivity: x.sensitivity })),
+  };
 }

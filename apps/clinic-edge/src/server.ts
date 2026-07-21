@@ -20,9 +20,9 @@ import { integrationQueueStatus, deadLetters, replayDeadLetter, type Deliver } f
 import { fhirPatientById, fhirPatientSearch } from './fhir.ts';
 import { toFhirBundle, capabilityStatement } from '@sancta/domain';
 import { instanceInfo } from './instance.ts';
-import { registerSite, listSitesForUser } from './site.ts';
+import { registerSite, listSitesForUser, replicationPlan } from './site.ts';
 import { setKpiTarget, recordSnapshot, kpiComparison } from './kpi.ts';
-import { createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth } from './admin.ts';
+import { createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth, getHelpTopic, listHelpTopics } from './admin.ts';
 import { defineForm, listForms, formAsOf } from './forms.ts';
 import { patientTimeline, type TimelineItem } from './timeline.ts';
 import { addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft } from './ehr.ts';
@@ -64,7 +64,7 @@ import { printReceipt, printInvoice, printStatement } from './billing-print.ts';
 import { storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument } from './document-lifecycle.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
-import { setPreference, queueMessage, markSent, pendingMessages, type Purpose, type Channel } from './comms.ts';
+import { setPreference, queueMessage, markSent, pendingMessages, recordInbound, openCommsTasks, completeCommsTask, type Purpose, type Channel } from './comms.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
 import { VitalError, type AppointmentState, type DrillTarget } from '@sancta/domain';
@@ -861,6 +861,26 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/comms/pending' && req.method === 'GET') {
           return sendJson(res, 200, { messages: await pendingMessages(pool) });
+        }
+        if (p === '/api/comms/inbound' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordInbound>[1];
+          try { return sendJson(res, 201, await recordInbound(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'inbound_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/comms/tasks' && req.method === 'GET') {
+          return sendJson(res, 200, { tasks: await openCommsTasks(pool) });
+        }
+        if (p === '/api/comms/tasks/complete' && req.method === 'POST') {
+          const b = (await readBody(req)) as { taskId: string };
+          try { return sendJson(res, 200, await completeCommsTask(pool, { taskId: b.taskId, ...(ctx.user ? { by: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'task_not_open', message: (err as Error).message } }); }
+        }
+        if (p === '/api/help' && req.method === 'GET') {
+          const slug = url.searchParams.get('slug');
+          if (slug) { const t = await getHelpTopic(pool, slug); return t ? sendJson(res, 200, t) : sendJson(res, 404, { error: { code: 'help_topic_not_found' } }); }
+          return sendJson(res, 200, { topics: await listHelpTopics(pool, url.searchParams.get('category') ?? undefined) });
+        }
+        if (p === '/api/sync/replication-plan' && req.method === 'POST') {
+          const b = (await readBody(req)) as { scope: import('@sancta/domain').ReplicationScope; asOf?: string };
+          return sendJson(res, 200, await replicationPlan(pool, { scope: b.scope, asOf: b.asOf ?? new Date().toISOString().slice(0, 10) }));
         }
         if (p === '/api/documents' && req.method === 'POST') {
           const b = (await readBody(req)) as UploadBody;

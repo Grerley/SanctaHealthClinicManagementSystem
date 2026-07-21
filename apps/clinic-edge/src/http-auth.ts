@@ -48,6 +48,7 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/integrations\/(status|dead)$/, permission: 'view_summary' }, // SYN-010/CLD-003 queue
   { method: 'POST', test: /^\/api\/integrations\/replay$/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/sync\/conflicts$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/sync\/replication-plan$/, permission: 'view_summary' }, // SYN-008 scope plan (read-only)
   { method: 'POST', test: /^\/api\/sync\/demographic-update$/, permission: 'administer' },
   { method: 'POST', test: /^\/api\/sync\/conflicts\/resolve$/, permission: 'approve' },
   // Clinical
@@ -162,6 +163,7 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/admin\/feature-flag$/, permission: 'configure' }, // ADM-006
   { method: 'POST', test: /^\/api\/devices/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/devices\/trusted$/, permission: 'view_summary' },
+  { method: 'GET', test: /^\/api\/help$/, permission: 'discover' }, // ADM-008 local help/onboarding
   { method: 'GET', test: /^\/api\/audit\/search$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/audit\/export$/, permission: 'export' },
 ];

@@ -67,6 +67,9 @@
       "name": "formulary"
     },
     {
+      "name": "help"
+    },
+    {
       "name": "instance"
     },
     {
@@ -729,6 +732,27 @@
         }
       }
     },
+    "/api/comms/inbound": {
+      "post": {
+        "operationId": "post_api_comms_inbound",
+        "summary": "POST /api/comms/inbound",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/comms/message": {
       "post": {
         "operationId": "post_api_comms_message",
@@ -796,6 +820,48 @@
       "post": {
         "operationId": "post_api_comms_sent",
         "summary": "POST /api/comms/sent",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/tasks": {
+      "get": {
+        "operationId": "get_api_comms_tasks",
+        "summary": "GET /api/comms/tasks",
+        "tags": [
+          "comms"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/comms/tasks/complete": {
+      "post": {
+        "operationId": "post_api_comms_tasks_complete",
+        "summary": "POST /api/comms/tasks/complete",
         "tags": [
           "comms"
         ],
@@ -2514,6 +2580,27 @@
           "formulary"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/help": {
+      "get": {
+        "operationId": "get_api_help",
+        "summary": "GET /api/help",
+        "tags": [
+          "help"
+        ],
+        "x-permission": "discover",
         "responses": {
           "200": {
             "description": "Success"
@@ -4518,6 +4605,27 @@
           "sync"
         ],
         "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/sync/replication-plan": {
+      "post": {
+        "operationId": "post_api_sync_replication_plan",
+        "summary": "POST /api/sync/replication-plan",
+        "tags": [
+          "sync"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

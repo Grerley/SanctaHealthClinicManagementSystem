@@ -629,6 +629,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | Re-indexing a document appends a new index version and never overwrites the source file or its content hash; both versions are retained | DOC-006 | ✅ |
 | A document is findable by a current index term (latest version) | DOC-006 | ✅ |
 
+## Inbound→tasks, local help & replication scope (real PostgreSQL) — COM-004, ADM-008, SYN-008
+
+`packages/domain/src/replication.test.ts` (unit) and `apps/clinic-edge/test/ops-completeness.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An inbound patient response raises a follow-up task linked to its source; the task can be closed and drops off the open queue; closing twice or an empty body is rejected | COM-004 | ✅ |
+| Local help/onboarding content is served from the edge (offline); onboarding steps return in order; an unknown slug returns null | ADM-008 | ✅ |
+| The replication plan withholds out-of-scope records: a site-scoped node with a sensitivity ceiling holds only its own, permitted-sensitivity, in-window records; a restricted patient is withheld from a `sensitive`-ceiling node | SYN-008 | ✅ |
+| A central node (all sites, restricted ceiling) replicates at least as much as a constrained local node | SYN-008 | ✅ |
+| Decision logic unit-tested across site/sensitivity/window boundaries | SYN-008 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

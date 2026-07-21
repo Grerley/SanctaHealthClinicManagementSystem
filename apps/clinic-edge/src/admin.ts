@@ -143,3 +143,23 @@ export async function systemHealth(pool: Pool): Promise<SystemHealth> {
     return { database: 'unreachable', pendingSync: -1, integrationQueue: { queued: -1, dead: -1 }, openConflicts: -1, status: 'attention', checkedAt };
   }
 }
+
+// --- Local help & onboarding (ADM-008) --------------------------------------
+
+export type HelpTopic = { slug: string; title: string; category: string; body: string; stepOrder: number | null };
+
+/** A single help topic served locally from the edge (ADM-008, offline). */
+export async function getHelpTopic(pool: Pool, slug: string): Promise<HelpTopic | null> {
+  const r = await pool.query(`SELECT slug, title, category, body, step_order FROM organisation.help_topic WHERE slug=$1`, [slug]);
+  if (r.rows.length === 0) return null;
+  const x = r.rows[0];
+  return { slug: x.slug, title: x.title, category: x.category, body: x.body, stepOrder: x.step_order };
+}
+
+/** List help topics, optionally by category; onboarding steps come back in order (ADM-008). */
+export async function listHelpTopics(pool: Pool, category?: string): Promise<HelpTopic[]> {
+  const r = category
+    ? await pool.query(`SELECT slug, title, category, body, step_order FROM organisation.help_topic WHERE category=$1 ORDER BY step_order NULLS LAST, title`, [category])
+    : await pool.query(`SELECT slug, title, category, body, step_order FROM organisation.help_topic ORDER BY category, step_order NULLS LAST, title`);
+  return r.rows.map((x) => ({ slug: x.slug, title: x.title, category: x.category, body: x.body, stepOrder: x.step_order }));
+}

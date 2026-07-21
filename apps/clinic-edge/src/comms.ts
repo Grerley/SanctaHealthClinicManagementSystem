@@ -63,3 +63,53 @@ export async function pendingMessages(pool: Pool): Promise<Array<{ messageId: st
   const r = await pool.query(`SELECT id, patient_id, channel, template FROM flow.message WHERE status='queued' ORDER BY created_at`);
   return r.rows.map((x) => ({ messageId: x.id, patientId: x.patient_id, channel: x.channel, template: x.template }));
 }
+
+// --- Inbound responses → tasks (COM-004) ------------------------------------
+
+/**
+ * Record an inbound patient response and raise a follow-up task linked to it
+ * (COM-004). Where the reply is to a known outbound message, the link is kept so
+ * the loop can be closed against its source.
+ */
+export async function recordInbound(
+  pool: Pool,
+  args: { patientId?: string; channel?: string; body: string; inReplyTo?: string; summary?: string; assignedRole?: string },
+): Promise<{ inboundId: string; taskId: string }> {
+  if (!args.body?.trim()) throw new CommsError('an inbound message body is required');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const inboundId = uuidv7();
+    await client.query(
+      `INSERT INTO flow.inbound_message (id, patient_id, channel, body, in_reply_to) VALUES ($1,$2,$3,$4,$5)`,
+      [inboundId, args.patientId ?? null, args.channel ?? 'sms', args.body, args.inReplyTo ?? null],
+    );
+    const taskId = uuidv7();
+    await client.query(
+      `INSERT INTO flow.comms_task (id, inbound_id, patient_id, summary, assigned_role) VALUES ($1,$2,$3,$4,$5)`,
+      [taskId, inboundId, args.patientId ?? null, args.summary ?? `Respond to inbound message: ${args.body.slice(0, 80)}`, args.assignedRole ?? null],
+    );
+    await client.query('COMMIT');
+    return { inboundId, taskId };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/** Open communication tasks awaiting action (COM-004). */
+export async function openCommsTasks(pool: Pool): Promise<Array<{ taskId: string; patientId: string | null; summary: string; inboundId: string }>> {
+  const r = await pool.query(
+    `SELECT id, patient_id, summary, inbound_id FROM flow.comms_task WHERE status='open' ORDER BY created_at`,
+  );
+  return r.rows.map((x) => ({ taskId: x.id, patientId: x.patient_id, summary: x.summary, inboundId: x.inbound_id }));
+}
+
+/** Close a communication task once actioned (COM-004). */
+export async function completeCommsTask(pool: Pool, args: { taskId: string; by?: string }): Promise<{ status: 'done' }> {
+  const r = await pool.query(`UPDATE flow.comms_task SET status='done', closed_at=now(), closed_by=$2 WHERE id=$1 AND status='open'`, [args.taskId, args.by ?? null]);
+  if (r.rowCount === 0) throw new CommsError('task not found or already closed');
+  return { status: 'done' };
+}
