@@ -641,6 +641,17 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | A central node (all sites, restricted ceiling) replicates at least as much as a constrained local node | SYN-008 | ✅ |
 | Decision logic unit-tested across site/sensitivity/window boundaries | SYN-008 | ✅ |
 
+## Fixed assets & product margin (real PostgreSQL) — FIN-008, FIN-011
+
+`packages/domain/src/finance-analytics.test.ts` (unit) and `apps/clinic-edge/test/fixed-assets-margin.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| An asset depreciates straight-line; net book value never falls below salvage; the register derives depreciation/NBV as-of a date (never a stored total) | FIN-008 | ✅ |
+| Disposal reports gain/loss versus net book value and is audited; a second disposal is rejected | FIN-008 | ✅ |
+| The margin report derives per-SKU margin from revenue (finalised invoice lines) and ACTUAL consumption (stock issued at lot cost); zero revenue yields 0% without divide-by-zero | FIN-011 | ✅ |
+| The clinic margin total ties out to the income statement (revenue less COGS) | FIN-011 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

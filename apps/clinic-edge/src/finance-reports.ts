@@ -135,3 +135,104 @@ export async function exportApprovedLedger(pool: Pool, args: { periodId: string;
 
   return { periodId: args.periodId, periodStatus, lines, totalDebitMinor, totalCreditMinor, balanced, lineCount: lines.length, idempotencyKey, exportedAt: new Date().toISOString() };
 }
+
+import { straightLineDepreciation, grossMargin, type Depreciation, type Margin } from '@sancta/domain';
+
+export class FixedAssetError extends Error {}
+
+/** Capitalise a fixed asset (FIN-008). */
+export async function capitaliseAsset(
+  pool: Pool,
+  args: { reference: string; name: string; category?: string; costMinor: number; salvageMinor?: number; usefulLifeMonths: number; acquiredOn: string; createdBy?: string },
+): Promise<{ id: string }> {
+  if (!args.reference?.trim() || !args.name?.trim()) throw new FixedAssetError('asset reference and name are required');
+  if ((args.salvageMinor ?? 0) > args.costMinor) throw new FixedAssetError('salvage cannot exceed cost');
+  const id = uuidv7();
+  await pool.query(
+    `INSERT INTO finance.fixed_asset (id, reference, name, category, cost_minor, salvage_minor, useful_life_months, acquired_on, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [id, args.reference, args.name, args.category ?? null, args.costMinor, args.salvageMinor ?? 0, args.usefulLifeMonths, args.acquiredOn, args.createdBy ?? null],
+  );
+  return { id };
+}
+
+function monthsBetween(fromIso: string, toIso: string): number {
+  const a = new Date(fromIso + 'T00:00:00Z');
+  const b = new Date(toIso + 'T00:00:00Z');
+  let months = (b.getUTCFullYear() - a.getUTCFullYear()) * 12 + (b.getUTCMonth() - a.getUTCMonth());
+  if (b.getUTCDate() < a.getUTCDate()) months--;
+  return Math.max(0, months);
+}
+
+export type AssetValuation = { id: string; reference: string; name: string; costMinor: number; asOf: string; status: string } & Depreciation;
+
+/** Depreciation + net book value for every asset as-of a date (FIN-008). */
+export async function assetRegister(pool: Pool, args: { asOf: string }): Promise<AssetValuation[]> {
+  const r = await pool.query(
+    `SELECT id, reference, name, cost_minor, salvage_minor, useful_life_months, to_char(acquired_on,'YYYY-MM-DD') AS acquired, status FROM finance.fixed_asset ORDER BY reference`,
+  );
+  return r.rows.map((x) => {
+    const monthsElapsed = monthsBetween(x.acquired, args.asOf);
+    const dep = straightLineDepreciation({ costMinor: Number(x.cost_minor), salvageMinor: Number(x.salvage_minor), usefulLifeMonths: x.useful_life_months, monthsElapsed });
+    return { id: x.id, reference: x.reference, name: x.name, costMinor: Number(x.cost_minor), asOf: args.asOf, status: x.status, ...dep };
+  });
+}
+
+/** Dispose of an asset, recording proceeds and the gain/loss vs net book value (FIN-008). */
+export async function disposeAsset(pool: Pool, args: { assetId: string; disposedOn: string; proceedsMinor: number; by?: string }): Promise<{ id: string; netBookValueMinor: number; gainLossMinor: number }> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const a = await client.query(`SELECT reference, cost_minor, salvage_minor, useful_life_months, to_char(acquired_on,'YYYY-MM-DD') AS acquired, status FROM finance.fixed_asset WHERE id=$1 FOR UPDATE`, [args.assetId]);
+    if (a.rows.length === 0) throw new FixedAssetError('asset not found');
+    if (a.rows[0].status === 'disposed') throw new FixedAssetError('asset already disposed');
+    const x = a.rows[0];
+    const dep = straightLineDepreciation({ costMinor: Number(x.cost_minor), salvageMinor: Number(x.salvage_minor), usefulLifeMonths: x.useful_life_months, monthsElapsed: monthsBetween(x.acquired, args.disposedOn) });
+    const gainLossMinor = args.proceedsMinor - dep.netBookValueMinor;
+    await client.query(`UPDATE finance.fixed_asset SET status='disposed', disposed_on=$2, disposal_proceeds_minor=$3 WHERE id=$1`, [args.assetId, args.disposedOn, args.proceedsMinor]);
+    await client.query(
+      `INSERT INTO audit.audit_event (id, actor_user, action, resource_type, resource_id, outcome, reason, captured_at, event_hash)
+       VALUES ($1,$2,'amend','fixed_asset',$3,'success',$4, now(), $5)`,
+      [uuidv7(), args.by ?? null, args.assetId, `disposed ${x.reference}: proceeds ${args.proceedsMinor} vs NBV ${dep.netBookValueMinor} (${gainLossMinor >= 0 ? 'gain' : 'loss'} ${Math.abs(gainLossMinor)})`, 'asset-disposal:' + args.assetId],
+    );
+    await client.query('COMMIT');
+    return { id: args.assetId, netBookValueMinor: dep.netBookValueMinor, gainLossMinor };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+export type ProductMargin = { sku: string; revenueMinor: number; cogsMinor: number; grossMarginMinor: number; marginPct: number };
+
+/**
+ * Product/service margin from revenue and ACTUAL consumption (FIN-011). Revenue
+ * per SKU comes from finalised invoice lines; cost of goods comes from the actual
+ * stock issued, valued at its lot cost. The clinic total ties out to the ledger's
+ * revenue-less-COGS.
+ */
+export async function marginReport(pool: Pool): Promise<{ products: ProductMargin[]; total: Margin }> {
+  const rev = await pool.query(
+    `SELECT service_code AS sku, coalesce(sum(applied_minor),0)::bigint AS revenue
+     FROM billing.invoice_line l JOIN billing.invoice i ON i.id=l.invoice_id
+     WHERE i.status IN ('finalised','part_paid','paid') GROUP BY service_code`,
+  );
+  const cogs = await pool.query(
+    `SELECT m.sku, coalesce(sum(-m.quantity * lo.unit_cost_minor),0)::bigint AS cogs
+     FROM inventory.stock_movement m JOIN inventory.lot lo ON lo.id=m.lot_id
+     WHERE m.quantity < 0 GROUP BY m.sku`,
+  );
+  const revBySku = new Map<string, number>(rev.rows.map((r) => [r.sku, Number(r.revenue)]));
+  const cogsBySku = new Map<string, number>(cogs.rows.map((r) => [r.sku, Number(r.cogs)]));
+  const skus = new Set<string>([...revBySku.keys(), ...cogsBySku.keys()]);
+  const products: ProductMargin[] = [...skus].sort().map((sku) => {
+    const m = grossMargin(revBySku.get(sku) ?? 0, cogsBySku.get(sku) ?? 0);
+    return { sku, ...m };
+  });
+  let totalRevenue = 0;
+  let totalCogs = 0;
+  for (const p of products) { totalRevenue += p.revenueMinor; totalCogs += p.cogsMinor; }
+  return { products, total: grossMargin(totalRevenue, totalCogs) };
+}

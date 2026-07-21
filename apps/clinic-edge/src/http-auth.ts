@@ -123,7 +123,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/equipment\/service$/, permission: 'amend' }, // INV-010
   { method: 'GET', test: /^\/api\/equipment\/due$/, permission: 'view_summary' }, // INV-010
   // Finance
-  { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value|budget)$/, permission: 'configure' }, // chart/reference data (FIN-001) + budgets (FIN-007)
+  { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value|budget|asset)$/, permission: 'configure' }, // chart/reference data (FIN-001) + budgets (FIN-007) + fixed-asset capitalisation (FIN-008)
+  { method: 'POST', test: /^\/api\/finance\/asset\/dispose$/, permission: 'approve' }, // FIN-008 disposal (gain/loss)
   { method: 'POST', test: /^\/api\/finance\/journal\/draft$/, permission: 'create' }, // maker drafts (FIN-003)
   { method: 'POST', test: /^\/api\/finance\/(expense|pay-supplier|period\/close|period\/reopen|journal\/post|journal\/reject|monthly-close)$/, permission: 'approve' }, // checker/approver
   { method: 'POST', test: /^\/api\/finance\/break-even$/, permission: 'view_summary' }, // FIN-012 planning calc (no writes)

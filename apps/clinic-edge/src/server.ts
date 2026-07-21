@@ -38,7 +38,7 @@ import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType } from './scheduling.ts';
 import { appointmentReminder } from '@sancta/domain';
 import { closePeriod, reopenPeriod, periodStatus } from './finance.ts';
-import { trialBalance, incomeStatement, exportApprovedLedger } from './finance-reports.ts';
+import { trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport } from './finance-reports.ts';
 import { breakEven, investmentRecovery } from '@sancta/domain';
 import { draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals } from './manual-journal.ts';
 import { balanceSheet, monthlyClose } from './finance-close.ts';
@@ -1055,6 +1055,21 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           const periodId = url.searchParams.get('periodId') ?? '';
           try { return sendJson(res, 200, await exportApprovedLedger(pool, { periodId, ...(ctx.user ? { exportedBy: ctx.user } : {}) })); }
           catch (err) { return sendJson(res, 422, { error: { code: 'ledger_export_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/asset' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof capitaliseAsset>[1];
+          try { return sendJson(res, 201, await capitaliseAsset(pool, { ...b, ...(ctx.user ? { createdBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 400, { error: { code: 'asset_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/asset/register' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { assets: await assetRegister(pool, { asOf }) });
+        }
+        if (p === '/api/finance/asset/dispose' && req.method === 'POST') {
+          const b = (await readBody(req)) as { assetId: string; disposedOn: string; proceedsMinor: number };
+          try { return sendJson(res, 200, await disposeAsset(pool, { ...b, ...(ctx.user ? { by: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'asset_disposal_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/finance/margin' && req.method === 'GET') {
+          return sendJson(res, 200, await marginReport(pool));
         }
         if (p === '/api/finance/break-even' && req.method === 'POST') {
           const b = (await readBody(req)) as { fixedCostMinor: number; unitPriceMinor: number; unitVariableCostMinor: number; investmentMinor?: number; fundingMinor?: number; monthlyNetMinor?: number };

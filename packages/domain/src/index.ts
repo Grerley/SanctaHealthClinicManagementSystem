@@ -43,3 +43,4 @@ export * from './deidentify.ts';
 export * from './patient-card.ts';
 export * from './billing-doc.ts';
 export * from './replication.ts';
+export * from './finance-analytics.ts';

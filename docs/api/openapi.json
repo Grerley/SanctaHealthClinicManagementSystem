@@ -2028,6 +2028,69 @@
         }
       }
     },
+    "/api/finance/asset": {
+      "post": {
+        "operationId": "post_api_finance_asset",
+        "summary": "POST /api/finance/asset",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/asset/dispose": {
+      "post": {
+        "operationId": "post_api_finance_asset_dispose",
+        "summary": "POST /api/finance/asset/dispose",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "approve",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/asset/register": {
+      "get": {
+        "operationId": "get_api_finance_asset_register",
+        "summary": "GET /api/finance/asset/register",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/finance/balance-sheet": {
       "get": {
         "operationId": "get_api_finance_balance_sheet",
@@ -2372,6 +2435,27 @@
           "finance"
         ],
         "x-permission": "export",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/finance/margin": {
+      "get": {
+        "operationId": "get_api_finance_margin",
+        "summary": "GET /api/finance/margin",
+        "tags": [
+          "finance"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"
