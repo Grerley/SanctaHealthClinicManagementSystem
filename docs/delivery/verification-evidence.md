@@ -676,6 +676,18 @@ Backend `apps/clinic-edge/test/appointments-extend.itest.ts` (real PostgreSQL) a
 | A REJECTED claim leaves the balance with the patient (unchanged); a claim cannot be adjudicated twice; claiming more than outstanding is rejected | BIL-011 | ✅ |
 | The remittance is linked to the real settling payment (no shadow balance) | BIL-011 | ✅ |
 
+## Patient self-service (real PostgreSQL) — COM-006
+
+`apps/clinic-edge/test/selfservice.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A scoped token gates self-service access; invalid, revoked and expired tokens are all rejected | COM-006 | ✅ |
+| The self-service summary shows the patient's OWN balance (1000 after part-payment), name, upcoming appointments and document count | COM-006 | ✅ |
+| A booking request is a PENDING request — no appointment is auto-created; staff see it and confirm it into an open slot, which books the appointment and marks the request confirmed | COM-006 | ✅ |
+| Confirming a request twice is rejected | COM-006 | ✅ |
+| A payment intent is recorded PENDING reconciliation (never a self-authorised payment); a non-positive amount and a bad token are rejected | COM-006 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

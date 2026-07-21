@@ -106,6 +106,9 @@
       "name": "schedule"
     },
     {
+      "name": "self-service"
+    },
+    {
       "name": "sites"
     },
     {
@@ -4607,6 +4610,153 @@
           "schedule"
         ],
         "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/booking-confirm": {
+      "post": {
+        "operationId": "post_api_self_service_booking_confirm",
+        "summary": "POST /api/self-service/booking-confirm",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/booking-request": {
+      "post": {
+        "operationId": "post_api_self_service_booking_request",
+        "summary": "POST /api/self-service/booking-request",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/booking-requests": {
+      "get": {
+        "operationId": "get_api_self_service_booking_requests",
+        "summary": "GET /api/self-service/booking-requests",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/pay-intent": {
+      "post": {
+        "operationId": "post_api_self_service_pay_intent",
+        "summary": "POST /api/self-service/pay-intent",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/revoke": {
+      "post": {
+        "operationId": "post_api_self_service_revoke",
+        "summary": "POST /api/self-service/revoke",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/summary": {
+      "get": {
+        "operationId": "get_api_self_service_summary",
+        "summary": "GET /api/self-service/summary",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/self-service/token": {
+      "post": {
+        "operationId": "post_api_self_service_token",
+        "summary": "POST /api/self-service/token",
+        "tags": [
+          "self-service"
+        ],
+        "x-permission": "administer",
         "responses": {
           "200": {
             "description": "Success"

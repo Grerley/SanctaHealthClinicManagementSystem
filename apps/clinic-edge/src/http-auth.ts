@@ -172,6 +172,12 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/devices/, permission: 'administer' },
   { method: 'GET', test: /^\/api\/devices\/trusted$/, permission: 'view_summary' },
   { method: 'GET', test: /^\/api\/help$/, permission: 'discover' }, // ADM-008 local help/onboarding
+  // Patient self-service (COM-006). Staff issue/revoke tokens and confirm requests;
+  // the patient-facing summary/booking-request/pay-intent routes are token-gated in
+  // the handler (no staff role — deliberately public at this layer).
+  { method: 'POST', test: /^\/api\/self-service\/(token|revoke)$/, permission: 'administer' },
+  { method: 'GET', test: /^\/api\/self-service\/booking-requests$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/self-service\/booking-confirm$/, permission: 'create' },
   { method: 'GET', test: /^\/api\/audit\/search$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/audit\/export$/, permission: 'export' },
 ];

@@ -66,6 +66,7 @@ import { storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, 
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
 import { setPreference, queueMessage, markSent, pendingMessages, recordInbound, openCommsTasks, completeCommsTask, type Purpose, type Channel } from './comms.ts';
+import { issueToken, revokeToken, selfSummary, requestBooking, recordPayIntent, listBookingRequests, confirmBooking } from './selfservice.ts';
 import { addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity } from './ops.ts';
 import { addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance } from './facility.ts';
 import { VitalError, type AppointmentState, type DrillTarget } from '@sancta/domain';
@@ -878,6 +879,32 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/comms/tasks/complete' && req.method === 'POST') {
           const b = (await readBody(req)) as { taskId: string };
           try { return sendJson(res, 200, await completeCommsTask(pool, { taskId: b.taskId, ...(ctx.user ? { by: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'task_not_open', message: (err as Error).message } }); }
+        }
+        if (p === '/api/self-service/token' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; ttlHours?: number };
+          return sendJson(res, 201, await issueToken(pool, b));
+        }
+        if (p === '/api/self-service/revoke' && req.method === 'POST') {
+          const b = (await readBody(req)) as { token: string };
+          await revokeToken(pool, b.token); return sendJson(res, 200, { ok: true });
+        }
+        if (p === '/api/self-service/summary' && req.method === 'GET') {
+          try { return sendJson(res, 200, await selfSummary(pool, url.searchParams.get('token') ?? '')); } catch (err) { return sendJson(res, 401, { error: { code: 'self_service_unauthorised', message: (err as Error).message } }); }
+        }
+        if (p === '/api/self-service/booking-request' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof requestBooking>[1];
+          try { return sendJson(res, 201, await requestBooking(pool, b)); } catch (err) { return sendJson(res, 401, { error: { code: 'self_service_unauthorised', message: (err as Error).message } }); }
+        }
+        if (p === '/api/self-service/pay-intent' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordPayIntent>[1];
+          try { return sendJson(res, 201, await recordPayIntent(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'pay_intent_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/self-service/booking-requests' && req.method === 'GET') {
+          return sendJson(res, 200, { requests: await listBookingRequests(pool) });
+        }
+        if (p === '/api/self-service/booking-confirm' && req.method === 'POST') {
+          const b = (await readBody(req)) as { requestId: string; slotId: string };
+          try { return sendJson(res, 201, await confirmBooking(pool, { ...b, ...(ctx.user ? { user: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'booking_confirm_failed', message: (err as Error).message } }); }
         }
         if (p === '/api/help' && req.method === 'GET') {
           const slug = url.searchParams.get('slug');
