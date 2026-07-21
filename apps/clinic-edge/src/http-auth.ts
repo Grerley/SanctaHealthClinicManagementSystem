@@ -112,6 +112,11 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/stock\/receive$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/stock\/stocktake$/, permission: 'approve' },
   { method: 'GET', test: /^\/api\/stock(\/(alerts|reorder|movement-report))?$/, permission: 'view_summary' }, // incl. INV-007/011
+  { method: 'POST', test: /^\/api\/procurement\/(requisition|purchase-order)$/, permission: 'create' }, // INV-003
+  { method: 'POST', test: /^\/api\/procurement\/requisition\/decide$/, permission: 'approve' }, // INV-003 SoD approval
+  { method: 'POST', test: /^\/api\/equipment$/, permission: 'create' }, // INV-010
+  { method: 'POST', test: /^\/api\/equipment\/service$/, permission: 'amend' }, // INV-010
+  { method: 'GET', test: /^\/api\/equipment\/due$/, permission: 'view_summary' }, // INV-010
   // Finance
   { method: 'POST', test: /^\/api\/finance\/(cost-centre|account|account\/revise|dimension|dimension\/value|budget)$/, permission: 'configure' }, // chart/reference data (FIN-001) + budgets (FIN-007)
   { method: 'POST', test: /^\/api\/finance\/journal\/draft$/, permission: 'create' }, // maker drafts (FIN-003)

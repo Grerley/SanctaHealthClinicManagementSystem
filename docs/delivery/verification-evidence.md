@@ -595,6 +595,17 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | A patient-summary export requires a lawful purpose, returns the summary with a content hash, and writes an append-only disclosure-log row (who/purpose/recipient/when); the disclosure is audited against the patient | PAT-010 | ✅ |
 | An unknown patient and an empty purpose are rejected | PAT-010 | ✅ |
 
+## Requisitions/POs & equipment register (real PostgreSQL) — INV-003, INV-010
+
+`apps/clinic-edge/test/procurement.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| A requisition cannot be approved by its own requester (segregation of duties, BR-011); a different, authorised approver succeeds; a decided requisition cannot be decided twice | INV-003 | ✅ |
+| A requisition above the value threshold requires an authorised (approve-capable) role — a stock-only role is blocked, an authorised role clears it | INV-003 | ✅ |
+| A purchase order can only be raised from an approved requisition; raising it flips the requisition to ordered | INV-003 | ✅ |
+| The equipment register tracks service events (append-only history) and rolls the next-service date; overdue equipment appears on the due list until serviced; unknown equipment and a duplicate asset tag are rejected | INV-010 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

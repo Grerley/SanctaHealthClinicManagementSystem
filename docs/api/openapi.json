@@ -52,6 +52,9 @@
       "name": "encounters"
     },
     {
+      "name": "equipment"
+    },
+    {
       "name": "fhir"
     },
     {
@@ -86,6 +89,9 @@
     },
     {
       "name": "prescription"
+    },
+    {
+      "name": "procurement"
     },
     {
       "name": "public"
@@ -1651,6 +1657,69 @@
           "encounters"
         ],
         "x-permission": "sign",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/equipment": {
+      "post": {
+        "operationId": "post_api_equipment",
+        "summary": "POST /api/equipment",
+        "tags": [
+          "equipment"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/equipment/due": {
+      "get": {
+        "operationId": "get_api_equipment_due",
+        "summary": "GET /api/equipment/due",
+        "tags": [
+          "equipment"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/equipment/service": {
+      "post": {
+        "operationId": "post_api_equipment_service",
+        "summary": "POST /api/equipment/service",
+        "tags": [
+          "equipment"
+        ],
+        "x-permission": "amend",
         "responses": {
           "200": {
             "description": "Success"
@@ -3697,6 +3766,69 @@
           "prescription"
         ],
         "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/procurement/purchase-order": {
+      "post": {
+        "operationId": "post_api_procurement_purchase_order",
+        "summary": "POST /api/procurement/purchase-order",
+        "tags": [
+          "procurement"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/procurement/requisition": {
+      "post": {
+        "operationId": "post_api_procurement_requisition",
+        "summary": "POST /api/procurement/requisition",
+        "tags": [
+          "procurement"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/procurement/requisition/decide": {
+      "post": {
+        "operationId": "post_api_procurement_requisition_decide",
+        "summary": "POST /api/procurement/requisition/decide",
+        "tags": [
+          "procurement"
+        ],
+        "x-permission": "approve",
         "responses": {
           "200": {
             "description": "Success"

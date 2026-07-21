@@ -51,6 +51,7 @@ import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type
 import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
+import { createRequisition, decideRequisition, createPurchaseOrder, registerEquipment, recordEquipmentService, equipmentDueService } from './procurement.ts';
 import { performStocktake } from './stocktake.ts';
 import { reorderSuggestions, stockMovementReport } from './inventory-reports.ts';
 import { dashboard, exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError } from './management.ts';
@@ -322,6 +323,31 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/stock/alerts' && req.method === 'GET') {
           const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
           return sendJson(res, 200, { alerts: await stockAlerts(pool, asOf) });
+        }
+        if (p === '/api/procurement/requisition' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createRequisition>[1];
+          try { return sendJson(res, 201, await createRequisition(pool, { ...b, ...(ctx.user ? { requestedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 400, { error: { code: 'requisition_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/procurement/requisition/decide' && req.method === 'POST') {
+          const b = (await readBody(req)) as { requisitionId: string; approve: boolean };
+          try { return sendJson(res, 200, await decideRequisition(pool, { requisitionId: b.requisitionId, approve: b.approve, approver: ctx.user ?? '', approverRoles: ctx.roles })); }
+          catch (err) { return sendJson(res, 409, { error: { code: 'requisition_decision_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/procurement/purchase-order' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createPurchaseOrder>[1];
+          try { return sendJson(res, 201, await createPurchaseOrder(pool, { ...b, ...(ctx.user ? { createdBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 409, { error: { code: 'purchase_order_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/equipment' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof registerEquipment>[1];
+          try { return sendJson(res, 201, await registerEquipment(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'equipment_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/equipment/service' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof recordEquipmentService>[1];
+          try { return sendJson(res, 201, await recordEquipmentService(pool, { ...b, ...(ctx.user ? { performedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'equipment_service_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/equipment/due' && req.method === 'GET') {
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return sendJson(res, 200, { equipment: await equipmentDueService(pool, { asOf }) });
         }
         if (p === '/api/stock/stocktake' && req.method === 'POST') {
           const b = (await readBody(req)) as { lotId: string; countedQty: number; approver?: string };
