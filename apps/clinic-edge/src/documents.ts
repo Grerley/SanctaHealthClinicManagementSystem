@@ -77,3 +77,46 @@ export async function disclosureLog(pool: Pool, documentId: string): Promise<Arr
   );
   return r.rows.map((x) => ({ userId: x.user_id, purpose: x.purpose, disclosedAt: x.disclosed_at }));
 }
+
+// --- Document index & assistive OCR (DOC-006) -------------------------------
+
+/**
+ * Attach index terms / OCR text to a document (DOC-006). ADDITIVE by design: a
+ * re-index appends a new version and never overwrites the source file or its
+ * content hash — the original is preserved. Returns the new index version.
+ */
+export async function indexDocument(
+  pool: Pool,
+  args: { documentId: string; terms?: string[]; ocrText?: string; indexedBy?: string },
+): Promise<{ version: number }> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const doc = await client.query(`SELECT sha256 FROM clinical.document_reference WHERE id=$1 FOR UPDATE`, [args.documentId]);
+    if (doc.rows.length === 0) throw new DocumentError('document not found');
+    const cur = await client.query(`SELECT coalesce(max(version),0) AS v FROM clinical.document_index WHERE document_id=$1`, [args.documentId]);
+    const version = Number(cur.rows[0].v) + 1;
+    await client.query(
+      `INSERT INTO clinical.document_index (id, document_id, version, terms, ocr_text, indexed_by) VALUES ($1,$2,$3,$4,$5,$6)`,
+      [uuidv7(), args.documentId, version, args.terms ?? [], args.ocrText ?? null, args.indexedBy ?? null],
+    );
+    await client.query('COMMIT');
+    return { version };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/** Find documents whose latest index carries a term (DOC-006). */
+export async function searchDocuments(pool: Pool, term: string): Promise<Array<{ documentId: string; filename: string; version: number }>> {
+  const r = await pool.query(
+    `SELECT DISTINCT ON (di.document_id) di.document_id, dr.filename, di.version
+     FROM clinical.document_index di JOIN clinical.document_reference dr ON dr.id = di.document_id
+     WHERE $1 = ANY(di.terms) ORDER BY di.document_id, di.version DESC`,
+    [term],
+  );
+  return r.rows.map((x) => ({ documentId: x.document_id, filename: x.filename, version: x.version }));
+}

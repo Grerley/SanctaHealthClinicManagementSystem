@@ -477,6 +477,27 @@
         }
       }
     },
+    "/api/billing/invoice/print": {
+      "post": {
+        "operationId": "post_api_billing_invoice_print",
+        "summary": "POST /api/billing/invoice/print",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/billing/link-charge": {
       "post": {
         "operationId": "post_api_billing_link_charge",
@@ -582,6 +603,27 @@
         }
       }
     },
+    "/api/billing/receipt/print": {
+      "post": {
+        "operationId": "post_api_billing_receipt_print",
+        "summary": "POST /api/billing/receipt/print",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/billing/refund": {
       "post": {
         "operationId": "post_api_billing_refund",
@@ -590,6 +632,27 @@
           "billing"
         ],
         "x-permission": "reverse",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/billing/statement/print": {
+      "post": {
+        "operationId": "post_api_billing_statement_print",
+        "summary": "POST /api/billing/statement/print",
+        "tags": [
+          "billing"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"
@@ -1002,6 +1065,27 @@
         }
       }
     },
+    "/api/documents/index": {
+      "post": {
+        "operationId": "post_api_documents_index",
+        "summary": "POST /api/documents/index",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "amend",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/documents/legal-hold": {
       "post": {
         "operationId": "post_api_documents_legal_hold",
@@ -1052,6 +1136,27 @@
           "documents"
         ],
         "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/documents/search": {
+      "get": {
+        "operationId": "get_api_documents_search",
+        "summary": "GET /api/documents/search",
+        "tags": [
+          "documents"
+        ],
+        "x-permission": "view_summary",
         "responses": {
           "200": {
             "description": "Success"

@@ -617,6 +617,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | The reception check-in view shows identity, logistical tasks and account balance — and never clinical detail; the serialised view contains no diagnosis/encounter/result/allergy/medication/vitals field | VIS-002 | ✅ |
 | An unknown visit is rejected | VIS-002 | ✅ |
 
+## Billing document print/reprint & document index/OCR (real PostgreSQL) — BIL-007, DOC-006
+
+`packages/domain/src/billing-doc.test.ts` (unit) and `apps/clinic-edge/test/billing-doc.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| The first print of a receipt/invoice/statement is the original (no marker); a reprint carries a COPY marker with its reprint number; every issue is recorded and audited | BIL-007 | ✅ |
+| Receipts total the payment; invoices and statements sum their lines | BIL-007 | ✅ |
+| Printing an unknown payment/invoice/patient is rejected | BIL-007 | ✅ |
+| Re-indexing a document appends a new index version and never overwrites the source file or its content hash; both versions are retained | DOC-006 | ✅ |
+| A document is findable by a current index term (latest version) | DOC-006 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

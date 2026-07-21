@@ -59,7 +59,8 @@ import { publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclo
 import { patientCard, resolveCard, checkInView } from './frontdesk.ts';
 import { applyDemographicUpdate, resolveConflictCase, listOpenConflicts } from './conflict.ts';
 import { searchAudit, exportAudit, type AuditFilter } from './audit.ts';
-import { uploadDocument, openDocument, disclosureLog, type UploadBody } from './documents.ts';
+import { uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, type UploadBody } from './documents.ts';
+import { printReceipt, printInvoice, printStatement } from './billing-print.ts';
 import { storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument } from './document-lifecycle.ts';
 import { startVisit, transfer, queueBoard, completeVisit } from './visits.ts';
 import { escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations } from './visit-lifecycle.ts';
@@ -872,6 +873,25 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/documents/disclosures' && req.method === 'GET') {
           return sendJson(res, 200, { disclosures: await disclosureLog(pool, url.searchParams.get('id') ?? '') });
+        }
+        if (p === '/api/documents/index' && req.method === 'POST') {
+          const b = (await readBody(req)) as { documentId: string; terms?: string[]; ocrText?: string };
+          try { return sendJson(res, 201, await indexDocument(pool, { ...b, ...(ctx.user ? { indexedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'index_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/documents/search' && req.method === 'GET') {
+          return sendJson(res, 200, { documents: await searchDocuments(pool, url.searchParams.get('term') ?? '') });
+        }
+        if (p === '/api/billing/receipt/print' && req.method === 'POST') {
+          const b = (await readBody(req)) as { paymentId: string; date?: string };
+          try { return sendJson(res, 200, await printReceipt(pool, { ...b, ...(ctx.user ? { printedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'receipt_print_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/invoice/print' && req.method === 'POST') {
+          const b = (await readBody(req)) as { invoiceId: string; date?: string };
+          try { return sendJson(res, 200, await printInvoice(pool, { ...b, ...(ctx.user ? { printedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'invoice_print_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/billing/statement/print' && req.method === 'POST') {
+          const b = (await readBody(req)) as { patientId: string; date?: string };
+          try { return sendJson(res, 200, await printStatement(pool, { ...b, ...(ctx.user ? { printedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 404, { error: { code: 'statement_print_failed', message: (err as Error).message } }); }
         }
         if (p === '/api/documents/generate' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof storeGeneratedDocument>[1];

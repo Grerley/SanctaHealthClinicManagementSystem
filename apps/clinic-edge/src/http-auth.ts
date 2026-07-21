@@ -109,6 +109,7 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/billing\/(payment|allocate|reallocate)$/, permission: 'receive_payment' },
   { method: 'POST', test: /^\/api\/billing\/refund$/, permission: 'reverse' },
   { method: 'GET', test: /^\/api\/billing\/invoice-outstanding$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/billing\/(receipt|invoice|statement)\/print$/, permission: 'view_summary' }, // BIL-007 print/reprint (copy-marked)
   { method: 'POST', test: /^\/api\/cashier\/(open|close)$/, permission: 'receive_payment' },
   { method: 'GET', test: /^\/api\/debtors\/ageing$/, permission: 'view_summary' },
   // Inventory
@@ -134,6 +135,8 @@ const RULES: Rule[] = [
   { method: 'POST', test: /^\/api\/documents\/generate$/, permission: 'create' }, // DOC-002
   { method: 'POST', test: /^\/api\/documents\/(supersede|entered-in-error|legal-hold|retention|dispose)$/, permission: 'administer' }, // DOC-003/005
   { method: 'GET', test: /^\/api\/documents\/disposal-candidates$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/documents\/index$/, permission: 'amend' }, // DOC-006 index/OCR (additive)
+  { method: 'GET', test: /^\/api\/documents\/search$/, permission: 'view_summary' }, // DOC-006
   // Management
   { method: 'GET', test: /^\/api\/management\/(dashboard|kpi-comparison|scope|drill|commentary)$/, permission: 'view_summary' }, // scope MGT-002, drill MGT-006 (detail re-gated in-handler)
   { method: 'GET', test: /^\/api\/management\/analytical-extract$/, permission: 'export' }, // MGT-009 de-identified dataset
