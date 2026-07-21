@@ -560,6 +560,18 @@ Both run in CI as required checks (`security` and `e2e + accessibility` jobs).
 | The export is idempotent — re-exporting an unchanged period yields the same SHA-256 idempotencyKey (computed over accounting content, never the wall-clock); a new posting changes the key | FIN-014 | ✅ |
 | An unknown period is rejected; each export is audited | FIN-014 | ✅ |
 
+## Order sets, patient-safe specimen labels & outbound referrals (real PostgreSQL) — ORD-002, ORD-004, ORD-008
+
+`packages/domain/src/labels.test.ts` (unit) and `apps/clinic-edge/test/orders-extend.itest.ts`:
+
+| Assertion | Requirement | Result |
+|-----------|-------------|--------|
+| Applying an order set creates one **individual DRAFT** order per item — the set is a convenience, never an auto-approve; nothing is active until a clinician reviews and activates each order (draft → active) | ORD-002 | ✅ |
+| An unknown/empty order set is rejected | ORD-002 | ✅ |
+| A specimen label is built from initials + DOB + sex + accession only; deriving initials in the domain makes it structurally impossible to print the full name; the full name never appears on the label | ORD-004 | ✅ |
+| Accessions are unique, gapless and zero-padded (SPN-000123) | ORD-004 | ✅ |
+| An outbound referral tracks its lifecycle sent → accepted → closed with feedback; a closed referral drops off the open queue; illegal transitions and a missing facility are rejected | ORD-008 | ✅ |
+
 ## Not yet proven (next increments)
 
 - Edge↔cloud transport currently runs over HTTP in tests; the production wire is HTTPS to

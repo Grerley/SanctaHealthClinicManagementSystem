@@ -82,6 +82,12 @@ const RULES: Rule[] = [
   { method: 'GET', test: /^\/api\/orders\/critical\/outstanding$/, permission: 'view_summary' },
   { method: 'POST', test: /^\/api\/orders\/(external-result|external-result\/reconcile|cancel|result\/correct)$/, permission: 'amend' }, // ORD-007/009
   { method: 'GET', test: /^\/api\/orders\/unmatched$/, permission: 'view_summary' },
+  { method: 'POST', test: /^\/api\/orders\/set$/, permission: 'configure' }, // ORD-002 define order set (reference data)
+  { method: 'POST', test: /^\/api\/orders\/set\/apply$/, permission: 'create' }, // ORD-002 apply → draft orders, still reviewed
+  { method: 'POST', test: /^\/api\/orders\/specimen-label$/, permission: 'create' }, // ORD-004
+  { method: 'POST', test: /^\/api\/referrals$/, permission: 'create' }, // ORD-008
+  { method: 'POST', test: /^\/api\/referrals\/status$/, permission: 'amend' }, // ORD-008
+  { method: 'GET', test: /^\/api\/referrals\/open$/, permission: 'view_summary' }, // ORD-008
   // Flow
   { method: 'POST', test: /^\/api\/visits\/(start|transfer|complete|hold|resume|outcome)$/, permission: 'create' },
   { method: 'POST', test: /^\/api\/visits\/escalate$/, permission: 'amend' }, // VIS-004

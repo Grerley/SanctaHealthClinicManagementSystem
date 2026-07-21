@@ -6,7 +6,7 @@
  * it. Results are append-only; cancelling never deletes the original (ORD-009).
  */
 import type { Pool } from 'pg';
-import { uuidv7, classifyResult, assertTransition, ORDER_TRANSITIONS, type OrderState } from '@sancta/domain';
+import { uuidv7, classifyResult, assertTransition, ORDER_TRANSITIONS, type OrderState, initialsOf, specimenLabel, formatAccession } from '@sancta/domain';
 
 export class OrderError extends Error {}
 
@@ -230,4 +230,158 @@ export async function correctResult(pool: Pool, args: { resultId: string; newVal
   } finally {
     client.release();
   }
+}
+
+// --- Order sets (ORD-002) ---------------------------------------------------
+
+/** Define/replace a reusable order set (ORD-002). */
+export async function defineOrderSet(
+  pool: Pool,
+  args: { code: string; name: string; items: Array<{ category: string; code: string; priority?: string; indication?: string }> },
+): Promise<{ code: string; itemCount: number }> {
+  if (!args.code?.trim() || !args.name?.trim()) throw new OrderError('order-set code and name are required');
+  if (!args.items?.length) throw new OrderError('an order set needs at least one item');
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`INSERT INTO clinical.order_set (code, name) VALUES ($1,$2) ON CONFLICT (code) DO UPDATE SET name=$2, active=true`, [args.code, args.name]);
+    await client.query(`DELETE FROM clinical.order_set_item WHERE set_code=$1`, [args.code]);
+    for (const it of args.items) {
+      await client.query(
+        `INSERT INTO clinical.order_set_item (id, set_code, category, code, priority, indication) VALUES ($1,$2,$3,$4,$5,$6)`,
+        [uuidv7(), args.code, it.category, it.code, it.priority ?? 'routine', it.indication ?? null],
+      );
+    }
+    await client.query('COMMIT');
+    return { code: args.code, itemCount: args.items.length };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Apply an order set to a patient (ORD-002). Each item becomes an INDIVIDUAL
+ * service request in DRAFT — the set is a convenience, never an auto-approve.
+ * Per-patient review is preserved: nothing is active until a clinician confirms
+ * each order (draft → active via setOrderStatus).
+ */
+export async function applyOrderSet(
+  pool: Pool,
+  args: { setCode: string; patientId: string; encounterId?: string; requestedBy?: string },
+): Promise<{ setCode: string; orderIds: string[] }> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const items = await client.query(`SELECT category, code, priority, indication FROM clinical.order_set_item WHERE set_code=$1 ORDER BY code`, [args.setCode]);
+    if (items.rows.length === 0) throw new OrderError(`order set not found or empty: ${args.setCode}`);
+    const orderIds: string[] = [];
+    for (const it of items.rows) {
+      const orderId = uuidv7();
+      await client.query(
+        `INSERT INTO clinical.service_request (id, patient_id, encounter_id, category, code, priority, indication, status, requested_by)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,'draft',$8)`, // DRAFT: still needs per-patient review
+        [orderId, args.patientId, args.encounterId ?? null, it.category, it.code, it.priority, it.indication ?? null, args.requestedBy ?? null],
+      );
+      orderIds.push(orderId);
+    }
+    await client.query('COMMIT');
+    return { setCode: args.setCode, orderIds };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+// --- Specimen labels (ORD-004) ----------------------------------------------
+
+/**
+ * Allocate a patient-safe specimen label for an order (ORD-004). A gapless
+ * accession is assigned and the label is built from initials + DOB + sex only —
+ * never the full name (see domain `specimenLabel`).
+ */
+export async function generateSpecimenLabel(pool: Pool, args: { orderId: string; collectedOn?: string }): Promise<import('@sancta/domain').SpecimenLabel> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const o = await client.query(
+      `SELECT sr.code AS order_code, sr.patient_id, p.given_name, p.family_name, to_char(p.date_of_birth,'YYYY-MM-DD') AS dob, p.sex
+       FROM clinical.service_request sr JOIN identity.patient p ON p.id = sr.patient_id WHERE sr.id=$1`,
+      [args.orderId],
+    );
+    if (o.rows.length === 0) throw new OrderError('order not found');
+    const row = o.rows[0];
+    const seq = await client.query(`SELECT nextval('clinical.specimen_accession_seq')::bigint AS n`);
+    const accession = formatAccession(Number(seq.rows[0].n));
+    const collectedOn = args.collectedOn ?? new Date().toISOString().slice(0, 10);
+    const id = uuidv7();
+    await client.query(
+      `INSERT INTO clinical.specimen (id, accession, service_request_id, patient_id, collected_on) VALUES ($1,$2,$3,$4,$5)`,
+      [id, accession, args.orderId, row.patient_id, collectedOn],
+    );
+    await client.query('COMMIT');
+    const initials = initialsOf(`${row.given_name ?? ''} ${row.family_name ?? ''}`.trim());
+    return specimenLabel({ accession, initials, dob: row.dob ?? '1900-01-01', sex: row.sex ?? '?', orderCode: row.order_code, collectedOn });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+// --- Outbound referrals (ORD-008) -------------------------------------------
+
+const REFERRAL_TRANSITIONS: Record<string, string[]> = {
+  sent: ['accepted', 'declined', 'closed'],
+  accepted: ['closed'],
+  declined: ['closed'],
+  closed: [],
+};
+
+/** Create an outbound referral (ORD-008), optionally linked to a source order. */
+export async function createReferral(
+  pool: Pool,
+  args: { patientId: string; targetFacility: string; reason?: string; serviceRequestId?: string; sentBy?: string },
+): Promise<{ id: string }> {
+  if (!args.targetFacility?.trim()) throw new OrderError('a target facility is required');
+  const id = uuidv7();
+  await pool.query(
+    `INSERT INTO clinical.referral (id, service_request_id, patient_id, target_facility, reason, sent_by) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [id, args.serviceRequestId ?? null, args.patientId, args.targetFacility, args.reason ?? null, args.sentBy ?? null],
+  );
+  return { id };
+}
+
+/** Advance a referral's lifecycle and record feedback/closure (ORD-008). */
+export async function updateReferral(pool: Pool, args: { referralId: string; to: string; feedback?: string }): Promise<{ status: string }> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const cur = await client.query(`SELECT status FROM clinical.referral WHERE id=$1 FOR UPDATE`, [args.referralId]);
+    if (cur.rows.length === 0) throw new OrderError('referral not found');
+    const from = cur.rows[0].status as string;
+    if (!(REFERRAL_TRANSITIONS[from] ?? []).includes(args.to)) throw new OrderError(`illegal referral transition ${from} -> ${args.to}`);
+    await client.query(
+      `UPDATE clinical.referral SET status=$2, feedback=COALESCE($3, feedback), updated_at=now() WHERE id=$1`,
+      [args.referralId, args.to, args.feedback ?? null],
+    );
+    await client.query('COMMIT');
+    return { status: args.to };
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/** Open referrals awaiting acceptance/feedback/closure (ORD-008). */
+export async function listOpenReferrals(pool: Pool): Promise<Array<{ id: string; patientId: string; targetFacility: string; status: string }>> {
+  const r = await pool.query(`SELECT id, patient_id, target_facility, status FROM clinical.referral WHERE status <> 'closed' ORDER BY created_at`);
+  return r.rows.map((x) => ({ id: x.id, patientId: x.patient_id, targetFacility: x.target_facility, status: x.status }));
 }

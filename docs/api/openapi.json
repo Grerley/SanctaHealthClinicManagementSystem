@@ -88,6 +88,9 @@
       "name": "prescription"
     },
     {
+      "name": "referrals"
+    },
+    {
       "name": "schedule"
     },
     {
@@ -3164,6 +3167,69 @@
         }
       }
     },
+    "/api/orders/set": {
+      "post": {
+        "operationId": "post_api_orders_set",
+        "summary": "POST /api/orders/set",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "configure",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/set/apply": {
+      "post": {
+        "operationId": "post_api_orders_set_apply",
+        "summary": "POST /api/orders/set/apply",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/orders/specimen-label": {
+      "post": {
+        "operationId": "post_api_orders_specimen_label",
+        "summary": "POST /api/orders/specimen-label",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/orders/unmatched": {
       "get": {
         "operationId": "get_api_orders_unmatched",
@@ -3481,6 +3547,69 @@
           "prescription"
         ],
         "x-permission": "view_clinical_detail",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/referrals": {
+      "post": {
+        "operationId": "post_api_referrals",
+        "summary": "POST /api/referrals",
+        "tags": [
+          "referrals"
+        ],
+        "x-permission": "create",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/referrals/open": {
+      "get": {
+        "operationId": "get_api_referrals_open",
+        "summary": "GET /api/referrals/open",
+        "tags": [
+          "referrals"
+        ],
+        "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/referrals/status": {
+      "post": {
+        "operationId": "post_api_referrals_status",
+        "summary": "POST /api/referrals/status",
+        "tags": [
+          "referrals"
+        ],
+        "x-permission": "amend",
         "responses": {
           "200": {
             "description": "Success"

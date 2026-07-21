@@ -48,7 +48,7 @@ import { quotePrice, chargeService, defineFee, listFees } from './pricing.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
-import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, type ReleaseResultBody } from './orders.ts';
+import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { performStocktake } from './stocktake.ts';
@@ -532,6 +532,29 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/orders/result/correct' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof correctResult>[1];
           try { return sendJson(res, 200, await correctResult(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'correct_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/set' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof defineOrderSet>[1];
+          try { return sendJson(res, 201, await defineOrderSet(pool, b)); } catch (err) { return sendJson(res, 400, { error: { code: 'order_set_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/set/apply' && req.method === 'POST') {
+          const b = (await readBody(req)) as { setCode: string; patientId: string; encounterId?: string };
+          try { return sendJson(res, 201, await applyOrderSet(pool, { ...b, ...(ctx.user ? { requestedBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 400, { error: { code: 'order_set_apply_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/orders/specimen-label' && req.method === 'POST') {
+          const b = (await readBody(req)) as { orderId: string; collectedOn?: string };
+          try { return sendJson(res, 201, await generateSpecimenLabel(pool, b)); } catch (err) { return sendJson(res, 404, { error: { code: 'specimen_label_failed', message: (err as Error).message } }); }
+        }
+        if (p === '/api/referrals' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof createReferral>[1];
+          try { return sendJson(res, 201, await createReferral(pool, { ...b, ...(ctx.user ? { sentBy: ctx.user } : {}) })); } catch (err) { return sendJson(res, 400, { error: { code: 'referral_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/referrals/status' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof updateReferral>[1];
+          try { return sendJson(res, 200, await updateReferral(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'referral_transition_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/referrals/open' && req.method === 'GET') {
+          return sendJson(res, 200, { referrals: await listOpenReferrals(pool) });
         }
         if (p === '/api/triage/vitals' && req.method === 'POST') {
           const body = (await readBody(req)) as RecordVitalsBody;
