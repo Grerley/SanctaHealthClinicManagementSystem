@@ -20,6 +20,7 @@ import {
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
   createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions, ChartAdminError,
+  recordExpense, paySupplier, apReconciliation, PayableError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -114,6 +115,28 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Payables: expenses, supplier payment, AP reconciliation (FIN-005/006) --
+    if (p === '/api/finance/expense' || p === '/api/finance/pay-supplier' || p === '/api/finance/ap-reconciliation') {
+      try {
+        if (p === '/api/finance/expense' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await recordExpense(env.DB, (await request.json()) as Parameters<typeof recordExpense>[1]), 201);
+        }
+        if (p === '/api/finance/pay-supplier' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await paySupplier(env.DB, (await request.json()) as Parameters<typeof paySupplier>[1]));
+        }
+        if (p === '/api/finance/ap-reconciliation' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await apReconciliation(env.DB));
+        }
+      } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof PayableError) return json({ error: { code: 'payable_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Chart of accounts / cost centres / dimensions (FIN-001) ----------
