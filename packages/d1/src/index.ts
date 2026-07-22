@@ -6,3 +6,4 @@ export * from './d1.ts';
 export * from './query.ts';
 export * from './migrations.ts';
 export * from './stock.ts';
+export * from './checkout.ts';
