@@ -27,6 +27,7 @@ import {
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   quotePrice, chargeService, defineFee, listFees, PricingError,
   markBillable, linkCharge, authoriseException, chargeCaptureReport, ChargeError,
+  registerPayer, addCoverage, checkEligibility, requestPreauth, decidePreauth, submitClaim, adjudicateClaim, PayerError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -673,6 +674,45 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof ChargeError) return json({ error: { code: 'charge_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Payer: coverage, eligibility, pre-auth & claims (BIL-011) -----------
+    if (p.startsWith('/api/payer/')) {
+      try {
+        if (p === '/api/payer/register' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await registerPayer(env.DB, (await request.json()) as Parameters<typeof registerPayer>[1]), 201);
+        }
+        if (p === '/api/payer/coverage' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          return json(await addCoverage(env.DB, (await request.json()) as Parameters<typeof addCoverage>[1]), 201);
+        }
+        if (p === '/api/payer/eligibility' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await checkEligibility(env.DB, { patientId: url.searchParams.get('patientId') ?? '', asOf: url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10) }));
+        }
+        if (p === '/api/payer/preauth' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          return json(await requestPreauth(env.DB, (await request.json()) as Parameters<typeof requestPreauth>[1]), 201);
+        }
+        if (p === '/api/payer/preauth/decide' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await decidePreauth(env.DB, (await request.json()) as Parameters<typeof decidePreauth>[1]));
+        }
+        if (p === '/api/payer/claim' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          return json(await submitClaim(env.DB, (await request.json()) as Parameters<typeof submitClaim>[1]), 201);
+        }
+        if (p === '/api/payer/claim/adjudicate' && method === 'POST') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          return json(await adjudicateClaim(env.DB, (await request.json()) as Parameters<typeof adjudicateClaim>[1]));
+        }
+      } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof BillingError) return json({ error: { code: 'billing_rejected', message: e.message } }, 409);
+        if (e instanceof PayerError) return json({ error: { code: 'payer_rejected', message: e.message } }, 409);
         throw e;
       }
     }
