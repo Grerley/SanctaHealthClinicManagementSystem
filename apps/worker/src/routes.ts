@@ -19,6 +19,7 @@ import {
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
+  createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions, ChartAdminError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -113,6 +114,54 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Chart of accounts / cost centres / dimensions (FIN-001) ----------
+    if (p === '/api/finance/chart' || p.startsWith('/api/finance/account') || p.startsWith('/api/finance/cost-centre') || p.startsWith('/api/finance/dimension')) {
+      try {
+        if (p === '/api/finance/chart' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return json({ asOf, accounts: await chartOfAccounts(env.DB, asOf) });
+        }
+        if (p === '/api/finance/account' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          try { return json(await accountAsOf(env.DB, url.searchParams.get('code') ?? '', asOf)); }
+          catch (e) { return json({ error: { code: 'account_not_found', message: String((e as Error).message) } }, 404); }
+        }
+        if (p === '/api/finance/account' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await defineAccount(env.DB, (await request.json()) as Parameters<typeof defineAccount>[1]), 201);
+        }
+        if (p === '/api/finance/account/revise' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await reviseAccount(env.DB, (await request.json()) as Parameters<typeof reviseAccount>[1]));
+        }
+        if (p === '/api/finance/cost-centres' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ costCentres: await listCostCentres(env.DB) });
+        }
+        if (p === '/api/finance/cost-centre' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await createCostCentre(env.DB, (await request.json()) as Parameters<typeof createCostCentre>[1]), 201);
+        }
+        if (p === '/api/finance/dimensions' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ dimensions: await listDimensions(env.DB) });
+        }
+        if (p === '/api/finance/dimension' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await createDimension(env.DB, (await request.json()) as Parameters<typeof createDimension>[1]), 201);
+        }
+        if (p === '/api/finance/dimension/value' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await addDimensionValue(env.DB, (await request.json()) as Parameters<typeof addDimensionValue>[1]), 201);
+        }
+      } catch (e) {
+        if (e instanceof ChartAdminError) return json({ error: { code: 'chart_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Manual journal: maker-checker (FIN-003, BR-011) ------------------

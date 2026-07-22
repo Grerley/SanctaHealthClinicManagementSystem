@@ -11,6 +11,7 @@ export * from './journal.ts';
 export * from './finance.ts';
 export * from './finance-reports.ts';
 export * from './manual-journal.ts';
+export * from './chart.ts';
 export * from './checkout.ts';
 export * from './billing.ts';
 export * from './patients.ts';
