@@ -8,6 +8,7 @@ import { can, type Permission, StockError, VitalError, breakEven, investmentReco
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
+  transfer, completeVisit, VisitError,
   bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError,
   createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
@@ -96,6 +97,17 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       if (denied) return denied;
       const body = (await request.json()) as { patientId: string; station?: string };
       return json(await startVisit(env.DB, body), 201);
+    }
+    if (p === '/api/visits/transfer' && method === 'POST') {
+      const denied = guard('amend'); if (denied) return denied;
+      try { await transfer(env.DB, (await request.json()) as Parameters<typeof transfer>[1]); return json({ ok: true }); }
+      catch (e) { if (e instanceof VisitError) return json({ error: { code: 'no_queue_entry', message: e.message } }, 404); throw e; }
+    }
+    if (p === '/api/visits/complete' && method === 'POST') {
+      const denied = guard('amend'); if (denied) return denied;
+      const b = (await request.json()) as { visitId: string; override?: boolean; reason?: string };
+      const out = await completeVisit(env.DB, { ...b, ...(auth.user ? { user: auth.user } : {}) });
+      return json(out, out.ok ? 200 : 409);
     }
 
     // --- Scheduling: calendar feed + create slot --------------------------
