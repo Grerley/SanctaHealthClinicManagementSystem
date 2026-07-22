@@ -47,6 +47,7 @@ import {
   setKpiTarget, recordSnapshot, kpiComparison, KpiAdminError,
   defineForm, formAsOf, listForms, FormAdminError,
   publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclosures, DisclosureError,
+  exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -262,11 +263,39 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       }
     }
 
-    // --- Command centre ----------------------------------------------------
+    // --- Command centre (MGT-001/002/006/007/010) --------------------------
     if (p === '/api/management/dashboard' && method === 'GET') {
       const denied = guard('view_summary');
       if (denied) return denied;
-      return json(await dashboard(env.DB, new Date().toISOString()));
+      return json(await dashboard(env.DB, url.searchParams.get('asOf') ?? new Date().toISOString()));
+    }
+    if (p.startsWith('/api/management/')) {
+      try {
+        if (p === '/api/management/export' && method === 'POST') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await exportDashboard(env.DB, { ...(await request.json()) as Omit<Parameters<typeof exportDashboard>[1], 'exportedBy'>, exportedBy: auth.user ?? 'system' }));
+        }
+        if (p === '/api/management/site-scope' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const requested = url.searchParams.getAll('site');
+          return json(await resolveSiteScope(env.DB, { roles: auth.roles, userSite: url.searchParams.get('userSite'), requestedSites: requested }));
+        }
+        if (p === '/api/management/drill' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await drillThrough(env.DB, { roles: auth.roles, target: (url.searchParams.get('target') ?? 'operational') as Parameters<typeof drillThrough>[1]['target'], ...(auth.user ? { actor: auth.user } : {}) }));
+        }
+        if (p === '/api/management/commentary' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await addCommentary(env.DB, { ...(await request.json()) as Parameters<typeof addCommentary>[1], ...(auth.user ? { authoredBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/management/commentary' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ commentary: await listCommentary(env.DB, { kpiId: url.searchParams.get('kpiId') ?? '', period: url.searchParams.get('period') ?? '' }) });
+        }
+      } catch (e) {
+        if (e instanceof ManagementScopeError) return json({ error: { code: 'management_denied', message: e.message } }, 403);
+        throw e;
+      }
     }
 
     // --- Month-end close & balance sheet (FIN-004/010) --------------------

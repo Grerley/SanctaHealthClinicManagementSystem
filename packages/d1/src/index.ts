@@ -58,3 +58,4 @@ export * from './audit.ts';
 export * from './kpi.ts';
 export * from './forms.ts';
 export * from './privacy.ts';
+export * from './management.ts';
