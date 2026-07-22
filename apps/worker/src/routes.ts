@@ -22,6 +22,7 @@ import {
   createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions, ChartAdminError,
   recordExpense, paySupplier, apReconciliation, PayableError,
   setBudget, budgetVariance, BudgetError,
+  balanceSheet, monthlyClose,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -116,6 +117,24 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Month-end close & balance sheet (FIN-004/010) --------------------
+    if (p === '/api/finance/balance-sheet' || p === '/api/finance/monthly-close') {
+      try {
+        if (p === '/api/finance/balance-sheet' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await balanceSheet(env.DB));
+        }
+        if (p === '/api/finance/monthly-close' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await monthlyClose(env.DB, (await request.json()) as Parameters<typeof monthlyClose>[1]));
+        }
+      } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof FinanceError) return json({ error: { code: 'monthly_close_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Budgets, variance & break-even (FIN-007) -------------------------
