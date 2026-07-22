@@ -48,6 +48,9 @@ import {
   defineForm, formAsOf, listForms, FormAdminError,
   publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclosures, DisclosureError,
   exportDashboard, resolveSiteScope, drillThrough, addCommentary, listCommentary, ManagementScopeError,
+  registerSite, listSitesForUser, replicationPlan, SiteError,
+  instanceInfo,
+  fhirPatientById, fhirPatientSearch,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -63,6 +66,7 @@ import { authFromRequest } from './auth.ts';
 export type Env = {
   DB: D1Database;
   ASSETS: { fetch(request: Request): Promise<Response> };
+  SANCTA_ENV?: string;
 };
 
 function json(body: unknown, status = 200): Response {
@@ -296,6 +300,45 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (e instanceof ManagementScopeError) return json({ error: { code: 'management_denied', message: e.message } }, 403);
         throw e;
       }
+    }
+
+    // --- Multi-site registry + scoped listing (OPS-008, SYN-008) ------------
+    if (p.startsWith('/api/sites')) {
+      try {
+        if (p === '/api/sites' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await registerSite(env.DB, (await request.json()) as Parameters<typeof registerSite>[1]), 201);
+        }
+        if (p === '/api/sites' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ sites: await listSitesForUser(env.DB, auth.roles, url.searchParams.get('userSite')) });
+        }
+        if (p === '/api/sites/replication-plan' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          const body = (await request.json()) as { scope: Parameters<typeof replicationPlan>[1]['scope']; asOf?: string };
+          return json(await replicationPlan(env.DB, { scope: body.scope, asOf: body.asOf ?? new Date().toISOString().slice(0, 10) }));
+        }
+      } catch (e) {
+        if (e instanceof SiteError) return json({ error: { code: 'site_rejected', message: e.message } }, 400);
+        throw e;
+      }
+    }
+
+    // --- Instance environment identity (ADM-007) ----------------------------
+    if (p === '/api/instance' && method === 'GET') {
+      return json(instanceInfo(env.SANCTA_ENV));
+    }
+
+    // --- FHIR-compatible read layer (SYN-009) -------------------------------
+    if (p.startsWith('/api/fhir/Patient')) {
+      const denied = guard('view_summary'); if (denied) return denied;
+      const id = url.searchParams.get('id');
+      const identifier = url.searchParams.get('identifier');
+      if (id) {
+        const res = await fhirPatientById(env.DB, id);
+        return res ? json(res) : json({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code: 'not-found' }] }, 404);
+      }
+      return json({ resourceType: 'Bundle', type: 'searchset', entry: (await fhirPatientSearch(env.DB, identifier ?? '')).map((r) => ({ resource: r })) });
     }
 
     // --- Month-end close & balance sheet (FIN-004/010) --------------------

@@ -59,3 +59,6 @@ export * from './kpi.ts';
 export * from './forms.ts';
 export * from './privacy.ts';
 export * from './management.ts';
+export * from './site.ts';
+export * from './instance.ts';
+export * from './fhir.ts';
