@@ -10,7 +10,7 @@ import { applyMigrations } from '@sancta/db/migrations';
 
 const url = process.env['DATABASE_URL'];
 if (!url) {
-  console.error('DATABASE_URL is required (e.g. postgres://user:pass@host:5432/dbname)');
+  console.error('DATABASE_URL is required (a PostgreSQL connection URL from your provider).');
   process.exit(1);
 }
 
