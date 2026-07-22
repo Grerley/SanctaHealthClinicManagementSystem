@@ -28,6 +28,7 @@ import {
   quotePrice, chargeService, defineFee, listFees, PricingError,
   markBillable, linkCharge, authoriseException, chargeCaptureReport, ChargeError,
   registerPayer, addCoverage, checkEligibility, requestPreauth, decidePreauth, submitClaim, adjudicateClaim, PayerError,
+  printReceipt, printInvoice, printStatement, BillingPrintError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -713,6 +714,27 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
         if (e instanceof BillingError) return json({ error: { code: 'billing_rejected', message: e.message } }, 409);
         if (e instanceof PayerError) return json({ error: { code: 'payer_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Billing document print/reprint (BIL-007) ---------------------------
+    if (p.startsWith('/api/billing-print/')) {
+      try {
+        if (p === '/api/billing-print/receipt' && method === 'POST') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await printReceipt(env.DB, (await request.json()) as Parameters<typeof printReceipt>[1]));
+        }
+        if (p === '/api/billing-print/invoice' && method === 'POST') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await printInvoice(env.DB, (await request.json()) as Parameters<typeof printInvoice>[1]));
+        }
+        if (p === '/api/billing-print/statement' && method === 'POST') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await printStatement(env.DB, (await request.json()) as Parameters<typeof printStatement>[1]));
+        }
+      } catch (e) {
+        if (e instanceof BillingPrintError) return json({ error: { code: 'print_rejected', message: e.message } }, 404);
         throw e;
       }
     }

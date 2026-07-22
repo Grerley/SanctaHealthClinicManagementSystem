@@ -38,3 +38,4 @@ export * from './comms.ts';
 export * from './pricing.ts';
 export * from './billing-completeness.ts';
 export * from './payer.ts';
+export * from './billing-print.ts';
