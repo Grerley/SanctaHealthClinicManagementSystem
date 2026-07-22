@@ -26,6 +26,7 @@ import {
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   quotePrice, chargeService, defineFee, listFees, PricingError,
+  markBillable, linkCharge, authoriseException, chargeCaptureReport, ChargeError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -644,6 +645,34 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
         if (e instanceof PriceError) return json({ error: { code: 'price_rejected', message: e.message } }, 422);
         if (e instanceof PricingError) return json({ error: { code: 'pricing_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Charge-capture completeness (BIL-002/012, BR-004) -------------------
+    if (p.startsWith('/api/charge-capture/')) {
+      try {
+        if (p === '/api/charge-capture/billable' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          await markBillable(env.DB, ((await request.json()) as { encounterId: string }).encounterId);
+          return json({ ok: true });
+        }
+        if (p === '/api/charge-capture/link' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          await linkCharge(env.DB, (await request.json()) as Parameters<typeof linkCharge>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/charge-capture/exception' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          await authoriseException(env.DB, (await request.json()) as Parameters<typeof authoriseException>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/charge-capture/report' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await chargeCaptureReport(env.DB));
+        }
+      } catch (e) {
+        if (e instanceof ChargeError) return json({ error: { code: 'charge_rejected', message: e.message } }, 409);
         throw e;
       }
     }

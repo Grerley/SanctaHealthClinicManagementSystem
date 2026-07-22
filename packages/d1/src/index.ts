@@ -36,3 +36,4 @@ export * from './documents.ts';
 export * from './document-lifecycle.ts';
 export * from './comms.ts';
 export * from './pricing.ts';
+export * from './billing-completeness.ts';
