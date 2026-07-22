@@ -12,3 +12,4 @@ export * from './patients.ts';
 export * from './visits.ts';
 export * from './scheduling.ts';
 export * from './dashboard.ts';
+export * from './orders.ts';

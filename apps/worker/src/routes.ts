@@ -8,6 +8,9 @@ import { can, type Permission, StockError } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
+  createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
+  attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
+  defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -101,6 +104,81 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Orders, results & critical-result acknowledgement (ORD, UAT-06) --
+    if (p.startsWith('/api/orders') || p.startsWith('/api/referrals')) {
+      try {
+        if (p === '/api/orders' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await createOrder(env.DB, (await request.json()) as Parameters<typeof createOrder>[1]), 201);
+        }
+        if (p === '/api/orders/result' && method === 'POST') {
+          const denied = guard('sign'); if (denied) return denied;
+          return json(await releaseResult(env.DB, (await request.json()) as Parameters<typeof releaseResult>[1]), 201);
+        }
+        if (p === '/api/orders/critical/ack' && method === 'POST') {
+          const denied = guard('sign'); if (denied) return denied;
+          return json(await acknowledgeCritical(env.DB, (await request.json()) as Parameters<typeof acknowledgeCritical>[1]));
+        }
+        if (p === '/api/orders/critical/outstanding' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ results: await outstandingCriticalResults(env.DB) });
+        }
+        if (p === '/api/orders/external-result' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await attachExternalResult(env.DB, (await request.json()) as Parameters<typeof attachExternalResult>[1]), 201);
+        }
+        if (p === '/api/orders/external-result/reconcile' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await reconcileExternalResult(env.DB, (await request.json()) as Parameters<typeof reconcileExternalResult>[1]));
+        }
+        if (p === '/api/orders/unmatched' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ unmatched: await unmatchedResults(env.DB) });
+        }
+        if (p === '/api/orders/cancel' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await cancelOrder(env.DB, (await request.json()) as Parameters<typeof cancelOrder>[1]));
+        }
+        if (p === '/api/orders/result/correct' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await correctResult(env.DB, (await request.json()) as Parameters<typeof correctResult>[1]));
+        }
+        if (p === '/api/orders/status' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await setOrderStatus(env.DB, (await request.json()) as Parameters<typeof setOrderStatus>[1]));
+        }
+        if (p === '/api/orders/set' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await defineOrderSet(env.DB, (await request.json()) as Parameters<typeof defineOrderSet>[1]), 201);
+        }
+        if (p === '/api/orders/set/apply' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as { setCode: string; patientId: string; encounterId?: string };
+          return json(await applyOrderSet(env.DB, { ...b, ...(auth.user ? { requestedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/orders/specimen-label' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await generateSpecimenLabel(env.DB, (await request.json()) as Parameters<typeof generateSpecimenLabel>[1]), 201);
+        }
+        if (p === '/api/referrals' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as Parameters<typeof createReferral>[1];
+          return json(await createReferral(env.DB, { ...b, ...(auth.user ? { sentBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/referrals/status' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await updateReferral(env.DB, (await request.json()) as Parameters<typeof updateReferral>[1]));
+        }
+        if (p === '/api/referrals/open' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ referrals: await listOpenReferrals(env.DB) });
+        }
+      } catch (e) {
+        if (e instanceof OrderError) return json({ error: { code: 'order_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Sync: cloud-native no-ops ----------------------------------------
