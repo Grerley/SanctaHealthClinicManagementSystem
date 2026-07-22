@@ -18,6 +18,7 @@ import {
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
+  draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -112,6 +113,32 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Manual journal: maker-checker (FIN-003, BR-011) ------------------
+    if (p.startsWith('/api/finance/journal')) {
+      try {
+        if (p === '/api/finance/journal' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ journals: await listManualJournals(env.DB, url.searchParams.get('status') ?? undefined) });
+        }
+        if (p === '/api/finance/journal/draft' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await draftManualJournal(env.DB, (await request.json()) as Parameters<typeof draftManualJournal>[1]), 201);
+        }
+        if (p === '/api/finance/journal/post' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await approveManualJournal(env.DB, (await request.json()) as Parameters<typeof approveManualJournal>[1]));
+        }
+        if (p === '/api/finance/journal/reject' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await rejectManualJournal(env.DB, (await request.json()) as Parameters<typeof rejectManualJournal>[1]));
+        }
+      } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof ManualJournalError) return json({ error: { code: 'journal_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Finance reports: statements, ledger export, assets, margin (FIN-008/010/011/014) --
