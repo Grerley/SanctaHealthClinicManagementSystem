@@ -4,10 +4,11 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError, VitalError, breakEven, investmentRecovery } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
+  bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError,
   createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
@@ -110,6 +111,58 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       if (denied) return denied;
       const body = (await request.json()) as { provider: string; startsAt: string; endsAt: string; room?: string; serviceCode?: string };
       return json(await createSlot(env.DB, body), 201);
+    }
+    // --- Appointment lifecycle: book / status / waitlist / reminders / types (APT-001..008) --
+    if (p.startsWith('/api/schedule/')) {
+      try {
+        if (p === '/api/schedule/book' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const out = await bookAppointment(env.DB, (await request.json()) as Parameters<typeof bookAppointment>[1]);
+          return json(out, out.ok ? 201 : 409);
+        }
+        if (p === '/api/schedule/next' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ slot: await nextAvailableSlot(env.DB, { provider: url.searchParams.get('provider') ?? '', afterIso: url.searchParams.get('after') ?? new Date().toISOString() }) });
+        }
+        if (p === '/api/schedule/status' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await setAppointmentStatus(env.DB, (await request.json()) as Parameters<typeof setAppointmentStatus>[1]));
+        }
+        if (p === '/api/schedule/reminder' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const b = (await request.json()) as { when: string; time?: string; location?: string; reason?: string; sensitive?: boolean };
+          return json({ message: appointmentReminder({ when: b.when, ...(b.time ? { time: b.time } : {}), ...(b.location ? { location: b.location } : {}), ...(b.reason ? { reason: b.reason } : {}), sensitive: b.sensitive === true }) });
+        }
+        if (p === '/api/schedule/waitlist' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as Parameters<typeof addToWaitlist>[1];
+          return json(await addToWaitlist(env.DB, { ...b, ...(auth.user ? { user: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/schedule/fill' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as { slotId: string };
+          const out = await fillReleasedSlot(env.DB, { slotId: b.slotId, ...(auth.user ? { user: auth.user } : {}) });
+          return json(out, out.filled ? 201 : 200);
+        }
+        if (p === '/api/schedule/reminder-queue' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const out = await queueReminder(env.DB, (await request.json()) as Parameters<typeof queueReminder>[1]);
+          return json(out, out.enqueued ? 201 : 200);
+        }
+        if (p === '/api/schedule/type' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          const b = (await request.json()) as Parameters<typeof setAppointmentType>[1];
+          return json(await setAppointmentType(env.DB, { ...b, ...(auth.user ? { by: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/schedule/type' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const t = await resolveAppointmentType(env.DB, { code: url.searchParams.get('code') ?? '', asOf: url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10) });
+          return json(t ?? { error: { code: 'not_found' } }, t ? 200 : 404);
+        }
+      } catch (e) {
+        if (e instanceof SchedulingError) return json({ error: { code: 'schedule_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Command centre ----------------------------------------------------
