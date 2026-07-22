@@ -41,3 +41,6 @@ export * from './payer.ts';
 export * from './billing-print.ts';
 export * from './stocktake.ts';
 export * from './inventory-reports.ts';
+export * from './visit-lifecycle.ts';
+export * from './handover.ts';
+export * from './timeline.ts';

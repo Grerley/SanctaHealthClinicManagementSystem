@@ -4,7 +4,7 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError, VitalError, PriceError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError, PriceError, TransitionError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   receiveGoods, stockAlerts, InventoryError,
@@ -30,6 +30,9 @@ import {
   registerPayer, addCoverage, checkEligibility, requestPreauth, decidePreauth, submitClaim, adjudicateClaim, PayerError,
   printReceipt, printInvoice, printStatement, BillingPrintError,
   performStocktake, StocktakeError, reorderSuggestions, stockMovementReport,
+  escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations, VisitLifecycleError,
+  sendHandover, acknowledgeHandover, inbox, HandoverError,
+  patientTimeline,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -756,6 +759,68 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (e instanceof BillingPrintError) return json({ error: { code: 'print_rejected', message: e.message } }, 404);
         throw e;
       }
+    }
+
+    // --- Visit lifecycle: escalate, hold/resume, outcomes, durations (VIS-004/006/007) --
+    if (p.startsWith('/api/visit-lifecycle/')) {
+      try {
+        if (p === '/api/visit-lifecycle/escalate' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await escalateVisit(env.DB, (await request.json()) as Parameters<typeof escalateVisit>[1]));
+        }
+        if (p === '/api/visit-lifecycle/hold' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await holdVisit(env.DB, (await request.json()) as Parameters<typeof holdVisit>[1]));
+        }
+        if (p === '/api/visit-lifecycle/resume' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await resumeVisit(env.DB, (await request.json()) as Parameters<typeof resumeVisit>[1]));
+        }
+        if (p === '/api/visit-lifecycle/outcome' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await endVisitWithOutcome(env.DB, (await request.json()) as Parameters<typeof endVisitWithOutcome>[1]));
+        }
+        if (p === '/api/visit-lifecycle/durations' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await visitDurations(env.DB, url.searchParams.get('visitId') ?? ''));
+        }
+      } catch (e) {
+        if (e instanceof TransitionError) return json({ error: { code: 'illegal_transition', message: e.message } }, 409);
+        if (e instanceof VisitLifecycleError) return json({ error: { code: 'visit_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Clinical handover & inbox (EHR-012) --------------------------------
+    if (p.startsWith('/api/handover')) {
+      try {
+        if (p === '/api/handover' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await sendHandover(env.DB, { ...(await request.json()) as Parameters<typeof sendHandover>[1], ...(auth.user ? { fromStaff: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/handover/acknowledge' && method === 'POST') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json(await acknowledgeHandover(env.DB, (await request.json()) as Parameters<typeof acknowledgeHandover>[1]));
+        }
+        if (p === '/api/handover/inbox' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ inbox: await inbox(env.DB, url.searchParams.get('staffId') ?? '', url.searchParams.get('includeAcknowledged') === 'true') });
+        }
+      } catch (e) {
+        if (e instanceof HandoverError) return json({ error: { code: 'handover_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Patient clinical timeline (EHR-002) --------------------------------
+    if (p === '/api/timeline' && method === 'GET') {
+      const denied = guard('view_clinical_detail'); if (denied) return denied;
+      const q = {
+        ...(url.searchParams.get('type') ? { type: url.searchParams.get('type') } : {}),
+        ...(url.searchParams.get('from') ? { from: url.searchParams.get('from') } : {}),
+        ...(url.searchParams.get('to') ? { to: url.searchParams.get('to') } : {}),
+      } as Parameters<typeof patientTimeline>[2];
+      return json({ timeline: await patientTimeline(env.DB, url.searchParams.get('patientId') ?? '', q) });
     }
 
     // --- Care plans, goals & follow-ups (EHR-006) -------------------------
