@@ -33,6 +33,8 @@ import {
   escalateVisit, holdVisit, resumeVisit, endVisitWithOutcome, visitDurations, VisitLifecycleError,
   sendHandover, acknowledgeHandover, inbox, HandoverError,
   patientTimeline,
+  addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft, EhrError,
+  loadPolicy, listPolicy, setFieldRule, DemographicPolicyError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -821,6 +823,64 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         ...(url.searchParams.get('to') ? { to: url.searchParams.get('to') } : {}),
       } as Parameters<typeof patientTimeline>[2];
       return json({ timeline: await patientTimeline(env.DB, url.searchParams.get('patientId') ?? '', q) });
+    }
+
+    // --- EHR: history, coded diagnoses, draft recovery (EHR-004/005/007) -----
+    if (p.startsWith('/api/ehr/')) {
+      try {
+        if (p === '/api/ehr/history' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await addHistoryItem(env.DB, { ...(await request.json()) as Parameters<typeof addHistoryItem>[1], ...(auth.user ? { user: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/ehr/history/status' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await setHistoryStatus(env.DB, (await request.json()) as Parameters<typeof setHistoryStatus>[1]));
+        }
+        if (p === '/api/ehr/history' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ history: await listHistory(env.DB, url.searchParams.get('patientId') ?? '', url.searchParams.get('category') ?? undefined) });
+        }
+        if (p === '/api/ehr/diagnosis-codes' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ codes: await searchDiagnosisCodes(env.DB, url.searchParams.get('q') ?? '', Number(url.searchParams.get('limit') ?? '20')) });
+        }
+        if (p === '/api/ehr/diagnosis' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await recordDiagnosis(env.DB, { ...(await request.json()) as Parameters<typeof recordDiagnosis>[1], ...(auth.user ? { user: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/ehr/diagnosis' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ diagnoses: await listDiagnoses(env.DB, url.searchParams.get('encounterId') ?? '') });
+        }
+        if (p === '/api/ehr/draft' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await openDraftEncounter(env.DB, { ...(await request.json()) as Parameters<typeof openDraftEncounter>[1], ...(auth.user ? { user: auth.user } : {}) }));
+        }
+        if (p === '/api/ehr/draft/autosave' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await autosaveDraft(env.DB, (await request.json()) as Parameters<typeof autosaveDraft>[1]));
+        }
+      } catch (e) {
+        if (e instanceof EhrError) return json({ error: { code: 'ehr_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Demographic capture policy (PAT-004) -------------------------------
+    if (p.startsWith('/api/demographic-policy')) {
+      try {
+        if (p === '/api/demographic-policy' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ fields: await listPolicy(env.DB) });
+        }
+        if (p === '/api/demographic-policy/field' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setFieldRule(env.DB, { ...(await request.json()) as Parameters<typeof setFieldRule>[1], ...(auth.user ? { by: auth.user } : {}) }));
+        }
+      } catch (e) {
+        if (e instanceof DemographicPolicyError) return json({ error: { code: 'policy_rejected', message: e.message } }, 400);
+        throw e;
+      }
     }
 
     // --- Care plans, goals & follow-ups (EHR-006) -------------------------

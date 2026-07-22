@@ -44,3 +44,5 @@ export * from './inventory-reports.ts';
 export * from './visit-lifecycle.ts';
 export * from './handover.ts';
 export * from './timeline.ts';
+export * from './ehr.ts';
+export * from './demographics.ts';
