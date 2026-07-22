@@ -39,3 +39,5 @@ export * from './pricing.ts';
 export * from './billing-completeness.ts';
 export * from './payer.ts';
 export * from './billing-print.ts';
+export * from './stocktake.ts';
+export * from './inventory-reports.ts';

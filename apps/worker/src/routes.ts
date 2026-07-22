@@ -29,6 +29,7 @@ import {
   markBillable, linkCharge, authoriseException, chargeCaptureReport, ChargeError,
   registerPayer, addCoverage, checkEligibility, requestPreauth, decidePreauth, submitClaim, adjudicateClaim, PayerError,
   printReceipt, printInvoice, printStatement, BillingPrintError,
+  performStocktake, StocktakeError, reorderSuggestions, stockMovementReport,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -119,6 +120,24 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary'); if (denied) return denied;
       const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
       return json({ alerts: await stockAlerts(env.DB, asOf) });
+    }
+    if (p === '/api/stock/stocktake' && method === 'POST') {
+      const denied = guard('create'); if (denied) return denied;
+      try { return json(await performStocktake(env.DB, { ...(await request.json()) as Parameters<typeof performStocktake>[1], ...(auth.user ? { user: auth.user } : {}) })); }
+      catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof StocktakeError) return json({ error: { code: 'stocktake_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+    if (p === '/api/stock/reorder-suggestions' && method === 'GET') {
+      const denied = guard('view_summary'); if (denied) return denied;
+      const w = url.searchParams.get('windowDays');
+      return json({ suggestions: await reorderSuggestions(env.DB, w ? { windowDays: Number(w) } : {}) });
+    }
+    if (p === '/api/stock/movement-report' && method === 'GET') {
+      const denied = guard('view_summary'); if (denied) return denied;
+      return json(await stockMovementReport(env.DB, { from: url.searchParams.get('from') ?? '', to: url.searchParams.get('to') ?? '' }));
     }
     if (p === '/api/checkout' && method === 'POST') {
       const denied = guard('create');
