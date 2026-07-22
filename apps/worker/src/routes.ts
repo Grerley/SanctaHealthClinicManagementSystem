@@ -13,6 +13,7 @@ import {
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
+  recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -106,6 +107,40 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Prescribing + allergy override (MED-002/003/004/009, UAT-05) -----
+    if (p === '/api/allergies' && method === 'POST') {
+      const denied = guard('create'); if (denied) return denied;
+      return json(await recordAllergy(env.DB, (await request.json()) as Parameters<typeof recordAllergy>[1]), 201);
+    }
+    if (p.startsWith('/api/prescribe')) {
+      try {
+        if (p === '/api/prescribe' && method === 'POST') {
+          const denied = guard('sign'); if (denied) return denied;
+          const result = await prescribe(env.DB, (await request.json()) as Parameters<typeof prescribe>[1]);
+          return json(result, result.ok ? 201 : 409); // allergy alert (no override) → 409
+        }
+        if (p === '/api/prescribe/template' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await defineRxTemplate(env.DB, (await request.json()) as Parameters<typeof defineRxTemplate>[1]), 201);
+        }
+        if (p === '/api/prescribe/template/apply' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await applyRxTemplate(env.DB, (await request.json()) as Parameters<typeof applyRxTemplate>[1]));
+        }
+        if (p === '/api/prescribe/administer' && method === 'POST') {
+          const denied = guard('dispense'); if (denied) return denied;
+          return json(await recordAdministration(env.DB, (await request.json()) as Parameters<typeof recordAdministration>[1]), 201);
+        }
+        if (p === '/api/prescribe/administrations' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ administrations: await listAdministrations(env.DB, { requestId: url.searchParams.get('requestId') ?? '' }) });
+        }
+      } catch (e) {
+        if (e instanceof PrescribingError) return json({ error: { code: 'prescribing_rejected', message: e.message } }, 422);
+        throw e;
+      }
     }
 
     // --- Triage / vitals (TRI-001..008, UAT-03) ---------------------------

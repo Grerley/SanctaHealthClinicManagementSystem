@@ -15,3 +15,4 @@ export * from './dashboard.ts';
 export * from './orders.ts';
 export * from './encounters.ts';
 export * from './triage.ts';
+export * from './prescribing.ts';
