@@ -17,6 +17,7 @@ import {
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
+  trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -111,6 +112,48 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Finance reports: statements, ledger export, assets, margin (FIN-008/010/011/014) --
+    if (p.startsWith('/api/finance/trial-balance') || p.startsWith('/api/finance/income-statement') || p.startsWith('/api/finance/ledger-export') || p.startsWith('/api/finance/asset') || p.startsWith('/api/finance/margin')) {
+      try {
+        if (p === '/api/finance/trial-balance' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await trialBalance(env.DB));
+        }
+        if (p === '/api/finance/income-statement' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await incomeStatement(env.DB));
+        }
+        if (p === '/api/finance/ledger-export' && method === 'GET') {
+          const denied = guard('export'); if (denied) return denied;
+          try {
+            return json(await exportApprovedLedger(env.DB, { periodId: url.searchParams.get('periodId') ?? '', ...(auth.user ? { exportedBy: auth.user } : {}) }));
+          } catch (e) { return json({ error: { code: 'ledger_export_failed', message: String((e as Error).message) } }, 422); }
+        }
+        if (p === '/api/finance/asset' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          const b = (await request.json()) as Parameters<typeof capitaliseAsset>[1];
+          return json(await capitaliseAsset(env.DB, { ...b, ...(auth.user ? { createdBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/finance/asset/register' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return json({ assets: await assetRegister(env.DB, { asOf }) });
+        }
+        if (p === '/api/finance/asset/dispose' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          const b = (await request.json()) as { assetId: string; disposedOn: string; proceedsMinor: number };
+          return json(await disposeAsset(env.DB, { ...b, ...(auth.user ? { by: auth.user } : {}) }));
+        }
+        if (p === '/api/finance/margin' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await marginReport(env.DB));
+        }
+      } catch (e) {
+        if (e instanceof FixedAssetError) return json({ error: { code: 'asset_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Finance: period control (FIN-009, BR-010, UAT-13) ----------------
