@@ -15,6 +15,7 @@ export * from './chart.ts';
 export * from './payables.ts';
 export * from './finance-budget.ts';
 export * from './finance-close.ts';
+export * from './cashier.ts';
 export * from './checkout.ts';
 export * from './billing.ts';
 export * from './patients.ts';

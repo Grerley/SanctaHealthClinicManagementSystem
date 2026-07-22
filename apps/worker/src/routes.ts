@@ -25,6 +25,7 @@ import {
   recordExpense, paySupplier, apReconciliation, PayableError,
   setBudget, budgetVariance, BudgetError,
   balanceSheet, monthlyClose,
+  openShift, closeCashierShift, ShiftError, CashierError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -362,6 +363,24 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof FixedAssetError) return json({ error: { code: 'asset_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Cashier shift open/close (BIL-009, UAT-09) -----------------------
+    if (p === '/api/cashier/open' || p === '/api/cashier/close') {
+      try {
+        if (p === '/api/cashier/open' && method === 'POST') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          return json(await openShift(env.DB, (await request.json()) as Parameters<typeof openShift>[1]), 201);
+        }
+        if (p === '/api/cashier/close' && method === 'POST') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          return json(await closeCashierShift(env.DB, (await request.json()) as Parameters<typeof closeCashierShift>[1]));
+        }
+      } catch (e) {
+        if (e instanceof CashierError) return json({ error: { code: 'shift_approval_required', message: e.message } }, 409);
+        if (e instanceof ShiftError) return json({ error: { code: 'shift_rejected', message: e.message } }, 409);
         throw e;
       }
     }
