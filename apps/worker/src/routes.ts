@@ -4,7 +4,7 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError, VitalError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError, PriceError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   receiveGoods, stockAlerts, InventoryError,
@@ -25,6 +25,7 @@ import {
   setPreference, queueMessage, markSent, pendingMessages, recordInbound, openCommsTasks, completeCommsTask, CommsError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
+  quotePrice, chargeService, defineFee, listFees, PricingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -616,6 +617,33 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       } catch (e) {
         if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
         if (e instanceof BillingError) return json({ error: { code: 'billing_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Pricing: effective-dated fee schedule & priced charges (BIL-001/003) --
+    if (p.startsWith('/api/pricing/')) {
+      try {
+        if (p === '/api/pricing/quote' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await quotePrice(env.DB, (await request.json()) as Parameters<typeof quotePrice>[1]));
+        }
+        if (p === '/api/pricing/charge' && method === 'POST') {
+          const denied = guard('bill'); if (denied) return denied;
+          return json(await chargeService(env.DB, (await request.json()) as Parameters<typeof chargeService>[1]), 201);
+        }
+        if (p === '/api/pricing/fees' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ fees: await listFees(env.DB, url.searchParams.get('serviceCode') ?? undefined) });
+        }
+        if (p === '/api/pricing/fees' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await defineFee(env.DB, (await request.json()) as Parameters<typeof defineFee>[1]), 201);
+        }
+      } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
+        if (e instanceof PriceError) return json({ error: { code: 'price_rejected', message: e.message } }, 422);
+        if (e instanceof PricingError) return json({ error: { code: 'pricing_rejected', message: e.message } }, 409);
         throw e;
       }
     }
