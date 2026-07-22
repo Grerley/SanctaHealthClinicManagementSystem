@@ -19,6 +19,7 @@ import {
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
   searchFormulary, dispensingWorklist, markDispensed, generatePrescription, MedicationError,
+  uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, DocumentError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
@@ -403,6 +404,36 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof FixedAssetError) return json({ error: { code: 'asset_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Documents: upload / open / disclosures / index / search (DOC-001/004/006/007) --
+    if (p.startsWith('/api/documents')) {
+      try {
+        if (p === '/api/documents' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await uploadDocument(env.DB, { ...(await request.json()) as Parameters<typeof uploadDocument>[1], ...(auth.user ? { uploadedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/documents/open' && method === 'POST') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          const b = (await request.json()) as { documentId: string; purpose?: string };
+          return json(await openDocument(env.DB, { ...b, userId: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/documents/disclosures' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ disclosures: await disclosureLog(env.DB, url.searchParams.get('documentId') ?? '') });
+        }
+        if (p === '/api/documents/index' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await indexDocument(env.DB, { ...(await request.json()) as { documentId: string; terms?: string[]; ocrText?: string }, ...(auth.user ? { indexedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/documents/search' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ documents: await searchDocuments(env.DB, url.searchParams.get('term') ?? '') });
+        }
+      } catch (e) {
+        if (e instanceof DocumentError) return json({ error: { code: 'document_rejected', message: e.message } }, 409);
         throw e;
       }
     }
