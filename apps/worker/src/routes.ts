@@ -17,6 +17,7 @@ import {
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
+  searchFormulary, dispensingWorklist, markDispensed, generatePrescription, MedicationError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
@@ -483,6 +484,32 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof CarePlanError) return json({ error: { code: 'care_plan_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Formulary / dispensing / prescription print (MED-001/005/006) ----
+    if (p === '/api/formulary' || p.startsWith('/api/dispense/') || p === '/api/prescription/print') {
+      try {
+        if (p === '/api/formulary' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ items: await searchFormulary(env.DB, url.searchParams.get('q') ?? '', url.searchParams.get('location') ?? undefined) });
+        }
+        if (p === '/api/dispense/worklist' && method === 'GET') {
+          const denied = guard('dispense'); if (denied) return denied;
+          return json({ worklist: await dispensingWorklist(env.DB) });
+        }
+        if (p === '/api/dispense/mark' && method === 'POST') {
+          const denied = guard('dispense'); if (denied) return denied;
+          const b = (await request.json()) as { requestId: string };
+          return json(await markDispensed(env.DB, { ...b, ...(auth.user ? { dispensedBy: auth.user } : {}) }));
+        }
+        if (p === '/api/prescription/print' && method === 'POST') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json(await generatePrescription(env.DB, (await request.json()) as Parameters<typeof generatePrescription>[1]));
+        }
+      } catch (e) {
+        if (e instanceof MedicationError) return json({ error: { code: 'medication_rejected', message: e.message } }, 409);
         throw e;
       }
     }
