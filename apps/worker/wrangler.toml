@@ -1,0 +1,27 @@
+# The all-Cloudflare app: one Worker serving the PWA (Static Assets) + the /api/*
+# API on D1. Deployed from GitHub (see .github/workflows/deploy.yml). Secrets are
+# never committed here — the D1 database id is injected/looked up at deploy time.
+name = "sancta-app"
+main = "src/index.ts"
+compatibility_date = "2026-07-05"
+compatibility_flags = ["nodejs_compat"]   # required by the pg-style code paths + node builtins
+workers_dev = true
+
+# The React PWA is served as static assets from the same versioned Worker release.
+# Only /api/* invokes the Worker; all other paths are served as the SPA.
+[assets]
+directory = "../clinic-web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+# D1 (SQLite) — the database. `database_id` is filled in per environment (the
+# deploy workflow / dashboard provides it; do not commit a real id).
+[[d1_databases]]
+binding = "DB"
+database_name = "sancta"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+migrations_dir = "../../packages/d1/migrations"
+
+[observability]
+enabled = true

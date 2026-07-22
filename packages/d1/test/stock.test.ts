@@ -8,7 +8,9 @@
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { openLocalD1, applyD1Migrations, receiveStock, dispenseStock, skuOnHand } from '../src/index.ts';
+import { receiveStock, dispenseStock, skuOnHand } from '../src/index.ts';
+import { openLocalD1 } from '../src/local.ts';
+import { applyD1Migrations } from '../src/migrations.ts';
 import { StockError } from '@sancta/domain';
 import type { LocalD1 } from '../src/d1.ts';
 

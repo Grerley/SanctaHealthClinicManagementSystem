@@ -1,0 +1,15 @@
+{
+  "name": "@sancta/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The all-Cloudflare app: one Worker serving the PWA (Static Assets) + the /api/* API on D1. Production entrypoint for the D1 migration.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --experimental-sqlite --test \"test/**/*.test.ts\""
+  },
+  "dependencies": {
+    "@sancta/d1": "*",
+    "@sancta/domain": "*"
+  }
+}

@@ -108,8 +108,7 @@ export class LocalD1 implements D1Database {
   }
 }
 
-/** Open an in-memory (or file) LocalD1 using node:sqlite. */
-export async function openLocalD1(path = ':memory:'): Promise<LocalD1> {
-  const { DatabaseSync } = (await import('node:sqlite')) as { DatabaseSync: new (p: string) => SqliteDb };
-  return new LocalD1(new DatabaseSync(path));
-}
+// `SqliteDb` is the structural shape the local driver needs (satisfied by
+// node:sqlite's DatabaseSync). The actual node:sqlite import lives in
+// ./local.ts, so the Worker bundle never pulls in node-only APIs.
+export type { SqliteDb };
