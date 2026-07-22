@@ -37,6 +37,8 @@ import {
   loadPolicy, listPolicy, setFieldRule, DemographicPolicyError,
   ageingReport,
   changeDemographic, markDeceased, patientIdentityHistory, IdentityHistoryError,
+  patientCard, resolveCard, checkInView, FrontDeskError,
+  issueToken, revokeToken, selfSummary, requestBooking, recordPayIntent, listBookingRequests, confirmBooking, SelfServiceError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -909,6 +911,63 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof IdentityHistoryError) return json({ error: { code: 'identity_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Front desk: patient card + check-in view (PAT-006, VIS-002) ---------
+    if (p.startsWith('/api/frontdesk/')) {
+      try {
+        if (p === '/api/frontdesk/card' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await patientCard(env.DB, url.searchParams.get('patientId') ?? ''));
+        }
+        if (p === '/api/frontdesk/resolve-card' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await resolveCard(env.DB, ((await request.json()) as { qr: string }).qr));
+        }
+        if (p === '/api/frontdesk/check-in' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await checkInView(env.DB, url.searchParams.get('visitId') ?? ''));
+        }
+      } catch (e) {
+        if (e instanceof FrontDeskError) return json({ error: { code: 'frontdesk_rejected', message: e.message } }, 404);
+        throw e;
+      }
+    }
+
+    // --- Patient self-service (COM-006) -------------------------------------
+    if (p.startsWith('/api/selfservice/')) {
+      try {
+        if (p === '/api/selfservice/token' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied; // staff issues the token
+          return json(await issueToken(env.DB, (await request.json()) as Parameters<typeof issueToken>[1]), 201);
+        }
+        if (p === '/api/selfservice/token/revoke' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          await revokeToken(env.DB, ((await request.json()) as { token: string }).token);
+          return json({ ok: true });
+        }
+        // Patient-scoped reads/requests: authenticated by the self-service token in the body/query, not staff RBAC.
+        if (p === '/api/selfservice/summary' && method === 'GET') {
+          return json(await selfSummary(env.DB, url.searchParams.get('token') ?? ''));
+        }
+        if (p === '/api/selfservice/booking-request' && method === 'POST') {
+          return json(await requestBooking(env.DB, (await request.json()) as Parameters<typeof requestBooking>[1]), 201);
+        }
+        if (p === '/api/selfservice/pay-intent' && method === 'POST') {
+          return json(await recordPayIntent(env.DB, (await request.json()) as Parameters<typeof recordPayIntent>[1]), 201);
+        }
+        if (p === '/api/selfservice/booking-requests' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ requests: await listBookingRequests(env.DB) });
+        }
+        if (p === '/api/selfservice/confirm-booking' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await confirmBooking(env.DB, { ...(await request.json()) as Parameters<typeof confirmBooking>[1], ...(auth.user ? { user: auth.user } : {}) }));
+        }
+      } catch (e) {
+        if (e instanceof SelfServiceError) return json({ error: { code: 'selfservice_rejected', message: e.message } }, 409);
         throw e;
       }
     }

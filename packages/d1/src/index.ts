@@ -48,3 +48,5 @@ export * from './ehr.ts';
 export * from './demographics.ts';
 export * from './debtors.ts';
 export * from './identity-history.ts';
+export * from './frontdesk.ts';
+export * from './selfservice.ts';
