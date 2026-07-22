@@ -9,6 +9,7 @@ import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   receiveGoods, stockAlerts, InventoryError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
+  addRelatedPerson, listRelatedPersons, accessPatient, RelationError, mergePatients, unmergePatients, MergeError,
   transfer, completeVisit, VisitError,
   bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError,
   createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
@@ -64,6 +65,33 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const body = (await request.json()) as Record<string, unknown>;
       const result = await registerPatient(env.DB, { ...body, ...(auth.user ? { user: auth.user } : {}) });
       return json(result, result.ok ? 201 : 200);
+    }
+    // --- Patient identity depth: relations / access / merge (PAT-005/008/009) --
+    if (p === '/api/patients/related' || p === '/api/patients/access' || p === '/api/patients/merge') {
+      try {
+        if (p === '/api/patients/related' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await addRelatedPerson(env.DB, { ...(await request.json()) as Parameters<typeof addRelatedPerson>[1], ...(auth.user ? { by: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/patients/related' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ related: await listRelatedPersons(env.DB, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/patients/access' && method === 'POST') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          const b = (await request.json()) as { patientId: string; purpose?: string; breakGlass?: boolean; breakGlassReason?: string };
+          return json(await accessPatient(env.DB, { ...b, roles: auth.roles, user: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/patients/merge' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          const b = (await request.json()) as { survivorId: string; mergedId: string };
+          return json(await mergePatients(env.DB, { ...b, mergedBy: auth.user ?? 'unknown' }));
+        }
+      } catch (e) {
+        if (e instanceof RelationError) return json({ error: { code: 'relation_rejected', message: e.message } }, 409);
+        if (e instanceof MergeError) return json({ error: { code: 'merge_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Stock + the flagship dispense-and-pay ----------------------------

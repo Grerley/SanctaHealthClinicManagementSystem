@@ -20,6 +20,8 @@ export * from './cashier.ts';
 export * from './checkout.ts';
 export * from './billing.ts';
 export * from './patients.ts';
+export * from './patient-relations.ts';
+export * from './merge.ts';
 export * from './visits.ts';
 export * from './scheduling.ts';
 export * from './dashboard.ts';

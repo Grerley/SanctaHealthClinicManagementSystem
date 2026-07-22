@@ -23,7 +23,7 @@ export async function listPatients(db: D1Database, q?: string, limit = 200): Pro
       db,
       `SELECT id, mrn, given_name, family_name, date_of_birth AS dob, sex
        FROM identity_patient
-       WHERE deceased = 0 AND (mrn LIKE ? OR given_name LIKE ? OR family_name LIKE ?)
+       WHERE deceased = 0 AND merged_into IS NULL AND (mrn LIKE ? OR given_name LIKE ? OR family_name LIKE ?)
        ORDER BY family_name, given_name LIMIT ?`,
       [like, like, like, limit],
     );
@@ -31,7 +31,7 @@ export async function listPatients(db: D1Database, q?: string, limit = 200): Pro
   return many<PatientRow>(
     db,
     `SELECT id, mrn, given_name, family_name, date_of_birth AS dob, sex
-     FROM identity_patient WHERE deceased = 0 ORDER BY family_name, given_name LIMIT ?`,
+     FROM identity_patient WHERE deceased = 0 AND merged_into IS NULL ORDER BY family_name, given_name LIMIT ?`,
     [limit],
   );
 }
@@ -44,7 +44,7 @@ export type RegisterResult =
 async function loadCandidates(db: D1Database): Promise<PatientCandidate[]> {
   const rows = await many<{ id: string; given_name: string | null; family_name: string | null; dob: string | null; sex: string | null }>(
     db,
-    `SELECT id, given_name, family_name, date_of_birth AS dob, sex FROM identity_patient WHERE deceased = 0`,
+    `SELECT id, given_name, family_name, date_of_birth AS dob, sex FROM identity_patient WHERE deceased = 0 AND merged_into IS NULL`,
   );
   return rows.map((r) => ({
     id: r.id,
