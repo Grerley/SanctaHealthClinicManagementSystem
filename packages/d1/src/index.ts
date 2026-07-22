@@ -8,3 +8,7 @@ export * from './d1.ts';
 export * from './query.ts';
 export * from './stock.ts';
 export * from './checkout.ts';
+export * from './patients.ts';
+export * from './visits.ts';
+export * from './scheduling.ts';
+export * from './dashboard.ts';
