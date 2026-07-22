@@ -53,3 +53,6 @@ export * from './selfservice.ts';
 export * from './devices.ts';
 export * from './ops.ts';
 export * from './facility.ts';
+export * from './admin.ts';
+export * from './audit.ts';
+export * from './kpi.ts';

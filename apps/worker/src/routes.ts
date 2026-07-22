@@ -4,7 +4,7 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError, VitalError, PriceError, TransitionError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError, PriceError, TransitionError, AuthorisationError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   receiveGoods, stockAlerts, InventoryError,
@@ -42,6 +42,9 @@ import {
   registerDevice, revokeDevice, DeviceError,
   addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity, OpsError,
   addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance, FacilityError,
+  createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth, getHelpTopic, listHelpTopics, AdminError,
+  searchAudit, exportAudit,
+  setKpiTarget, recordSnapshot, kpiComparison, KpiAdminError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -1080,6 +1083,89 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof FacilityError) return json({ error: { code: 'facility_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Admin: config releases, feature flags, health, help (ADM-003/005/006/008) --
+    if (p.startsWith('/api/admin/')) {
+      try {
+        if (p === '/api/admin/release' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await createRelease(env.DB, { ...(await request.json()) as Omit<Parameters<typeof createRelease>[1], 'by'>, by: auth.user ?? 'system' }), 201);
+        }
+        if (p === '/api/admin/release/promote' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await promoteRelease(env.DB, { ...(await request.json()) as Omit<Parameters<typeof promoteRelease>[1], 'by'>, by: auth.user ?? 'system' }));
+        }
+        if (p === '/api/admin/release/rollback' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await rollbackRelease(env.DB, { ...(await request.json()) as Omit<Parameters<typeof rollbackRelease>[1], 'by'>, by: auth.user ?? 'system' }));
+        }
+        if (p === '/api/admin/config' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await currentConfig(env.DB, url.searchParams.get('name') ?? '') ?? { version: 0, payload: null });
+        }
+        if (p === '/api/admin/feature-flag' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setFeatureFlag(env.DB, (await request.json()) as Parameters<typeof setFeatureFlag>[1]));
+        }
+        if (p === '/api/admin/feature-flag' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ enabled: await evaluateFlag(env.DB, url.searchParams.get('key') ?? '', { site: url.searchParams.get('site'), roles: auth.roles }) });
+        }
+        if (p === '/api/admin/health' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await systemHealth(env.DB));
+        }
+        if (p === '/api/admin/help' && method === 'GET') {
+          const slug = url.searchParams.get('slug');
+          if (slug) return json(await getHelpTopic(env.DB, slug) ?? { error: { code: 'not_found' } });
+          return json({ topics: await listHelpTopics(env.DB, url.searchParams.get('category') ?? undefined) });
+        }
+      } catch (e) {
+        if (e instanceof AuthorisationError) return json({ error: { code: 'segregation', message: e.message } }, 403);
+        if (e instanceof AdminError) return json({ error: { code: 'admin_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Audit search & audited export (ADM-004) ----------------------------
+    if (p === '/api/audit/search' && method === 'GET') {
+      const denied = guard('export'); if (denied) return denied;
+      const f = {
+        ...(url.searchParams.get('user') ? { user: url.searchParams.get('user') as string } : {}),
+        ...(url.searchParams.get('patientRef') ? { patientRef: url.searchParams.get('patientRef') as string } : {}),
+        ...(url.searchParams.get('resourceType') ? { resourceType: url.searchParams.get('resourceType') as string } : {}),
+        ...(url.searchParams.get('action') ? { action: url.searchParams.get('action') as string } : {}),
+        ...(url.searchParams.get('fromIso') ? { fromIso: url.searchParams.get('fromIso') as string } : {}),
+        ...(url.searchParams.get('toIso') ? { toIso: url.searchParams.get('toIso') as string } : {}),
+        ...(url.searchParams.get('limit') ? { limit: Number(url.searchParams.get('limit')) } : {}),
+      };
+      return json({ rows: await searchAudit(env.DB, f) });
+    }
+    if (p === '/api/audit/export' && method === 'POST') {
+      const denied = guard('export'); if (denied) return denied;
+      return json(await exportAudit(env.DB, (await request.json()) as Parameters<typeof exportAudit>[1], auth.user ?? 'system'));
+    }
+
+    // --- KPI targets + comparison (MGT-004/005) -----------------------------
+    if (p.startsWith('/api/kpi/')) {
+      try {
+        if (p === '/api/kpi/target' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setKpiTarget(env.DB, { ...(await request.json()) as Parameters<typeof setKpiTarget>[1], ...(auth.user ? { by: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/kpi/snapshot' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await recordSnapshot(env.DB, (await request.json()) as Parameters<typeof recordSnapshot>[1]), 201);
+        }
+        if (p === '/api/kpi/comparison' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await kpiComparison(env.DB, { kpiId: url.searchParams.get('kpiId') ?? '', period: url.searchParams.get('period') ?? '', priorPeriod: url.searchParams.get('priorPeriod') ?? '' }));
+        }
+      } catch (e) {
+        if (e instanceof KpiAdminError) return json({ error: { code: 'kpi_rejected', message: e.message } }, 409);
         throw e;
       }
     }
