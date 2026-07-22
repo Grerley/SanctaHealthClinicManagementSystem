@@ -8,6 +8,7 @@ import { can, type Permission, StockError, VitalError, breakEven, investmentReco
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   receiveGoods, stockAlerts, InventoryError,
+  createRequisition, decideRequisition, createPurchaseOrder, registerEquipment, recordEquipmentService, equipmentDueService, ProcurementError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
   addRelatedPerson, listRelatedPersons, accessPatient, RelationError, mergePatients, unmergePatients, MergeError,
   transfer, completeVisit, VisitError,
@@ -405,6 +406,40 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof FixedAssetError) return json({ error: { code: 'asset_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Procurement + equipment (INV-003/010) ----------------------------
+    if (p.startsWith('/api/procurement/') || p.startsWith('/api/equipment')) {
+      try {
+        if (p === '/api/procurement/requisition' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await createRequisition(env.DB, { ...(await request.json()) as Parameters<typeof createRequisition>[1], ...(auth.user ? { requestedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/procurement/requisition/decide' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          const b = (await request.json()) as { requisitionId: string; approve: boolean };
+          return json(await decideRequisition(env.DB, { ...b, approver: auth.user ?? 'unknown', approverRoles: auth.roles }));
+        }
+        if (p === '/api/procurement/purchase-order' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await createPurchaseOrder(env.DB, { ...(await request.json()) as Parameters<typeof createPurchaseOrder>[1], ...(auth.user ? { createdBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/equipment' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await registerEquipment(env.DB, (await request.json()) as Parameters<typeof registerEquipment>[1]), 201);
+        }
+        if (p === '/api/equipment/service' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await recordEquipmentService(env.DB, { ...(await request.json()) as Parameters<typeof recordEquipmentService>[1], ...(auth.user ? { performedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/equipment/due' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ equipment: await equipmentDueService(env.DB, { asOf: url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10) }) });
+        }
+      } catch (e) {
+        if (e instanceof ProcurementError) return json({ error: { code: 'procurement_rejected', message: e.message } }, 409);
         throw e;
       }
     }

@@ -8,6 +8,7 @@ export * from './d1.ts';
 export * from './query.ts';
 export * from './stock.ts';
 export * from './inventory.ts';
+export * from './procurement.ts';
 export * from './journal.ts';
 export * from './finance.ts';
 export * from './finance-reports.ts';
