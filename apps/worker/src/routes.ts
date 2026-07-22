@@ -7,6 +7,7 @@
 import { can, type Permission, StockError, VitalError, breakEven, investmentRecovery, appointmentReminder } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
+  receiveGoods, stockAlerts, InventoryError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
   transfer, completeVisit, VisitError,
   bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError,
@@ -71,6 +72,16 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const sku = url.searchParams.get('sku') ?? '';
       const location = url.searchParams.get('location') ?? 'MAIN';
       return json({ sku, onHand: await skuOnHand(env.DB, sku, location) });
+    }
+    if (p === '/api/stock/receive' && method === 'POST') {
+      const denied = guard('create'); if (denied) return denied;
+      try { return json(await receiveGoods(env.DB, { ...(await request.json()) as Parameters<typeof receiveGoods>[1], ...(auth.user ? { user: auth.user } : {}) }), 201); }
+      catch (e) { if (e instanceof InventoryError) return json({ error: { code: 'receipt_rejected', message: e.message } }, 400); throw e; }
+    }
+    if (p === '/api/stock/alerts' && method === 'GET') {
+      const denied = guard('view_summary'); if (denied) return denied;
+      const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+      return json({ alerts: await stockAlerts(env.DB, asOf) });
     }
     if (p === '/api/checkout' && method === 'POST') {
       const denied = guard('create');
