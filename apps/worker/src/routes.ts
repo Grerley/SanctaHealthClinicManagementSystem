@@ -11,6 +11,7 @@ import {
   createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
+  createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -104,6 +105,41 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Clinical encounters (EHR-008/009, BR-003, UAT-04) ----------------
+    if (p.startsWith('/api/encounters')) {
+      try {
+        if (p === '/api/encounters' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as { patientId: string };
+          return json(await createDraftEncounter(env.DB, { ...b, ...(auth.user ? { user: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/encounters/draft' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          await updateDraft(env.DB, (await request.json()) as Parameters<typeof updateDraft>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/encounters/sign' && method === 'POST') {
+          const denied = guard('sign'); if (denied) return denied;
+          return json(await signEncounter(env.DB, (await request.json()) as Parameters<typeof signEncounter>[1]));
+        }
+        if (p === '/api/encounters/addendum' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await addAddendum(env.DB, (await request.json()) as Parameters<typeof addAddendum>[1]), 201);
+        }
+        if (p === '/api/encounters/entered-in-error' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await markEnteredInError(env.DB, (await request.json()) as Parameters<typeof markEnteredInError>[1]));
+        }
+        if (p === '/api/encounters/get' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json(await getEncounter(env.DB, url.searchParams.get('id') ?? ''));
+        }
+      } catch (e) {
+        if (e instanceof EncounterError) return json({ error: { code: 'encounter_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Orders, results & critical-result acknowledgement (ORD, UAT-06) --

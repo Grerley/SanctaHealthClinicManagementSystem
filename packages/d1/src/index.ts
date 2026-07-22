@@ -13,3 +13,4 @@ export * from './visits.ts';
 export * from './scheduling.ts';
 export * from './dashboard.ts';
 export * from './orders.ts';
+export * from './encounters.ts';
