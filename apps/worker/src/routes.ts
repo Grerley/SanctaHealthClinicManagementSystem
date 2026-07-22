@@ -14,6 +14,7 @@ import {
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
+  createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -107,6 +108,42 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Care plans, goals & follow-ups (EHR-006) -------------------------
+    if (p.startsWith('/api/ehr/care-plan')) {
+      try {
+        if (p === '/api/ehr/care-plan' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          const b = (await request.json()) as Parameters<typeof createCarePlan>[1];
+          return json(await createCarePlan(env.DB, { ...b, ...(auth.user ? { user: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/ehr/care-plan/goal' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await addGoal(env.DB, (await request.json()) as Parameters<typeof addGoal>[1]), 201);
+        }
+        if (p === '/api/ehr/care-plan/followup' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await addFollowUp(env.DB, (await request.json()) as Parameters<typeof addFollowUp>[1]), 201);
+        }
+        if (p === '/api/ehr/care-plan/followup/complete' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          const b = (await request.json()) as { id: string };
+          return json(await completeFollowUp(env.DB, { ...b, ...(auth.user ? { user: auth.user } : {}) }));
+        }
+        if (p === '/api/ehr/care-plans' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ carePlans: await listCarePlans(env.DB, url.searchParams.get('patientId') ?? '') });
+        }
+        if (p === '/api/ehr/care-plan/overdue' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+          return json({ overdue: await overdueFollowUps(env.DB, asOf) });
+        }
+      } catch (e) {
+        if (e instanceof CarePlanError) return json({ error: { code: 'care_plan_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Prescribing + allergy override (MED-002/003/004/009, UAT-05) -----
