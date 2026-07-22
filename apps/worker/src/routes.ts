@@ -15,6 +15,7 @@ import {
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
+  recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -108,6 +109,38 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Billing: payments, allocation, reallocation, refunds (BIL-006/010) --
+    if (p.startsWith('/api/billing/')) {
+      try {
+        if (p === '/api/billing/payment' && method === 'POST') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          return json(await recordPayment(env.DB, (await request.json()) as Parameters<typeof recordPayment>[1]), 201);
+        }
+        if (p === '/api/billing/allocate' && method === 'POST') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          await allocate(env.DB, (await request.json()) as Parameters<typeof allocate>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/billing/reallocate' && method === 'POST') {
+          const denied = guard('reverse'); if (denied) return denied;
+          await reallocate(env.DB, (await request.json()) as Parameters<typeof reallocate>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/billing/refund' && method === 'POST') {
+          const denied = guard('reverse'); if (denied) return denied;
+          return json(await refundPayment(env.DB, (await request.json()) as Parameters<typeof refundPayment>[1]), 201);
+        }
+        if (p === '/api/billing/invoice-outstanding' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const id = url.searchParams.get('id') ?? '';
+          return json({ invoiceId: id, outstandingMinor: await invoiceOutstanding(env.DB, id) });
+        }
+      } catch (e) {
+        if (e instanceof BillingError) return json({ error: { code: 'billing_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Care plans, goals & follow-ups (EHR-006) -------------------------

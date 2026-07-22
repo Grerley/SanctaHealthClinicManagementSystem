@@ -18,12 +18,12 @@ import {
   postPaymentReceived,
   uuidv7,
   StockError,
-  type JournalBatch,
   type Lot,
   type StockMovement,
 } from '@sancta/domain';
 import type { D1Database, D1PreparedStatement } from './d1.ts';
-import { many, run, stmt } from './query.ts';
+import { many, stmt } from './query.ts';
+import { ensurePeriod, journalStatements } from './journal.ts';
 
 export class DuplicateCheckoutError extends Error {}
 
@@ -48,24 +48,11 @@ export type CheckoutD1Request = {
   shiftId?: string;
 };
 
-/** Statements that persist a balanced journal batch (batch header + its lines). */
-function journalStatements(db: D1Database, batch: JournalBatch, periodId: string): D1PreparedStatement[] {
-  const out: D1PreparedStatement[] = [
-    stmt(db, `INSERT INTO finance_journal_batch (id, origin, source_type, source_id, currency, posting_date, period_id, reverses) VALUES (?,?,?,?,?,?,?,?)`,
-      [batch.id, batch.origin, batch.source.type, batch.source.id, batch.currency, batch.postingDate, periodId, batch.reverses ?? null]),
-  ];
-  for (const l of batch.lines) {
-    out.push(stmt(db, `INSERT INTO finance_journal_line (id, batch_id, account_code, debit_minor, credit_minor, cost_centre, memo) VALUES (?,?,?,?,?,?,?)`,
-      [uuidv7(), batch.id, l.accountCode, l.debit.minor, l.credit.minor, l.costCentre ?? null, l.memo ?? null]));
-  }
-  return out;
-}
-
 export async function commitCheckoutD1(db: D1Database, req: CheckoutD1Request): Promise<{ idempotencyKey: string; cogsMinor: number }> {
   const d = req.dispense;
   const periodId = d.postingDate.slice(0, 7);
   // Ensure the accounting period exists (idempotent, not part of the atomic unit).
-  await run(db, `INSERT INTO finance_financial_period (id, status) VALUES (?, 'open') ON CONFLICT(id) DO NOTHING`, [periodId]);
+  await ensurePeriod(db, periodId);
 
   // Read lots + current balances; build the FEFO plan with the shared domain logic.
   const lotRows = await many<{ id: string; sku: string; expiry_date: string; status: string; unit_cost_minor: number }>(
