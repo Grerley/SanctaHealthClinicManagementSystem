@@ -45,6 +45,8 @@ import {
   createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth, getHelpTopic, listHelpTopics, AdminError,
   searchAudit, exportAudit,
   setKpiTarget, recordSnapshot, kpiComparison, KpiAdminError,
+  defineForm, formAsOf, listForms, FormAdminError,
+  publicQueue, analyticalExtract, exportPatientSummary, listPatientDisclosures, DisclosureError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -1166,6 +1168,52 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof KpiAdminError) return json({ error: { code: 'kpi_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Clinical forms: versioned, effective-dated (EHR-003) ---------------
+    if (p.startsWith('/api/forms')) {
+      try {
+        if (p === '/api/forms' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await defineForm(env.DB, { ...(await request.json()) as Parameters<typeof defineForm>[1], ...(auth.user ? { by: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/forms' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ forms: await listForms(env.DB, url.searchParams.get('onDate') ?? undefined) });
+        }
+        if (p === '/api/forms/resolve' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await formAsOf(env.DB, url.searchParams.get('formCode') ?? '', url.searchParams.get('onDate') ?? new Date().toISOString().slice(0, 10)));
+        }
+      } catch (e) {
+        if (e instanceof FormAdminError) return json({ error: { code: 'form_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Privacy: public queue, analytics, authorised disclosure (VIS-009/MGT-009/PAT-010) --
+    if (p.startsWith('/api/privacy/')) {
+      try {
+        if (p === '/api/privacy/public-queue' && method === 'GET') {
+          // De-identified — safe for a public screen; no RBAC gate needed.
+          return json({ queue: await publicQueue(env.DB, url.searchParams.get('asOf') ?? undefined) });
+        }
+        if (p === '/api/privacy/analytics' && method === 'GET') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await analyticalExtract(env.DB, { asOf: url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10), ...(auth.user ? { exportedBy: auth.user } : {}) }));
+        }
+        if (p === '/api/privacy/disclose' && method === 'POST') {
+          const denied = guard('export'); if (denied) return denied;
+          return json(await exportPatientSummary(env.DB, { ...(await request.json()) as Parameters<typeof exportPatientSummary>[1], ...(auth.user ? { disclosedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/privacy/disclosures' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ disclosures: await listPatientDisclosures(env.DB, { patientId: url.searchParams.get('patientId') ?? '' }) });
+        }
+      } catch (e) {
+        if (e instanceof DisclosureError) return json({ error: { code: 'disclosure_rejected', message: e.message } }, 409);
         throw e;
       }
     }

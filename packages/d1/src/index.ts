@@ -56,3 +56,5 @@ export * from './facility.ts';
 export * from './admin.ts';
 export * from './audit.ts';
 export * from './kpi.ts';
+export * from './forms.ts';
+export * from './privacy.ts';
