@@ -20,6 +20,7 @@ import {
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
   searchFormulary, dispensingWorklist, markDispensed, generatePrescription, MedicationError,
   uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, DocumentError,
+  storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument, DocLifecycleError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
@@ -432,8 +433,39 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
           const denied = guard('view_summary'); if (denied) return denied;
           return json({ documents: await searchDocuments(env.DB, url.searchParams.get('term') ?? '') });
         }
+        // --- Document lifecycle: generate / supersede / EIE / hold / retention / disposal (DOC-002/003/005) ---
+        if (p === '/api/documents/generate' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await storeGeneratedDocument(env.DB, { ...(await request.json()) as Parameters<typeof storeGeneratedDocument>[1], ...(auth.user ? { generatedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/documents/supersede' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await supersedeDocument(env.DB, { ...(await request.json()) as { documentId: string; newDocumentId: string }, by: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/documents/entered-in-error' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await markDocumentEnteredInError(env.DB, { ...(await request.json()) as { documentId: string; reason: string }, by: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/documents/legal-hold' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setLegalHold(env.DB, { ...(await request.json()) as { documentId: string; hold: boolean }, by: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/documents/retention' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setRetention(env.DB, { ...(await request.json()) as { documentId: string; retentionClass: string; retainUntil: string }, by: auth.user ?? 'unknown' }));
+        }
+        if (p === '/api/documents/disposal-candidates' && method === 'GET') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json({ candidates: await disposalCandidates(env.DB, url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10)) });
+        }
+        if (p === '/api/documents/dispose' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          const b = (await request.json()) as { documentId: string; asOf?: string };
+          return json(await disposeDocument(env.DB, { documentId: b.documentId, asOf: b.asOf ?? new Date().toISOString().slice(0, 10), by: auth.user ?? 'unknown' }));
+        }
       } catch (e) {
         if (e instanceof DocumentError) return json({ error: { code: 'document_rejected', message: e.message } }, 409);
+        if (e instanceof DocLifecycleError) return json({ error: { code: 'document_lifecycle_rejected', message: e.message } }, 409);
         throw e;
       }
     }

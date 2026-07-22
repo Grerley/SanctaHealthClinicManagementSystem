@@ -32,3 +32,4 @@ export * from './prescribing.ts';
 export * from './care-plan.ts';
 export * from './medication.ts';
 export * from './documents.ts';
+export * from './document-lifecycle.ts';
