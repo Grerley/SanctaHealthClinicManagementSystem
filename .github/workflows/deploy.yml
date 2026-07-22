@@ -1,16 +1,17 @@
 # Deploy the all-Cloudflare app (Worker + PWA on D1) from GitHub.
 #
-# This is the ONLY place the D1 database is touched by a machine: the pipeline runs
+# This is the ONLY place the D1 database is touched by a machine: the pipeline
+# creates the database if it does not exist, resolves its id, runs
 # `wrangler d1 migrations apply --remote` (forward-only, tracked) and then
-# `wrangler deploy`. No human hand-edits the database; schema is code.
+# `wrangler deploy`. No human hand-edits the database, and nobody runs anything
+# locally — schema is code and provisioning is automated here.
 #
 # Required repo configuration (Settings → Secrets and variables → Actions):
-#   Secrets:   CLOUDFLARE_API_TOKEN      (scoped: Workers Scripts:Edit, D1:Edit, Workers KV:Edit if used)
+#   Secrets:   CLOUDFLARE_API_TOKEN   (scoped: Workers Scripts:Edit, D1:Edit)
 #   Secrets:   CLOUDFLARE_ACCOUNT_ID
-#   Variables: CLOUDFLARE_D1_DATABASE_ID (the id from `wrangler d1 create sancta`; not secret)
 #
-# One-time before the first run: create the database with `wrangler d1 create sancta`
-# and put its id in the CLOUDFLARE_D1_DATABASE_ID variable.
+# That's it — the D1 database id is discovered/created at deploy time, so there
+# is no CLOUDFLARE_D1_DATABASE_ID to set and nothing to run on your machine.
 name: deploy
 
 on:
@@ -41,16 +42,37 @@ jobs:
       - name: Build PWA
         run: npm run build -w @sancta/clinic-web
 
-      # Inject the (non-secret) D1 database id into the Worker config.
+      # Ensure the D1 database exists and resolve its id (idempotent: created on the
+      # first deploy, reused on every deploy after). No local `wrangler d1 create`
+      # is ever needed — this is the single source of provisioning.
+      - name: Ensure D1 database
+        id: d1
+        working-directory: apps/worker
+        run: |
+          set -euo pipefail
+          db_id="$(npx --no-install wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
+          if [ -z "$db_id" ] || [ "$db_id" = "null" ]; then
+            echo "D1 database 'sancta' not found — creating it."
+            npx --no-install wrangler d1 create sancta
+            db_id="$(npx --no-install wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
+          fi
+          if [ -z "$db_id" ] || [ "$db_id" = "null" ]; then
+            echo "Failed to resolve the D1 database id after create." >&2
+            exit 1
+          fi
+          echo "Using D1 database id: $db_id"
+          echo "db_id=$db_id" >> "$GITHUB_OUTPUT"
+
+      # Inject the resolved D1 database id into the Worker config for this run.
       - name: Configure D1 database id
-        run: sed -i "s/REPLACE_WITH_D1_DATABASE_ID/${{ vars.CLOUDFLARE_D1_DATABASE_ID }}/" apps/worker/wrangler.toml
+        run: sed -i "s/REPLACE_WITH_D1_DATABASE_ID/${{ steps.d1.outputs.db_id }}/" apps/worker/wrangler.toml
 
       # Apply pending D1 migrations to the REMOTE database (forward-only, idempotent).
       - name: Apply D1 migrations
         working-directory: apps/worker
-        run: npx wrangler d1 migrations apply sancta --remote
+        run: npx --no-install wrangler d1 migrations apply sancta --remote
 
       # Ship the Worker + static assets as one versioned release.
       - name: Deploy Worker
         working-directory: apps/worker
-        run: npx wrangler deploy
+        run: npx --no-install wrangler deploy

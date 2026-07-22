@@ -7,24 +7,26 @@ The app is one Cloudflare Worker that serves the React PWA (Static Assets) and t
 
 ## One-time setup (you, in Cloudflare + GitHub)
 
-1. **Create the D1 database** (once):
-   ```
-   npx wrangler d1 create sancta
-   ```
-   Copy the printed `database_id`.
-2. **Create a scoped API token** (Cloudflare → My Profile → API Tokens): permissions
-   `Workers Scripts:Edit`, `D1:Edit` (and `Workers KV:Edit` if used later). Copy it.
-3. **Add repo configuration** (GitHub → Settings → Secrets and variables → Actions):
+You never run anything locally and never touch the database by hand. The pipeline
+creates the D1 database on the first deploy and reuses it after — so there are only
+**two** secrets to set:
+
+1. **Create a scoped API token** (Cloudflare → My Profile → API Tokens): permissions
+   `Workers Scripts:Edit`, `D1:Edit`. Copy it.
+2. **Add repo configuration** (GitHub → Settings → Secrets and variables → Actions):
    - Secret `CLOUDFLARE_API_TOKEN` = the token
    - Secret `CLOUDFLARE_ACCOUNT_ID` = your Cloudflare account id
-   - Variable `CLOUDFLARE_D1_DATABASE_ID` = the `database_id` from step 1 (not secret)
+
+There is no `CLOUDFLARE_D1_DATABASE_ID` to set: the deploy workflow discovers the
+database (creating it if missing) and injects its id automatically.
 
 ## Deploying
 
 Push to `main` (or run the **deploy** workflow manually). The pipeline:
 1. builds the PWA,
-2. runs `wrangler d1 migrations apply sancta --remote` (forward-only, idempotent),
-3. runs `wrangler deploy` — shipping the Worker + assets as one versioned release.
+2. ensures the D1 database exists and resolves its id (creates it on the first run),
+3. runs `wrangler d1 migrations apply sancta --remote` (forward-only, idempotent),
+4. runs `wrangler deploy` — shipping the Worker + assets as one versioned release.
 
 Verify: `GET https://<your-worker-url>/healthz` → `{ "status": "ok", "plane": "cloud", "db": "d1" }`.
 
