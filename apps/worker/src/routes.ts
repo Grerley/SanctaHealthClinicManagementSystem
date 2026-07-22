@@ -22,6 +22,7 @@ import {
   searchFormulary, dispensingWorklist, markDispensed, generatePrescription, MedicationError,
   uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, DocumentError,
   storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument, DocLifecycleError,
+  setPreference, queueMessage, markSent, pendingMessages, recordInbound, openCommsTasks, completeCommsTask, CommsError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
@@ -406,6 +407,47 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof FixedAssetError) return json({ error: { code: 'asset_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Patient communication (COM-001..005) -----------------------------
+    if (p.startsWith('/api/comms/')) {
+      try {
+        if (p === '/api/comms/preference' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          await setPreference(env.DB, (await request.json()) as Parameters<typeof setPreference>[1]);
+          return json({ ok: true });
+        }
+        if (p === '/api/comms/message' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await queueMessage(env.DB, (await request.json()) as Parameters<typeof queueMessage>[1]), 201);
+        }
+        if (p === '/api/comms/sent' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          const b = (await request.json()) as { messageId: string };
+          await markSent(env.DB, b.messageId);
+          return json({ ok: true });
+        }
+        if (p === '/api/comms/pending' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ pending: await pendingMessages(env.DB) });
+        }
+        if (p === '/api/comms/inbound' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await recordInbound(env.DB, (await request.json()) as Parameters<typeof recordInbound>[1]), 201);
+        }
+        if (p === '/api/comms/tasks' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ tasks: await openCommsTasks(env.DB) });
+        }
+        if (p === '/api/comms/tasks/complete' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          const b = (await request.json()) as { taskId: string };
+          return json(await completeCommsTask(env.DB, { ...b, ...(auth.user ? { by: auth.user } : {}) }));
+        }
+      } catch (e) {
+        if (e instanceof CommsError) return json({ error: { code: 'comms_rejected', message: e.message } }, 409);
         throw e;
       }
     }
