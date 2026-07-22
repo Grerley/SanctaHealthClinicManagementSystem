@@ -50,11 +50,11 @@ jobs:
         working-directory: apps/worker
         run: |
           set -euo pipefail
-          db_id="$(npx --no-install wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
+          db_id="$(npx -y wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
           if [ -z "$db_id" ] || [ "$db_id" = "null" ]; then
             echo "D1 database 'sancta' not found — creating it."
-            npx --no-install wrangler d1 create sancta
-            db_id="$(npx --no-install wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
+            npx -y wrangler d1 create sancta
+            db_id="$(npx -y wrangler d1 list --json | jq -r '.[] | select(.name=="sancta") | .uuid')"
           fi
           if [ -z "$db_id" ] || [ "$db_id" = "null" ]; then
             echo "Failed to resolve the D1 database id after create." >&2
@@ -70,9 +70,9 @@ jobs:
       # Apply pending D1 migrations to the REMOTE database (forward-only, idempotent).
       - name: Apply D1 migrations
         working-directory: apps/worker
-        run: npx --no-install wrangler d1 migrations apply sancta --remote
+        run: npx -y wrangler d1 migrations apply sancta --remote
 
       # Ship the Worker + static assets as one versioned release.
       - name: Deploy Worker
         working-directory: apps/worker
-        run: npx --no-install wrangler deploy
+        run: npx -y wrangler deploy
