@@ -4,7 +4,7 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError, VitalError } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError, breakEven, investmentRecovery } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
@@ -21,6 +21,7 @@ import {
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
   createCostCentre, listCostCentres, defineAccount, reviseAccount, accountAsOf, chartOfAccounts, createDimension, addDimensionValue, listDimensions, ChartAdminError,
   recordExpense, paySupplier, apReconciliation, PayableError,
+  setBudget, budgetVariance, BudgetError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -115,6 +116,32 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Budgets, variance & break-even (FIN-007) -------------------------
+    if (p === '/api/finance/budget' || p === '/api/finance/budget-variance' || p === '/api/finance/break-even') {
+      try {
+        if (p === '/api/finance/budget' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setBudget(env.DB, (await request.json()) as Parameters<typeof setBudget>[1]), 201);
+        }
+        if (p === '/api/finance/budget-variance' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await budgetVariance(env.DB, { periodId: url.searchParams.get('periodId') ?? '' }));
+        }
+        if (p === '/api/finance/break-even' && method === 'POST') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const b = (await request.json()) as { fixedCostMinor: number; unitPriceMinor: number; unitVariableCostMinor: number; investmentMinor?: number; fundingMinor?: number; monthlyNetMinor?: number };
+          try {
+            const be = breakEven({ fixedCostMinor: b.fixedCostMinor, unitPriceMinor: b.unitPriceMinor, unitVariableCostMinor: b.unitVariableCostMinor });
+            const recovery = b.investmentMinor !== undefined ? investmentRecovery({ investmentMinor: b.investmentMinor, fundingMinor: b.fundingMinor ?? 0, monthlyNetMinor: b.monthlyNetMinor ?? 0 }) : null;
+            return json({ breakEven: be, recovery });
+          } catch (e) { return json({ error: { code: 'break_even_unreachable', message: String((e as Error).message) } }, 422); }
+        }
+      } catch (e) {
+        if (e instanceof BudgetError) return json({ error: { code: 'budget_rejected', message: e.message } }, 409);
+        throw e;
+      }
     }
 
     // --- Payables: expenses, supplier payment, AP reconciliation (FIN-005/006) --
