@@ -24,6 +24,7 @@ import {
 import type { D1Database, D1PreparedStatement } from './d1.ts';
 import { many, stmt } from './query.ts';
 import { ensurePeriod, journalStatements } from './journal.ts';
+import { assertPeriodOpen } from './finance.ts';
 
 export class DuplicateCheckoutError extends Error {}
 
@@ -51,8 +52,10 @@ export type CheckoutD1Request = {
 export async function commitCheckoutD1(db: D1Database, req: CheckoutD1Request): Promise<{ idempotencyKey: string; cogsMinor: number }> {
   const d = req.dispense;
   const periodId = d.postingDate.slice(0, 7);
-  // Ensure the accounting period exists (idempotent, not part of the atomic unit).
+  // Ensure the accounting period exists (idempotent, not part of the atomic unit),
+  // then reject if it is hard-closed (BR-010) before any ledger write.
   await ensurePeriod(db, periodId);
+  await assertPeriodOpen(db, periodId);
 
   // Read lots + current balances; build the FEFO plan with the shared domain logic.
   const lotRows = await many<{ id: string; sku: string; expiry_date: string; status: string; unit_cost_minor: number }>(

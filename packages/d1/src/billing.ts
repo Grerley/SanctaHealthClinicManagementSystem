@@ -14,6 +14,7 @@ import { uuidv7, money, postPaymentReceived, postRefund } from '@sancta/domain';
 import type { D1Database, D1PreparedStatement } from './d1.ts';
 import { one, many, stmt } from './query.ts';
 import { ensurePeriod, journalStatements } from './journal.ts';
+import { assertPeriodOpen } from './finance.ts';
 
 export class BillingError extends Error {}
 
@@ -28,6 +29,7 @@ export async function recordPayment(
   const postingDate = args.postingDate ?? today();
   const periodId = postingDate.slice(0, 7);
   await ensurePeriod(db, periodId);
+  await assertPeriodOpen(db, periodId);
   const paymentId = uuidv7();
   const journal = postPaymentReceived({ batchId: uuidv7(), postingDate }, paymentId, money(args.amountMinor), args.method);
   await db.batch([
@@ -89,6 +91,7 @@ export async function refundPayment(
   const postingDate = args.postingDate ?? today();
   const periodId = postingDate.slice(0, 7);
   await ensurePeriod(db, periodId);
+  await assertPeriodOpen(db, periodId);
   const refundId = uuidv7();
   const journal = postRefund({ batchId: uuidv7(), postingDate }, refundId, money(args.amountMinor), args.method);
   const batch: D1PreparedStatement[] = [

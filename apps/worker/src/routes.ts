@@ -16,6 +16,7 @@ import {
   recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
   createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, overdueFollowUps, CarePlanError,
   recordPayment, allocate, reallocate, refundPayment, invoiceOutstanding, BillingError,
+  closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -71,6 +72,7 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       } catch (e) {
         if (e instanceof DuplicateCheckoutError) return json({ ok: false, duplicate: true }, 409);
         if (e instanceof StockError) return json({ ok: false, error: { code: 'insufficient_stock', message: e.message } }, 409);
+        if (e instanceof PeriodClosedError) return json({ ok: false, error: { code: 'period_closed', message: e.message } }, 409);
         throw e;
       }
     }
@@ -111,6 +113,28 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       return json(await dashboard(env.DB, new Date().toISOString()));
     }
 
+    // --- Finance: period control (FIN-009, BR-010, UAT-13) ----------------
+    if (p.startsWith('/api/finance/period')) {
+      try {
+        if (p === '/api/finance/period/close' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await closePeriod(env.DB, (await request.json()) as Parameters<typeof closePeriod>[1]));
+        }
+        if (p === '/api/finance/period/reopen' && method === 'POST') {
+          const denied = guard('approve'); if (denied) return denied;
+          return json(await reopenPeriod(env.DB, (await request.json()) as Parameters<typeof reopenPeriod>[1]));
+        }
+        if (p === '/api/finance/period' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          const id = url.searchParams.get('id') ?? '';
+          return json({ periodId: id, status: await periodStatus(env.DB, id) });
+        }
+      } catch (e) {
+        if (e instanceof FinanceError) return json({ error: { code: 'finance_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
     // --- Billing: payments, allocation, reallocation, refunds (BIL-006/010) --
     if (p.startsWith('/api/billing/')) {
       try {
@@ -138,6 +162,7 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
           return json({ invoiceId: id, outstandingMinor: await invoiceOutstanding(env.DB, id) });
         }
       } catch (e) {
+        if (e instanceof PeriodClosedError) return json({ error: { code: 'period_closed', message: e.message } }, 409);
         if (e instanceof BillingError) return json({ error: { code: 'billing_rejected', message: e.message } }, 409);
         throw e;
       }
