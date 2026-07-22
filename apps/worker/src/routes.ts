@@ -35,6 +35,8 @@ import {
   patientTimeline,
   addHistoryItem, setHistoryStatus, listHistory, searchDiagnosisCodes, recordDiagnosis, listDiagnoses, openDraftEncounter, autosaveDraft, EhrError,
   loadPolicy, listPolicy, setFieldRule, DemographicPolicyError,
+  ageingReport,
+  changeDemographic, markDeceased, patientIdentityHistory, IdentityHistoryError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -879,6 +881,34 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof DemographicPolicyError) return json({ error: { code: 'policy_rejected', message: e.message } }, 400);
+        throw e;
+      }
+    }
+
+    // --- Debtor ageing + collection work queue (BIL-008) --------------------
+    if (p === '/api/debtors/ageing' && method === 'GET') {
+      const denied = guard('view_summary'); if (denied) return denied;
+      const asOf = url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10);
+      return json(await ageingReport(env.DB, asOf));
+    }
+
+    // --- Patient identity history & deceased provenance (PAT-007) ------------
+    if (p.startsWith('/api/identity/')) {
+      try {
+        if (p === '/api/identity/change' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await changeDemographic(env.DB, { ...(await request.json()) as Parameters<typeof changeDemographic>[1], ...(auth.user ? { by: auth.user } : {}) }));
+        }
+        if (p === '/api/identity/deceased' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await markDeceased(env.DB, { ...(await request.json()) as Parameters<typeof markDeceased>[1], ...(auth.user ? { by: auth.user } : {}) }));
+        }
+        if (p === '/api/identity/history' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ history: await patientIdentityHistory(env.DB, url.searchParams.get('patientId') ?? '') });
+        }
+      } catch (e) {
+        if (e instanceof IdentityHistoryError) return json({ error: { code: 'identity_rejected', message: e.message } }, 409);
         throw e;
       }
     }

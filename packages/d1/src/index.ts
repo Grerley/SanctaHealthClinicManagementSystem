@@ -46,3 +46,5 @@ export * from './handover.ts';
 export * from './timeline.ts';
 export * from './ehr.ts';
 export * from './demographics.ts';
+export * from './debtors.ts';
+export * from './identity-history.ts';
