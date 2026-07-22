@@ -4,7 +4,7 @@
  * covers the full PWA surface — the five screens a user clicks through
  * (Dispense, Patients, Queue, Calendar, Command centre) — on Cloudflare/D1.
  */
-import { can, type Permission, StockError } from '@sancta/domain';
+import { can, type Permission, StockError, VitalError } from '@sancta/domain';
 import {
   skuOnHand, commitCheckoutD1, DuplicateCheckoutError,
   listPatients, registerPatient, startVisit, queueBoard, createSlot, calendarView, dashboard,
@@ -12,6 +12,7 @@ import {
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
+  recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -105,6 +106,40 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       const denied = guard('view_summary');
       if (denied) return denied;
       return json(await dashboard(env.DB, new Date().toISOString()));
+    }
+
+    // --- Triage / vitals (TRI-001..008, UAT-03) ---------------------------
+    if (p.startsWith('/api/triage')) {
+      try {
+        if (p === '/api/triage/vitals' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await recordVitals(env.DB, (await request.json()) as Parameters<typeof recordVitals>[1]), 201);
+        }
+        if (p === '/api/triage/assessment' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await recordTriageAssessment(env.DB, (await request.json()) as Parameters<typeof recordTriageAssessment>[1]), 201);
+        }
+        if (p === '/api/triage/intervention' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await recordIntervention(env.DB, (await request.json()) as Parameters<typeof recordIntervention>[1]), 201);
+        }
+        if (p === '/api/triage/sign' && method === 'POST') {
+          const denied = guard('sign'); if (denied) return denied;
+          return json(await signTriage(env.DB, (await request.json()) as Parameters<typeof signTriage>[1]));
+        }
+        if (p === '/api/triage/queue' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ queue: await openTriageQueue(env.DB) });
+        }
+        if (p === '/api/triage/summary' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json(await triageSummary(env.DB, url.searchParams.get('encounterId') ?? ''));
+        }
+      } catch (e) {
+        if (e instanceof VitalError) return json({ error: { code: 'vitals_need_confirmation', message: e.message } }, 422);
+        if (e instanceof TriageError) return json({ error: { code: 'triage_rejected', message: e.message } }, 422);
+        throw e;
+      }
     }
 
     // --- Clinical encounters (EHR-008/009, BR-003, UAT-04) ----------------
