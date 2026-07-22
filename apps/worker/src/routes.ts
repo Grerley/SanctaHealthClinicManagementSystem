@@ -39,6 +39,9 @@ import {
   changeDemographic, markDeceased, patientIdentityHistory, IdentityHistoryError,
   patientCard, resolveCard, checkInView, FrontDeskError,
   issueToken, revokeToken, selfSummary, requestBooking, recordPayIntent, listBookingRequests, confirmBooking, SelfServiceError,
+  registerDevice, revokeDevice, DeviceError,
+  addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity, OpsError,
+  addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance, FacilityError,
   closePeriod, reopenPeriod, periodStatus, FinanceError, PeriodClosedError,
   trialBalance, incomeStatement, exportApprovedLedger, capitaliseAsset, assetRegister, disposeAsset, marginReport, FixedAssetError,
   draftManualJournal, approveManualJournal, rejectManualJournal, listManualJournals, ManualJournalError,
@@ -968,6 +971,115 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         }
       } catch (e) {
         if (e instanceof SelfServiceError) return json({ error: { code: 'selfservice_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Device trust & revocation (ADM-002) --------------------------------
+    if (p.startsWith('/api/devices')) {
+      try {
+        if (p === '/api/devices/register' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await registerDevice(env.DB, (await request.json()) as Parameters<typeof registerDevice>[1]), 201);
+        }
+        if (p === '/api/devices/revoke' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          await revokeDevice(env.DB, { ...(await request.json()) as Parameters<typeof revokeDevice>[1], ...(auth.user ? { user: auth.user } : {}) });
+          return json({ ok: true });
+        }
+      } catch (e) {
+        if (e instanceof DeviceError) return json({ error: { code: 'device_rejected', message: e.message } }, 404);
+        throw e;
+      }
+    }
+
+    // --- Operations: staff, credentials, tasks, productivity (OPS-001/003/007) --
+    if (p.startsWith('/api/ops/')) {
+      try {
+        if (p === '/api/ops/staff' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await addStaff(env.DB, (await request.json()) as Parameters<typeof addStaff>[1]), 201);
+        }
+        if (p === '/api/ops/credential' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await checkCredential(env.DB, url.searchParams.get('staffId') ?? '', url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10)));
+        }
+        if (p === '/api/ops/task' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await createTask(env.DB, (await request.json()) as Parameters<typeof createTask>[1]), 201);
+        }
+        if (p === '/api/ops/task/complete' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          await completeTask(env.DB, ((await request.json()) as { taskId: string }).taskId);
+          return json({ ok: true });
+        }
+        if (p === '/api/ops/tasks/overdue' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ tasks: await overdueTasks(env.DB, url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10)) });
+        }
+        if (p === '/api/ops/productivity' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ staff: await staffProductivity(env.DB, { from: url.searchParams.get('from') ?? '', to: url.searchParams.get('to') ?? '' }) });
+        }
+      } catch (e) {
+        if (e instanceof OpsError) return json({ error: { code: 'ops_rejected', message: e.message } }, 409);
+        throw e;
+      }
+    }
+
+    // --- Facility: resources, checklists, incidents, maintenance (OPS-002/004/005/006) --
+    if (p.startsWith('/api/facility/')) {
+      try {
+        if (p === '/api/facility/resource' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await addResource(env.DB, (await request.json()) as Parameters<typeof addResource>[1]), 201);
+        }
+        if (p === '/api/facility/resource/status' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await setResourceStatus(env.DB, (await request.json()) as Parameters<typeof setResourceStatus>[1]));
+        }
+        if (p === '/api/facility/resources' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ resources: await listResources(env.DB, url.searchParams.get('kind') ?? undefined) });
+        }
+        if (p === '/api/facility/capacity' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json(await availableCapacity(env.DB, url.searchParams.get('kind') ?? ''));
+        }
+        if (p === '/api/facility/checklist' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await defineChecklist(env.DB, (await request.json()) as Parameters<typeof defineChecklist>[1]), 201);
+        }
+        if (p === '/api/facility/checklist/run' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await runChecklist(env.DB, { ...(await request.json()) as Parameters<typeof runChecklist>[1], ...(auth.user ? { performedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/facility/incident' && method === 'POST') {
+          const denied = guard('create'); if (denied) return denied;
+          return json(await reportIncident(env.DB, { ...(await request.json()) as Parameters<typeof reportIncident>[1], ...(auth.user ? { reportedBy: auth.user } : {}) }), 201);
+        }
+        if (p === '/api/facility/incident/update' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await updateIncident(env.DB, { ...(await request.json()) as Parameters<typeof updateIncident>[1], ...(auth.user ? { by: auth.user } : {}) }));
+        }
+        if (p === '/api/facility/incidents' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ incidents: await openIncidents(env.DB) });
+        }
+        if (p === '/api/facility/maintenance' && method === 'POST') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json(await scheduleMaintenance(env.DB, (await request.json()) as Parameters<typeof scheduleMaintenance>[1]), 201);
+        }
+        if (p === '/api/facility/maintenance/complete' && method === 'POST') {
+          const denied = guard('amend'); if (denied) return denied;
+          return json(await completeMaintenance(env.DB, { ...(await request.json()) as Parameters<typeof completeMaintenance>[1], ...(auth.user ? { performedBy: auth.user } : {}) }));
+        }
+        if (p === '/api/facility/maintenance/due' && method === 'GET') {
+          const denied = guard('view_summary'); if (denied) return denied;
+          return json({ due: await dueMaintenance(env.DB, url.searchParams.get('asOf') ?? new Date().toISOString().slice(0, 10)) });
+        }
+      } catch (e) {
+        if (e instanceof FacilityError) return json({ error: { code: 'facility_rejected', message: e.message } }, 409);
         throw e;
       }
     }

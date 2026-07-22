@@ -50,3 +50,6 @@ export * from './debtors.ts';
 export * from './identity-history.ts';
 export * from './frontdesk.ts';
 export * from './selfservice.ts';
+export * from './devices.ts';
+export * from './ops.ts';
+export * from './facility.ts';
