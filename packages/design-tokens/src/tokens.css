@@ -1,0 +1,108 @@
+/*
+ * Sancta design tokens — UI/UX & Front-End Specification §6.
+ * The single source of truth. Feature code must consume these custom properties
+ * (or the semantic component APIs built on them), never raw hex/px literals.
+ * Design direction: calm precision (§1.1).
+ */
+
+:root {
+  /* --- §6.2 Colour (raw ramp) --------------------------------------------- */
+  --sancta-colour-brand-navy: #15395B;
+  --sancta-colour-brand-blue: #2E74B5;
+  --sancta-colour-action: #087E8B;
+  --sancta-colour-action-hover: #066974;
+  --sancta-colour-text: #17212B;
+  --sancta-colour-text-secondary: #5F6B76;
+  --sancta-colour-surface: #FFFFFF;
+  --sancta-colour-surface-subtle: #F7F9FB;
+  --sancta-colour-border: #D7DEE5;
+  --sancta-colour-border-strong: #AFC3D3;
+  --sancta-colour-success: #16784A;
+  --sancta-colour-warning: #9A6700;
+  --sancta-colour-danger: #B42318;
+  --sancta-colour-info: #175CD3;
+
+  /* Tint backgrounds for banners/tags (kept legible: text uses the solid tone). */
+  --sancta-colour-success-subtle: #E7F4EC;
+  --sancta-colour-warning-subtle: #FBF3E2;
+  --sancta-colour-danger-subtle: #FBEAE8;
+  --sancta-colour-info-subtle: #E7F0FC;
+  --sancta-colour-action-subtle: #E3F1F2;
+
+  /* --- Semantic aliases (prefer these in components) ----------------------- */
+  --sancta-focus-ring: var(--sancta-colour-brand-blue);
+  --sancta-selection: var(--sancta-colour-action-subtle);
+
+  /* --- §6.4 Spacing (4px base; no arbitrary gaps) ------------------------- */
+  --sancta-space-1: 4px;
+  --sancta-space-2: 8px;
+  --sancta-space-3: 12px;
+  --sancta-space-4: 16px;
+  --sancta-space-6: 24px;
+  --sancta-space-8: 32px;
+  --sancta-space-12: 48px;
+  --sancta-space-16: 64px;
+
+  /* --- §6.4 Shape --------------------------------------------------------- */
+  --sancta-radius-control: 8px;   /* inputs, buttons */
+  --sancta-radius-panel: 12px;    /* cards, grouped surfaces */
+  --sancta-radius-surface: 16px;  /* drawers, major modals */
+  --sancta-border-width: 1px;
+  --sancta-border-width-emphasis: 2px;
+
+  /* --- §6.4 Elevation (borders carry structure; shadows sparingly) -------- */
+  --sancta-shadow-low: 0 1px 2px rgba(23, 33, 43, 0.06);
+  --sancta-shadow-overlay: 0 8px 24px rgba(23, 33, 43, 0.16);
+
+  /* --- §7.4 / §8.2 Focus -------------------------------------------------- */
+  --sancta-focus-width: 2px;
+  --sancta-focus-offset: 2px;
+
+  /* --- §6.2 / §8.2 Touch & target sizes ----------------------------------- */
+  --sancta-touch-target-min: 44px;       /* touch */
+  --sancta-target-compact-min: 32px;     /* dense desktop controls */
+
+  /* --- §6.3 Typography ---------------------------------------------------- */
+  /* Approved local system font stack (no web-font fetch — perf + offline). */
+  --sancta-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sancta-font-numeric: "SF Mono", "Segoe UI Mono", "Roboto Mono", ui-monospace, monospace;
+  --sancta-font-feature-tabular: "tnum" 1, "lnum" 1; /* tabular figures for money/measures/ids */
+
+  --sancta-type-display-size: 32px;      --sancta-type-display-line: 40px;   --sancta-type-display-weight: 700;
+  --sancta-type-page-size: 24px;         --sancta-type-page-line: 32px;      --sancta-type-page-weight: 700;
+  --sancta-type-section-size: 20px;      --sancta-type-section-line: 28px;   --sancta-type-section-weight: 700;
+  --sancta-type-subsection-size: 16px;   --sancta-type-subsection-line: 24px;--sancta-type-subsection-weight: 700;
+  --sancta-type-body-size: 16px;         --sancta-type-body-line: 24px;      --sancta-type-body-weight: 400;
+  --sancta-type-dense-size: 14px;        --sancta-type-dense-line: 20px;     --sancta-type-dense-weight: 400;
+  --sancta-type-label-size: 14px;        --sancta-type-label-line: 20px;     --sancta-type-label-weight: 600;
+  --sancta-type-supporting-size: 13px;   --sancta-type-supporting-line: 18px;--sancta-type-supporting-weight: 400;
+
+  /* --- Motion (§6.6 — restrained; honour reduced motion below) ------------ */
+  --sancta-motion-fast: 120ms;
+  --sancta-motion-base: 200ms;
+  --sancta-easing: cubic-bezier(0.2, 0, 0, 1);
+
+  /* --- z-index scale ------------------------------------------------------ */
+  --sancta-z-sticky: 100;
+  --sancta-z-drawer: 200;
+  --sancta-z-dialog: 300;
+  --sancta-z-toast: 400;
+
+  color-scheme: light;
+}
+
+/* §8.2 / §6.6 — honour reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sancta-motion-fast: 0ms;
+    --sancta-motion-base: 0ms;
+  }
+}
+
+/* §8.2 — honour forced-colors / high-contrast: let system colours win, keep a
+   visible focus outline (never remove it). */
+@media (forced-colors: active) {
+  :root {
+    --sancta-focus-ring: Highlight;
+  }
+}

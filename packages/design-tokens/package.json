@@ -1,0 +1,14 @@
+{
+  "name": "@sancta/design-tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sancta design tokens (UI/UX spec §6) — CSS custom properties + typed TS. Single source of truth for colour, type, space, shape, focus and touch targets.",
+  "exports": {
+    ".": "./src/tokens.ts",
+    "./css": "./src/tokens.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}
