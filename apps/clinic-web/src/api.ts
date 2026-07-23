@@ -50,6 +50,11 @@ export type DueMedication = { requestId: string; patientId: string; mrn: string 
 export type HandoverItem = { id: string; fromStaff: string | null; patientId: string | null; taskId: string | null; message: string; status: string; createdAt: string };
 export type OpenReferral = { id: string; patientId: string; targetFacility: string; status: string };
 export type DocSearchRow = { documentId: string; filename: string; version: number };
+export type CarePlan = {
+  id: string; title: string; status: string;
+  goals: Array<{ description: string; targetDate: string | null; status: string }>;
+  followUps: Array<{ id: string; description: string; dueDate: string; status: string }>;
+};
 export type CriticalResult = { resultId: string; patientId: string; value: number; abnormal: string; releasedAt: string };
 export type OpsTask = { taskId: string; subject: string; owner: string | null; priority: number; dueDate: string };
 export type StockAlert = { sku: string; name: string; onHand: number; reorderMin: number | null; flags: string[] };
@@ -96,6 +101,7 @@ export const api = {
   handoverInbox: (staffId: string) => jsonFetch<{ inbox: HandoverItem[] }>(`/api/handover/inbox?staffId=${encodeURIComponent(staffId)}`),
   openReferrals: () => jsonFetch<{ referrals: OpenReferral[] }>('/api/referrals/open'),
   searchDocuments: (term: string) => jsonFetch<{ documents: DocSearchRow[] }>(`/api/documents/search?term=${encodeURIComponent(term)}`),
+  carePlans: (patientId: string) => jsonFetch<{ carePlans: CarePlan[] }>(`/api/ehr/care-plans?patientId=${encodeURIComponent(patientId)}`),
   overdueTasks: (asOf?: string) => jsonFetch<{ tasks: OpsTask[] }>(`/api/ops/tasks/overdue${asOf ? `?asOf=${asOf}` : ''}`),
   stockAlerts: (asOf?: string) => jsonFetch<{ alerts: StockAlert[] }>(`/api/stock/alerts${asOf ? `?asOf=${asOf}` : ''}`),
   reorderSuggestions: () => jsonFetch<{ suggestions: ReorderSuggestion[] }>('/api/stock/reorder-suggestions'),

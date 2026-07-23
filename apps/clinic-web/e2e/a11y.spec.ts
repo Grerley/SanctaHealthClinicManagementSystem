@@ -21,6 +21,7 @@ const TABS = [
   { testid: 'tab-orders', name: 'Orders' },
   { testid: 'tab-results', name: 'Results' },
   { testid: 'tab-mar', name: 'Med round' },
+  { testid: 'tab-careplans', name: 'Care plans' },
   { testid: 'tab-referrals', name: 'Referrals' },
   { testid: 'tab-documents', name: 'Documents' },
   { testid: 'tab-handover', name: 'Handover' },
