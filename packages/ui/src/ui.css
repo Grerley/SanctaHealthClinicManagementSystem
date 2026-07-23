@@ -1,0 +1,131 @@
+/*
+ * Sancta component styles (spec §11). Token-driven; classes + data-* attributes,
+ * so components ship no inline colour. Every interactive element gets the §8.2
+ * focus-visible ring. Import once at the app root, after design-tokens/css.
+ */
+
+/* --- Global focus-visible ring (§7.4 / §8.2) ---------------------------- */
+.sancta-focusable:focus-visible,
+.sancta-btn:focus-visible,
+.sancta-tab:focus-visible,
+.sancta-field-input:focus-visible,
+.sancta-link:focus-visible {
+  outline: var(--sancta-focus-width) solid var(--sancta-focus-ring);
+  outline-offset: var(--sancta-focus-offset);
+  border-radius: var(--sancta-radius-control);
+}
+
+/* --- Button (§7.1 action hierarchy) ------------------------------------- */
+.sancta-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--sancta-space-2);
+  min-height: var(--sancta-touch-target-min);
+  padding: 0 var(--sancta-space-4);
+  font: var(--sancta-type-label-weight) var(--sancta-type-label-size) / var(--sancta-type-label-line) var(--sancta-font-sans);
+  border-radius: var(--sancta-radius-control);
+  border: var(--sancta-border-width) solid transparent;
+  cursor: pointer;
+  transition: background-color var(--sancta-motion-fast) var(--sancta-easing), border-color var(--sancta-motion-fast) var(--sancta-easing);
+  text-decoration: none;
+}
+.sancta-btn[data-size="compact"] { min-height: var(--sancta-target-compact-min); padding: 0 var(--sancta-space-3); }
+.sancta-btn[disabled], .sancta-btn[aria-disabled="true"] { cursor: not-allowed; opacity: 0.55; }
+
+/* Primary (one dominant action per area, §6.5) */
+.sancta-btn[data-variant="primary"] { background: var(--sancta-colour-action); color: #fff; }
+.sancta-btn[data-variant="primary"]:hover:not([disabled]):not([aria-disabled="true"]) { background: var(--sancta-colour-action-hover); }
+.sancta-btn[data-variant="primary"][data-tone="danger"] { background: var(--sancta-colour-danger); }
+
+/* Secondary */
+.sancta-btn[data-variant="secondary"] { background: var(--sancta-colour-surface); color: var(--sancta-colour-text); border-color: var(--sancta-colour-border); }
+.sancta-btn[data-variant="secondary"]:hover:not([disabled]):not([aria-disabled="true"]) { background: var(--sancta-colour-surface-subtle); }
+.sancta-btn[data-variant="secondary"][data-tone="danger"] { color: var(--sancta-colour-danger); border-color: var(--sancta-colour-danger); }
+
+/* Subtle / tertiary */
+.sancta-btn[data-variant="subtle"] { background: transparent; color: var(--sancta-colour-action); }
+.sancta-btn[data-variant="subtle"]:hover:not([disabled]):not([aria-disabled="true"]) { background: var(--sancta-colour-action-subtle); }
+
+/* --- Status tag (§11.3 — text + icon, never colour alone) --------------- */
+.sancta-tag {
+  display: inline-flex; align-items: center; gap: var(--sancta-space-1);
+  padding: 2px var(--sancta-space-2);
+  font: var(--sancta-type-supporting-weight) var(--sancta-type-supporting-size) / var(--sancta-type-supporting-line) var(--sancta-font-sans);
+  border-radius: 999px; border: var(--sancta-border-width) solid transparent; white-space: nowrap;
+}
+.sancta-tag[data-tone="neutral"] { background: var(--sancta-colour-surface-subtle); color: var(--sancta-colour-text-secondary); border-color: var(--sancta-colour-border); }
+.sancta-tag[data-tone="action"]  { background: var(--sancta-colour-action-subtle); color: var(--sancta-colour-action-hover); }
+.sancta-tag[data-tone="success"] { background: var(--sancta-colour-success-subtle); color: var(--sancta-colour-success); }
+.sancta-tag[data-tone="warning"] { background: var(--sancta-colour-warning-subtle); color: var(--sancta-colour-warning); }
+.sancta-tag[data-tone="danger"]  { background: var(--sancta-colour-danger-subtle); color: var(--sancta-colour-danger); }
+.sancta-tag[data-tone="info"]    { background: var(--sancta-colour-info-subtle); color: var(--sancta-colour-info); }
+.sancta-tag svg { flex: none; }
+
+/* --- Banner (§6.6 status / §11) ----------------------------------------- */
+.sancta-banner {
+  display: flex; gap: var(--sancta-space-3); align-items: flex-start;
+  padding: var(--sancta-space-3) var(--sancta-space-4);
+  border-radius: var(--sancta-radius-panel);
+  border: var(--sancta-border-width) solid var(--sancta-colour-border);
+  font: var(--sancta-type-body-weight) var(--sancta-type-body-size) / var(--sancta-type-body-line) var(--sancta-font-sans);
+}
+.sancta-banner[data-tone="success"] { background: var(--sancta-colour-success-subtle); border-color: var(--sancta-colour-success); }
+.sancta-banner[data-tone="warning"] { background: var(--sancta-colour-warning-subtle); border-color: var(--sancta-colour-warning); }
+.sancta-banner[data-tone="danger"]  { background: var(--sancta-colour-danger-subtle); border-color: var(--sancta-colour-danger); }
+.sancta-banner[data-tone="info"]    { background: var(--sancta-colour-info-subtle); border-color: var(--sancta-colour-info); }
+.sancta-banner__icon { flex: none; margin-top: 2px; }
+.sancta-banner__title { font-weight: 700; }
+
+/* --- Connectivity indicator (§10.2) ------------------------------------- */
+.sancta-conn { display: inline-flex; align-items: center; gap: var(--sancta-space-2);
+  font: var(--sancta-type-supporting-weight) var(--sancta-type-supporting-size) / var(--sancta-type-supporting-line) var(--sancta-font-sans); }
+.sancta-conn__dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+.sancta-conn[data-tone="success"] .sancta-conn__dot { background: var(--sancta-colour-success); }
+.sancta-conn[data-tone="warning"] .sancta-conn__dot { background: var(--sancta-colour-warning); }
+.sancta-conn[data-tone="danger"]  .sancta-conn__dot { background: var(--sancta-colour-danger); }
+.sancta-conn[data-tone="info"]    .sancta-conn__dot { background: var(--sancta-colour-info); }
+
+/* --- Patient identity strip (§4.4) -------------------------------------- */
+.sancta-strip {
+  display: flex; flex-wrap: wrap; gap: var(--sancta-space-2) var(--sancta-space-6);
+  align-items: center; padding: var(--sancta-space-3) var(--sancta-space-4);
+  background: var(--sancta-colour-brand-navy); color: #fff;
+  border-radius: var(--sancta-radius-panel);
+}
+.sancta-strip__name { font-weight: 700; font-size: var(--sancta-type-subsection-size); }
+.sancta-strip__id, .sancta-strip__meta { font-variant-numeric: tabular-nums; opacity: 0.92; font-size: var(--sancta-type-dense-size); }
+.sancta-strip__alerts { display: inline-flex; gap: var(--sancta-space-2); margin-left: auto; }
+
+/* --- Field (§12 forms) -------------------------------------------------- */
+.sancta-field { display: flex; flex-direction: column; gap: var(--sancta-space-1); }
+.sancta-field__label { font: var(--sancta-type-label-weight) var(--sancta-type-label-size) / var(--sancta-type-label-line) var(--sancta-font-sans); color: var(--sancta-colour-text); }
+.sancta-field__optional { color: var(--sancta-colour-text-secondary); font-weight: 400; }
+.sancta-field__hint { font-size: var(--sancta-type-supporting-size); color: var(--sancta-colour-text-secondary); }
+.sancta-field__control { display: flex; align-items: stretch; }
+.sancta-field-input {
+  min-height: var(--sancta-touch-target-min); width: 100%;
+  padding: 0 var(--sancta-space-3);
+  font: var(--sancta-type-body-weight) var(--sancta-type-body-size) / var(--sancta-type-body-line) var(--sancta-font-sans);
+  border: var(--sancta-border-width) solid var(--sancta-colour-border); border-radius: var(--sancta-radius-control);
+  background: var(--sancta-colour-surface); color: var(--sancta-colour-text);
+}
+.sancta-field-input[data-numeric="true"] { font-variant-numeric: tabular-nums; text-align: right; }
+.sancta-field[data-invalid="true"] .sancta-field-input { border-color: var(--sancta-colour-danger); border-width: var(--sancta-border-width-emphasis); }
+.sancta-field__error { font-size: var(--sancta-type-supporting-size); color: var(--sancta-colour-danger); font-weight: 600; }
+.sancta-field__adornment { display: inline-flex; align-items: center; padding: 0 var(--sancta-space-2);
+  background: var(--sancta-colour-surface-subtle); border: var(--sancta-border-width) solid var(--sancta-colour-border);
+  color: var(--sancta-colour-text-secondary); font-size: var(--sancta-type-dense-size); white-space: nowrap; }
+.sancta-field__adornment--prefix { border-right: 0; border-radius: var(--sancta-radius-control) 0 0 var(--sancta-radius-control); }
+.sancta-field__adornment--suffix { border-left: 0; border-radius: 0 var(--sancta-radius-control) var(--sancta-radius-control) 0; }
+.sancta-field__control:has(.sancta-field__adornment--prefix) .sancta-field-input { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.sancta-field__control:has(.sancta-field__adornment--suffix) .sancta-field-input { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+
+/* --- Error summary (§12.3) ---------------------------------------------- */
+.sancta-errorsummary { border: var(--sancta-border-width-emphasis) solid var(--sancta-colour-danger);
+  border-radius: var(--sancta-radius-panel); padding: var(--sancta-space-3) var(--sancta-space-4); background: var(--sancta-colour-danger-subtle); }
+.sancta-errorsummary__title { font-weight: 700; color: var(--sancta-colour-danger); margin-bottom: var(--sancta-space-2); }
+.sancta-errorsummary a { color: var(--sancta-colour-danger); }
+
+/* --- State block (empty/stale/failed/permission/conflict, §6.6) --------- */
+.sancta-state { text-align: center; padding: var(--sancta-space-8) var(--sancta-space-4);
+  color: var(--sancta-colour-text-secondary); display: flex; flex-direction: column; align-items: center; gap: var(--sancta-space-2); }
+.sancta-state__title { font-weight: 700; color: var(--sancta-colour-text); }
+.sancta-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

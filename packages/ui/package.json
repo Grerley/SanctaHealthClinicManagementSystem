@@ -1,0 +1,20 @@
+{
+  "name": "@sancta/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sancta component library (UI/UX spec §11) — semantic, accessible React primitives over @sancta/design-tokens.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --experimental-strip-types --test test/*.test.ts"
+  },
+  "peerDependencies": {
+    "react": "^18.3.1"
+  },
+  "dependencies": {
+    "@sancta/design-tokens": "*"
+  }
+}
