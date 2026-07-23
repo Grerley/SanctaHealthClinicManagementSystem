@@ -40,6 +40,9 @@ jobs:
       - name: Unit tests (domain invariants, sync, dispense)
         run: npm test
 
+      - name: Performance-budget gate (gz JS ≤ 350 KB cap · CSS ≤ 50 KB)
+        run: npm run perf
+
   integration:
     name: integration (real PostgreSQL)
     runs-on: ubuntu-latest

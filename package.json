@@ -19,6 +19,7 @@
     "lint": "echo \"lint: eslint config lands with app code in Phase 1 — placeholder\" && exit 0",
     "security": "node scripts/secret-scan.mjs && npm audit --omit=dev --audit-level=high",
     "iac": "node scripts/iac-check.mjs",
+    "perf": "npm run build -w @sancta/clinic-web && node scripts/perf-budget.mjs",
     "openapi:gen": "node --experimental-strip-types scripts/gen-openapi.ts",
     "contract": "node --experimental-strip-types scripts/contract-check.ts",
     "coverage": "node scripts/coverage.mjs",
