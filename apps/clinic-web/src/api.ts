@@ -12,7 +12,9 @@ const SESSION_USER = 'demo-operator';
 // the caller can show its stale/error state instead of spinning forever.
 const READ_TIMEOUT_MS = 10_000;
 
-async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
+/** Exported so a screen can define its own typed reads inline (no central api edit),
+ * keeping the read-timeout + session headers consistent across every module. */
+export async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), READ_TIMEOUT_MS);
   try {

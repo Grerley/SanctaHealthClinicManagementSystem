@@ -20,11 +20,18 @@
 .shell__offline { display: inline-flex; align-items: center; gap: var(--sancta-space-2); font-size: var(--sancta-type-supporting-size); }
 
 .shell__nav {
-  display: flex; gap: var(--sancta-space-1); flex-wrap: wrap;
+  display: flex; gap: var(--sancta-space-4) var(--sancta-space-3); flex-wrap: wrap; align-items: flex-start;
   padding: var(--sancta-space-2) var(--sancta-space-3);
   background: var(--sancta-colour-surface); border-bottom: 1px solid var(--sancta-colour-border);
   position: sticky; top: 52px; z-index: calc(var(--sancta-z-sticky) - 1);
+  max-height: 40vh; overflow-y: auto;
 }
+.shell__navgroup { display: flex; flex-direction: column; gap: 2px; }
+.shell__navgroup-label {
+  font-size: var(--sancta-type-supporting-size); font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--sancta-colour-text-secondary); padding: 0 var(--sancta-space-2);
+}
+.shell__navgroup-tabs { display: flex; gap: var(--sancta-space-1); flex-wrap: wrap; }
 .shell__tab {
   display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
   min-height: var(--sancta-touch-target-min);
