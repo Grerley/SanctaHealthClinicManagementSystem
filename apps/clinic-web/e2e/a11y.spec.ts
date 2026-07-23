@@ -18,7 +18,7 @@ import { test, expect } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
 
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-const blocking = (vs: { impact?: string | null }[]) => vs.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+const blocking = <T extends { impact?: string | null }>(vs: T[]): T[] => vs.filter((v) => v.impact === 'serious' || v.impact === 'critical');
 
 // No DB reset: this is a read-only render scan — screens render regardless of data,
 // and the harness already seeds on startup — so we skip the expensive schema rebuild.
@@ -48,8 +48,10 @@ test('every tab has no serious/critical WCAG 2.2 AA violations (NFR-019)', async
     // scans what rendered — loading/stale StateBlocks are accessible.
     await page.waitForLoadState('networkidle', { timeout: 2_000 }).catch(() => {});
 
-    // Scan ONLY the active screen — keeps per-tab cost flat as the nav grows.
-    const results = await new AxeBuilder({ page }).include('.shell__work').withTags(WCAG_AA).analyze();
+    // Exclude the (large, growing) nav — already covered by the one-time shell scan —
+    // so per-tab cost stays flat. exclude() is a no-op if the node is absent, unlike
+    // include(), which throws when its selector matches nothing.
+    const results = await new AxeBuilder({ page }).exclude('.shell__nav').withTags(WCAG_AA).analyze();
     const bad = blocking(results.violations);
     if (bad.length > 0) {
       failed.push(testid);
