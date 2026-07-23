@@ -18,6 +18,7 @@ const TABS = [
   { testid: 'tab-encounter', name: 'Encounter' },
   { testid: 'tab-prescribe', name: 'Prescribe' },
   { testid: 'tab-vitals', name: 'Vitals' },
+  { testid: 'tab-orders', name: 'Orders' },
   { testid: 'tab-queue', name: 'Queue' },
   { testid: 'tab-calendar', name: 'Calendar' },
   { testid: 'tab-inventory', name: 'Inventory' },
