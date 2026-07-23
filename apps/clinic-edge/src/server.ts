@@ -359,7 +359,12 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           try { return sendJson(res, 200, await performStocktake(pool, b)); }
           catch (err) { return sendJson(res, 409, { error: { code: 'stocktake_rejected', message: (err as Error).message } }); }
         }
-        if ((p === '/api/stock/reorder' || p === '/api/stock/reorder-suggestions') && req.method === 'GET') {
+        if (p === '/api/stock/reorder' && req.method === 'GET') {
+          const w = url.searchParams.get('windowDays');
+          return sendJson(res, 200, { suggestions: await reorderSuggestions(pool, w ? { windowDays: Number(w) } : {}) });
+        }
+        // Alias matching the D1 worker's path, so the PWA speaks one API to both backends.
+        if (p === '/api/stock/reorder-suggestions' && req.method === 'GET') {
           const w = url.searchParams.get('windowDays');
           return sendJson(res, 200, { suggestions: await reorderSuggestions(pool, w ? { windowDays: Number(w) } : {}) });
         }

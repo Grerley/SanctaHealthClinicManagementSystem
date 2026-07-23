@@ -861,6 +861,27 @@
         }
       }
     },
+    "/api/cashier/shifts": {
+      "get": {
+        "operationId": "get_api_cashier_shifts",
+        "summary": "GET /api/cashier/shifts",
+        "tags": [
+          "cashier"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/checkout": {
       "post": {
         "operationId": "post_api_checkout",
@@ -4902,6 +4923,27 @@
           "stock"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/stock/reorder-suggestions": {
+      "get": {
+        "operationId": "get_api_stock_reorder_suggestions",
+        "summary": "GET /api/stock/reorder-suggestions",
+        "tags": [
+          "stock"
+        ],
+        "x-permission": null,
         "responses": {
           "200": {
             "description": "Success"
