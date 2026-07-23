@@ -37,6 +37,20 @@ test('a payment credits AR once via a balanced journal', async () => {
   assert.equal(Number(j?.c), 5000);
 });
 
+test('a retried idempotency key does not double-post the payment (safety #8)', async () => {
+  const key = 'idem-pay-1';
+  const first = await recordPayment(db, { patientId: PID, method: 'cash', amountMinor: 2500, idempotencyKey: key });
+  const replay = await recordPayment(db, { patientId: PID, method: 'cash', amountMinor: 2500, idempotencyKey: key });
+  assert.equal(replay.duplicate, true);
+  assert.equal(replay.paymentId, first.paymentId); // same original payment
+  // Exactly ONE payment and one AR credit for that key — money was not double-posted.
+  const n = await db.prepare(`SELECT COUNT(*) AS n FROM billing_payment WHERE idempotency_key=?`).bind(key).first<{ n: number }>();
+  assert.equal(Number(n?.n), 1);
+  const ar = await db.prepare(`SELECT COALESCE(SUM(credit_minor),0) AS c FROM finance_journal_line WHERE account_code='1200-PATIENT-AR'
+    AND batch_id IN (SELECT id FROM finance_journal_batch WHERE source_type='payment' AND source_id=?)`).bind(first.paymentId).first<{ c: number }>();
+  assert.equal(Number(ar?.c), 2500);
+});
+
 test('allocations cannot exceed the payment; outstanding drops as allocated', async () => {
   await makeInvoice('inv-1', 3000);
   const { paymentId } = await recordPayment(db, { patientId: PID, method: 'cash', amountMinor: 3000 });

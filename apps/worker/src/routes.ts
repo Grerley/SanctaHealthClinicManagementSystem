@@ -704,7 +704,9 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
       try {
         if (p === '/api/billing/payment' && method === 'POST') {
           const denied = guard('receive_payment'); if (denied) return denied;
-          return json(await recordPayment(env.DB, (await request.json()) as Parameters<typeof recordPayment>[1]), 201);
+          const idem = request.headers.get('x-idempotency-key') ?? undefined;
+          const body = (await request.json()) as Parameters<typeof recordPayment>[1];
+          return json(await recordPayment(env.DB, { ...body, ...(idem ? { idempotencyKey: idem } : {}) }), 201);
         }
         if (p === '/api/billing/allocate' && method === 'POST') {
           const denied = guard('receive_payment'); if (denied) return denied;

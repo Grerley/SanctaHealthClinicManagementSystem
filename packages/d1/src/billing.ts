@@ -20,23 +20,42 @@ export class BillingError extends Error {}
 
 function today(): string { return new Date().toISOString().slice(0, 10); }
 
-/** Record a patient payment (unallocated) and post Dr cash / Cr AR once. */
+/**
+ * Record a patient payment (unallocated) and post Dr cash / Cr AR once. Idempotent
+ * (safety scenario #8): when an `idempotencyKey` is supplied, a replay of the same
+ * key returns the ORIGINAL payment instead of creating a second one — a queue
+ * replay or a double-click never double-posts money (§8). The partial UNIQUE index
+ * on idempotency_key is the lock-free gate.
+ */
 export async function recordPayment(
   db: D1Database,
-  args: { patientId: string; method: 'cash' | 'bank' | 'mobile'; amountMinor: number; postingDate?: string; user?: string },
-): Promise<{ paymentId: string }> {
+  args: { patientId: string; method: 'cash' | 'bank' | 'mobile'; amountMinor: number; postingDate?: string; user?: string; idempotencyKey?: string },
+): Promise<{ paymentId: string; duplicate?: boolean }> {
   if (args.amountMinor <= 0) throw new BillingError('payment amount must be positive');
+  if (args.idempotencyKey) {
+    const existing = await one<{ id: string }>(db, `SELECT id FROM billing_payment WHERE idempotency_key=?`, [args.idempotencyKey]);
+    if (existing) return { paymentId: existing.id, duplicate: true };
+  }
   const postingDate = args.postingDate ?? today();
   const periodId = postingDate.slice(0, 7);
   await ensurePeriod(db, periodId);
   await assertPeriodOpen(db, periodId);
   const paymentId = uuidv7();
   const journal = postPaymentReceived({ batchId: uuidv7(), postingDate }, paymentId, money(args.amountMinor), args.method);
-  await db.batch([
-    stmt(db, `INSERT INTO billing_payment (id, receipt_number, patient_id, method, amount_minor, currency, status) VALUES (?,?,?,?,?, 'USD','confirmed')`,
-      [paymentId, 'RCT-' + paymentId.slice(-12), args.patientId, args.method, args.amountMinor]),
-    ...journalStatements(db, journal, periodId),
-  ]);
+  try {
+    await db.batch([
+      stmt(db, `INSERT INTO billing_payment (id, receipt_number, patient_id, method, amount_minor, currency, status, idempotency_key) VALUES (?,?,?,?,?, 'USD','confirmed', ?)`,
+        [paymentId, 'RCT-' + paymentId.slice(-12), args.patientId, args.method, args.amountMinor, args.idempotencyKey ?? null]),
+      ...journalStatements(db, journal, periodId),
+    ]);
+  } catch (e) {
+    // Lost a race on the idempotency key — the winning payment stands.
+    if (args.idempotencyKey && /UNIQUE/i.test(String((e as Error).message))) {
+      const existing = await one<{ id: string }>(db, `SELECT id FROM billing_payment WHERE idempotency_key=?`, [args.idempotencyKey]);
+      if (existing) return { paymentId: existing.id, duplicate: true };
+    }
+    throw e;
+  }
   return { paymentId };
 }
 
