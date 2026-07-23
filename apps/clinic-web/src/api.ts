@@ -51,6 +51,8 @@ export type HandoverItem = { id: string; fromStaff: string | null; patientId: st
 export type OpenReferral = { id: string; patientId: string; targetFacility: string; status: string };
 export type DocSearchRow = { documentId: string; filename: string; version: number };
 export type Device = { deviceId: string; label: string; site: string | null; trustState: string; softwareVersion: string | null; registeredAt: string; revokedAt: string | null };
+export type PendingMessage = { messageId: string; patientId: string; channel: string; template: string };
+export type CommsTask = { taskId: string; patientId: string | null; summary: string; inboundId: string };
 export type CarePlan = {
   id: string; title: string; status: string;
   goals: Array<{ description: string; targetDate: string | null; status: string }>;
@@ -104,6 +106,8 @@ export const api = {
   searchDocuments: (term: string) => jsonFetch<{ documents: DocSearchRow[] }>(`/api/documents/search?term=${encodeURIComponent(term)}`),
   carePlans: (patientId: string) => jsonFetch<{ carePlans: CarePlan[] }>(`/api/ehr/care-plans?patientId=${encodeURIComponent(patientId)}`),
   devices: () => jsonFetch<{ devices: Device[] }>('/api/devices'),
+  commsPending: () => jsonFetch<{ pending: PendingMessage[] }>('/api/comms/pending'),
+  commsTasks: () => jsonFetch<{ tasks: CommsTask[] }>('/api/comms/tasks'),
   overdueTasks: (asOf?: string) => jsonFetch<{ tasks: OpsTask[] }>(`/api/ops/tasks/overdue${asOf ? `?asOf=${asOf}` : ''}`),
   stockAlerts: (asOf?: string) => jsonFetch<{ alerts: StockAlert[] }>(`/api/stock/alerts${asOf ? `?asOf=${asOf}` : ''}`),
   reorderSuggestions: () => jsonFetch<{ suggestions: ReorderSuggestion[] }>('/api/stock/reorder-suggestions'),

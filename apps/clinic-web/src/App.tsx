@@ -17,6 +17,7 @@ import { Referrals } from './screens/Referrals.tsx';
 import { Documents } from './screens/Documents.tsx';
 import { CarePlans } from './screens/CarePlans.tsx';
 import { Devices } from './screens/Devices.tsx';
+import { Comms } from './screens/Comms.tsx';
 import { Finance } from './screens/Finance.tsx';
 import { Inbox } from './screens/Inbox.tsx';
 import { Inventory } from './screens/Inventory.tsx';
@@ -25,7 +26,7 @@ import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'mar' | 'careplans' | 'referrals' | 'documents' | 'handover' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'devices' | 'dashboard';
+type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'mar' | 'careplans' | 'referrals' | 'documents' | 'handover' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'comms' | 'devices' | 'dashboard';
 // Role-ordered primary navigation (§4.1). The app opens on Dispense & Pay (the
 // flagship slice); Inbox ("Today": critical results & tasks) sits alongside it.
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
@@ -48,6 +49,7 @@ const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'inventory', label: 'Inventory', hint: 'Stock and expiry' },
   { id: 'cashier', label: 'Cashier', hint: 'Shift close and drawer' },
   { id: 'finance', label: 'Finance', hint: 'Debtors and ledger' },
+  { id: 'comms', label: 'Comms', hint: 'Messages and replies' },
   { id: 'devices', label: 'Devices', hint: 'Trust and revocation' },
   { id: 'dashboard', label: 'Command centre', hint: 'Management' },
 ];
@@ -134,6 +136,7 @@ export function App() {
           {tab === 'inventory' && <Inventory />}
           {tab === 'cashier' && <Cashier />}
           {tab === 'finance' && <Finance />}
+          {tab === 'comms' && <Comms />}
           {tab === 'devices' && <Devices />}
           {tab === 'dashboard' && <Dashboard />}
         </div>
