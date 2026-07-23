@@ -8,7 +8,7 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
+  createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults, pendingResults,
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
 } from '../src/orders.ts';
@@ -33,6 +33,22 @@ test('release classifies, completes the order, and audits', async () => {
   assert.equal(out.critical, false);
   const status = await db.prepare(`SELECT status FROM clinical_service_request WHERE id=?`).bind(orderId).first<{ status: string }>();
   assert.equal(status?.status, 'completed');
+});
+
+test('pendingResults lists lab/imaging orders awaiting a result, STAT first, and drops resulted orders', async () => {
+  const routine = await createOrder(db, { patientId: PID, category: 'laboratory', code: 'FBC', priority: 'routine' });
+  const stat = await createOrder(db, { patientId: PID, category: 'imaging', code: 'CXR', priority: 'stat' });
+  await createOrder(db, { patientId: PID, category: 'referral', code: 'CARD', priority: 'routine' }); // not a diagnostic result
+
+  const pending = await pendingResults(db);
+  assert.deepEqual(pending.map((o) => o.orderId), [stat.orderId, routine.orderId]); // STAT floats to the top; referral excluded
+  assert.equal(pending[0]!.priority, 'stat');
+  assert.equal(pending[0]!.name, 'Test Patient');
+
+  // Once a result is entered, the order leaves the worklist.
+  await releaseResult(db, { orderId: stat.orderId, value: 1, refLow: 0, refHigh: 2 });
+  const after = await pendingResults(db);
+  assert.deepEqual(after.map((o) => o.orderId), [routine.orderId]);
 });
 
 test('a critical result queues until acknowledged, then clears (idempotent)', async () => {

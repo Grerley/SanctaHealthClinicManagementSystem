@@ -13,7 +13,7 @@ import {
   addRelatedPerson, listRelatedPersons, accessPatient, RelationError, mergePatients, unmergePatients, MergeError,
   transfer, completeVisit, VisitError,
   bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, SchedulingError,
-  createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults,
+  createOrder, setOrderStatus, releaseResult, acknowledgeCritical, outstandingCriticalResults, pendingResults,
   attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult,
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
@@ -1480,6 +1480,10 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (p === '/api/orders/critical/outstanding' && method === 'GET') {
           const denied = guard('view_clinical_detail'); if (denied) return denied;
           return json({ results: await outstandingCriticalResults(env.DB) });
+        }
+        if (p === '/api/orders/pending-results' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ orders: await pendingResults(env.DB) });
         }
         if (p === '/api/orders/external-result' && method === 'POST') {
           const denied = guard('create'); if (denied) return denied;

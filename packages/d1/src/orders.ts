@@ -70,6 +70,27 @@ export async function releaseResult(db: D1Database, args: ReleaseResultBody): Pr
   return { resultId, abnormal: cls.abnormal, critical: cls.critical };
 }
 
+export type PendingResultRow = { orderId: string; patientId: string; mrn: string | null; name: string; category: string; code: string; priority: string; indication: string | null; orderedAt: string };
+
+/** Diagnostic orders awaiting a result: active lab/imaging requests with no result
+ * row yet (ORD-04 worklist). STAT/urgent float to the top so time-critical results
+ * are entered first. Read-only; entering a result classifies criticality (ORD-05). */
+export async function pendingResults(db: D1Database): Promise<PendingResultRow[]> {
+  const rows = await many<{ id: string; patient_id: string; mrn: string | null; given_name: string; family_name: string; category: string; code: string; priority: string; indication: string | null; created_at: string }>(
+    db,
+    `SELECT sr.id, sr.patient_id, p.mrn, p.given_name, p.family_name, sr.category, sr.code, sr.priority, sr.indication, sr.created_at
+       FROM clinical_service_request sr
+       JOIN identity_patient p ON p.id = sr.patient_id
+      WHERE sr.status='active' AND sr.category IN ('laboratory','imaging')
+        AND NOT EXISTS (SELECT 1 FROM clinical_result r WHERE r.service_request_id = sr.id)
+      ORDER BY CASE sr.priority WHEN 'stat' THEN 0 WHEN 'urgent' THEN 1 ELSE 2 END, sr.created_at ASC`,
+  );
+  return rows.map((r) => ({
+    orderId: r.id, patientId: r.patient_id, mrn: r.mrn, name: `${r.given_name} ${r.family_name}`.trim(),
+    category: r.category, code: r.code, priority: r.priority, indication: r.indication, orderedAt: r.created_at,
+  }));
+}
+
 /** Acknowledge a critical result (ORD-006). Idempotent via UNIQUE(result_id). */
 export async function acknowledgeCritical(db: D1Database, args: { resultId: string; acknowledgedBy: string; action?: string }): Promise<{ ok: true }> {
   await db.batch([

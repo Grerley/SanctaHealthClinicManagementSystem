@@ -48,7 +48,7 @@ import { quotePrice, chargeService, defineFee, listFees } from './pricing.ts';
 import { recordExpense, paySupplier, apReconciliation } from './payables.ts';
 import { recordPayment, allocate, reallocate, invoiceOutstanding, refundPayment } from './billing.ts';
 import { markBillable, linkCharge, authoriseException, chargeCaptureReport, type ChargeException } from './billing-completeness.ts';
-import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, type ReleaseResultBody } from './orders.ts';
+import { createOrder, releaseResult, acknowledgeCritical, outstandingCriticalResults, pendingResults, attachExternalResult, reconcileExternalResult, unmatchedResults, cancelOrder, correctResult, defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, type ReleaseResultBody } from './orders.ts';
 import { createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, attachForm } from './encounters.ts';
 import { receiveGoods, stockAlerts } from './inventory.ts';
 import { createRequisition, decideRequisition, createPurchaseOrder, registerEquipment, recordEquipmentService, equipmentDueService } from './procurement.ts';
@@ -577,6 +577,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/orders/critical/outstanding' && req.method === 'GET') {
           return sendJson(res, 200, { results: await outstandingCriticalResults(pool) });
+        }
+        if (p === '/api/orders/pending-results' && req.method === 'GET') {
+          return sendJson(res, 200, { orders: await pendingResults(pool) });
         }
         if (p === '/api/orders/external-result' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachExternalResult>[1];

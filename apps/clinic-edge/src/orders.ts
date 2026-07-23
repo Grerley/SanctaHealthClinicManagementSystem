@@ -117,6 +117,26 @@ export async function outstandingCriticalResults(pool: Pool): Promise<Array<{ re
   return res.rows.map((r) => ({ resultId: r.id, patientId: r.patient_id, value: Number(r.value), abnormal: r.abnormal, releasedAt: r.released_at }));
 }
 
+export type PendingResultRow = { orderId: string; patientId: string; mrn: string | null; name: string; category: string; code: string; priority: string; indication: string | null; orderedAt: string };
+
+/** Diagnostic orders awaiting a result: active lab/imaging requests with no result
+ * row yet (ORD-04 worklist). STAT/urgent float to the top. Read-only. */
+export async function pendingResults(pool: Pool): Promise<PendingResultRow[]> {
+  const res = await pool.query(
+    `SELECT sr.id, sr.patient_id, p.mrn, p.given_name, p.family_name, sr.category, sr.code, sr.priority, sr.indication,
+            to_char(sr.created_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS ordered_at
+       FROM clinical.service_request sr
+       JOIN identity.patient p ON p.id = sr.patient_id
+      WHERE sr.status='active' AND sr.category IN ('laboratory','imaging')
+        AND NOT EXISTS (SELECT 1 FROM clinical.result r WHERE r.service_request_id = sr.id)
+      ORDER BY CASE sr.priority WHEN 'stat' THEN 0 WHEN 'urgent' THEN 1 ELSE 2 END, sr.created_at ASC`,
+  );
+  return res.rows.map((r) => ({
+    orderId: r.id, patientId: r.patient_id, mrn: r.mrn, name: `${r.given_name} ${r.family_name}`.trim(),
+    category: r.category, code: r.code, priority: r.priority, indication: r.indication, orderedAt: r.ordered_at,
+  }));
+}
+
 // --- ORD-007 external results + reconciliation --------------------------------
 
 export type ExternalResultBody = { orderRef: string; patientId?: string; value?: number; unit?: string; abnormal?: string; source?: string };

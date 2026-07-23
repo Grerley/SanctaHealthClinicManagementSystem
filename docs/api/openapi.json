@@ -3665,6 +3665,27 @@
         }
       }
     },
+    "/api/orders/pending-results": {
+      "get": {
+        "operationId": "get_api_orders_pending_results",
+        "summary": "GET /api/orders/pending-results",
+        "tags": [
+          "orders"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/orders/result": {
       "post": {
         "operationId": "post_api_orders_result",
