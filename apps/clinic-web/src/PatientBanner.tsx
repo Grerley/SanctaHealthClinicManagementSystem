@@ -1,27 +1,32 @@
+import { StatusTag } from '@sancta/ui';
 import type { Patient } from './api.ts';
 
 /**
- * Persistent patient banner (EHR-001). Once a patient is active it stays visible
- * across every tab so the clinician always knows whose record they are in. When
- * offline, a clear stale indicator warns that the shown record may be out of date.
+ * Persistent patient identity strip (spec §4.4, EHR-001). Once a patient is active
+ * it stays visible across every destination so the clinician always knows whose
+ * record they are in (§3.1). When the clinic hub is unreachable a clear stale
+ * indicator warns the shown record may be out of date. Rendered on the design
+ * system (.sancta-strip) while preserving the established DOM contract
+ * (patient-banner, banner-name, stale-indicator).
  */
 export function PatientBanner({ patient, online }: { patient: Patient | null; online: boolean }) {
   if (!patient) return null;
   return (
-    <div
+    <section
       data-testid="patient-banner"
+      className="sancta-strip"
       role="region"
-      aria-label="Active patient"
-      style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', margin: '8px 0', padding: '8px 12px', background: '#eef2ff', borderRadius: 8, border: '1px solid #c7d2fe' }}
+      aria-label={`Patient in context: ${patient.given_name} ${patient.family_name}, clinic number ${patient.mrn}`}
     >
-      <strong data-testid="banner-name">{patient.family_name}, {patient.given_name}</strong>
-      <span style={{ color: '#3730a3' }}>MRN {patient.mrn}</span>
-      {patient.dob ? <span style={{ color: '#3730a3' }}>DOB {patient.dob}</span> : null}
+      <span className="sancta-strip__name" data-testid="banner-name">{patient.family_name}, {patient.given_name}</span>
+      <span className="sancta-strip__id">Clinic no. {patient.mrn}</span>
+      {patient.dob ? <span className="sancta-strip__meta">DOB {patient.dob}</span> : null}
+      {patient.sex ? <span className="sancta-strip__meta">{patient.sex}</span> : null}
       {!online && (
-        <span data-testid="stale-indicator" style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 12, background: '#fef3c7', color: '#92400e', fontSize: 13 }}>
-          ⚠ Offline — record may be stale
+        <span className="sancta-strip__alerts" data-testid="stale-indicator">
+          <StatusTag tone="warning" icon="stale">Offline — record may be stale</StatusTag>
         </span>
       )}
-    </div>
+    </section>
   );
 }

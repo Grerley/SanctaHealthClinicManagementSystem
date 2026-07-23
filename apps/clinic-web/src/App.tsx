@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ConnectivityIndicator } from '@sancta/ui';
 import { Dispense } from './screens/Dispense.tsx';
 import { Patients } from './screens/Patients.tsx';
 import { Queue } from './screens/Queue.tsx';
@@ -6,14 +7,16 @@ import { Dashboard } from './screens/Dashboard.tsx';
 import { Calendar } from './screens/Calendar.tsx';
 import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
+import './shell.css';
 
 type Tab = 'dispense' | 'patients' | 'queue' | 'calendar' | 'dashboard';
-const TABS: Array<{ id: Tab; label: string }> = [
-  { id: 'dispense', label: 'Dispense & Pay' },
-  { id: 'patients', label: 'Patients' },
-  { id: 'queue', label: 'Queue' },
-  { id: 'calendar', label: 'Calendar' },
-  { id: 'dashboard', label: 'Command centre' },
+// Role-ordered primary navigation (§4.1).
+const TABS: Array<{ id: Tab; label: string; hint: string }> = [
+  { id: 'dispense', label: 'Dispense & Pay', hint: 'Pharmacy and cashier' },
+  { id: 'patients', label: 'Patients', hint: 'Search and registration' },
+  { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
+  { id: 'calendar', label: 'Calendar', hint: 'Appointments' },
+  { id: 'dashboard', label: 'Command centre', hint: 'Management' },
 ];
 
 export function App() {
@@ -32,37 +35,60 @@ export function App() {
     };
   }, []);
 
+  const activeTab = TABS.find((t) => t.id === tab)!;
+
   return (
-    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 820, margin: '0 auto', padding: 16 }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: 20 }}>Sancta Clinic</h1>
-        <span data-testid="net-status" style={{ padding: '2px 8px', borderRadius: 12, background: online ? '#dcfce7' : '#fee2e2', color: online ? '#065f46' : '#991b1b', fontSize: 13 }}>
-          {online ? 'Online' : 'Offline — local work continues'}
-        </span>
+    <div className="shell">
+      {/* §4.2 Global header — product identity + connectivity. */}
+      <header className="shell__header">
+        <div className="shell__brand">
+          <h1>Sancta Clinic</h1>
+          <span className="shell__site">Main clinic</span>
+        </div>
+        <div className="shell__conn" data-testid="net-status">
+          {online
+            ? <ConnectivityIndicator clinicReachable cloudReachable pendingCount={0} />
+            : <span className="shell__offline">Offline — local work continues on this device</span>}
+        </div>
       </header>
 
-      <PatientBanner patient={activePatient} online={online} />
-
-      <nav role="tablist" style={{ display: 'flex', gap: 4, margin: '12px 0', borderBottom: '1px solid #e5e7eb' }}>
+      {/* §4.2 Primary navigation — stable, role-ordered destinations. */}
+      <nav className="shell__nav" role="tablist" aria-label="Primary">
         {TABS.map((t) => (
           <button
             key={t.id}
             role="tab"
             aria-selected={tab === t.id}
+            className="shell__tab sancta-focusable"
             data-testid={`tab-${t.id}`}
+            data-active={tab === t.id || undefined}
             onClick={() => setTab(t.id)}
-            style={{ padding: '8px 12px', border: 0, borderBottom: tab === t.id ? '2px solid #047857' : '2px solid transparent', background: 'transparent', fontWeight: tab === t.id ? 700 : 400, cursor: 'pointer' }}
           >
-            {t.label}
+            <span className="shell__tab-label">{t.label}</span>
+            <span className="shell__tab-hint">{t.hint}</span>
           </button>
         ))}
       </nav>
 
-      {tab === 'dispense' && <Dispense />}
-      {tab === 'patients' && <Patients onSelect={setActivePatient} />}
-      {tab === 'queue' && <Queue />}
-      {tab === 'calendar' && <Calendar />}
-      {tab === 'dashboard' && <Dashboard />}
-    </main>
+      <main className="shell__main">
+        {/* §4.2 Context strip — persistent patient identity during risky work. */}
+        <PatientBanner patient={activePatient} online={online} />
+
+        {/* §4.2 Page header — one title + short context. */}
+        <div className="shell__page-header">
+          <h2>{activeTab.label}</h2>
+          <span className="shell__page-context">{activeTab.hint}</span>
+        </div>
+
+        {/* §4.2 Work area. */}
+        <div className="shell__work">
+          {tab === 'dispense' && <Dispense />}
+          {tab === 'patients' && <Patients onSelect={setActivePatient} />}
+          {tab === 'queue' && <Queue />}
+          {tab === 'calendar' && <Calendar />}
+          {tab === 'dashboard' && <Dashboard />}
+        </div>
+      </main>
+    </div>
   );
 }

@@ -12,6 +12,8 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@sancta/design-tokens": "*",
+    "@sancta/ui": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

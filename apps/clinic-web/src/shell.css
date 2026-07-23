@@ -1,0 +1,60 @@
+/*
+ * Application shell (spec §4.2, responsive §5.1). Header + role nav + work area.
+ * Compact (320–767): nav wraps to a scrollless row. Medium+ (768+): nav sits under
+ * a wider header. Content is capped for readability but never forces horizontal page
+ * scroll (§6.3).
+ */
+.shell { min-height: 100%; display: flex; flex-direction: column; }
+
+.shell__header {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--sancta-space-4);
+  padding: var(--sancta-space-3) var(--sancta-space-4);
+  background: var(--sancta-colour-brand-navy); color: #fff;
+  position: sticky; top: 0; z-index: var(--sancta-z-sticky);
+}
+.shell__brand { display: flex; align-items: baseline; gap: var(--sancta-space-3); }
+.shell__brand h1 { font-size: var(--sancta-type-section-size); line-height: var(--sancta-type-section-line); font-weight: 700; }
+.shell__site { font-size: var(--sancta-type-supporting-size); opacity: 0.85; }
+.shell__conn { background: rgba(255, 255, 255, 0.12); border-radius: 999px; padding: var(--sancta-space-1) var(--sancta-space-3); color: #fff; }
+.shell__conn .sancta-conn { color: #fff; }
+.shell__offline { display: inline-flex; align-items: center; gap: var(--sancta-space-2); font-size: var(--sancta-type-supporting-size); }
+
+.shell__nav {
+  display: flex; gap: var(--sancta-space-1); flex-wrap: wrap;
+  padding: var(--sancta-space-2) var(--sancta-space-3);
+  background: var(--sancta-colour-surface); border-bottom: 1px solid var(--sancta-colour-border);
+  position: sticky; top: 52px; z-index: calc(var(--sancta-z-sticky) - 1);
+}
+.shell__tab {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+  min-height: var(--sancta-touch-target-min);
+  padding: var(--sancta-space-2) var(--sancta-space-3);
+  border: 0; border-radius: var(--sancta-radius-control); background: transparent; cursor: pointer;
+  color: var(--sancta-colour-text-secondary);
+}
+.shell__tab:hover { background: var(--sancta-colour-surface-subtle); }
+.shell__tab[data-active] { background: var(--sancta-colour-action-subtle); color: var(--sancta-colour-action-hover); }
+.shell__tab-label { font: var(--sancta-type-label-weight) var(--sancta-type-label-size) / var(--sancta-type-label-line) var(--sancta-font-sans); }
+.shell__tab[data-active] .shell__tab-label { color: var(--sancta-colour-action-hover); }
+.shell__tab-hint { font-size: var(--sancta-type-supporting-size); }
+
+.shell__main {
+  flex: 1; width: 100%; max-width: 1120px; margin: 0 auto;
+  padding: var(--sancta-space-4);
+  display: flex; flex-direction: column; gap: var(--sancta-space-4);
+}
+.shell__page-header { display: flex; align-items: baseline; gap: var(--sancta-space-3); flex-wrap: wrap; }
+.shell__page-header h2 { font-size: var(--sancta-type-page-size); line-height: var(--sancta-type-page-line); font-weight: 700; }
+.shell__page-context { color: var(--sancta-colour-text-secondary); font-size: var(--sancta-type-dense-size); }
+
+.shell__work {
+  background: var(--sancta-colour-surface); border: 1px solid var(--sancta-colour-border);
+  border-radius: var(--sancta-radius-panel); padding: var(--sancta-space-4);
+}
+
+/* Compact: the tab hint is dropped to keep the nav to one scrollless row. */
+@media (max-width: 767px) {
+  .shell__tab-hint { display: none; }
+  .shell__header { flex-wrap: wrap; }
+  .shell__nav { top: 0; position: static; overflow-x: auto; flex-wrap: nowrap; }
+}

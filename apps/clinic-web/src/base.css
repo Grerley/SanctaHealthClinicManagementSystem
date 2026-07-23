@@ -1,0 +1,31 @@
+/*
+ * App base — a minimal reset + document typography from the design tokens.
+ * Calm precision (§1.1): restrained, coherent, fast. Loaded after the token +
+ * component stylesheets so it can rely on the custom properties.
+ */
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font: var(--sancta-type-body-weight) var(--sancta-type-body-size) / var(--sancta-type-body-line) var(--sancta-font-sans);
+  color: var(--sancta-colour-text);
+  background: var(--sancta-colour-surface-subtle);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The page must never scroll horizontally (§6.3). Two-dimensional data regions
+   opt back in locally with their own labelled scroller. */
+body { overflow-x: hidden; }
+
+h1, h2, h3, p { margin: 0; }
+:where(a) { color: var(--sancta-colour-action); }
+
+/* Money, measurements, counts, times and identifiers use tabular figures (§6.2). */
+.sancta-num, [data-numeric="true"] { font-variant-numeric: tabular-nums; }
+
+/* Native controls inherit a visible focus-visible ring where components don't
+   already provide one (§8.2). */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: var(--sancta-focus-width) solid var(--sancta-focus-ring);
+  outline-offset: var(--sancta-focus-offset);
+}

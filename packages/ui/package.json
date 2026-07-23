@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Sancta component library (UI/UX spec §11) — semantic, accessible React primitives over @sancta/design-tokens.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./src/ui.css": "./src/ui.css",
+    "./ui.css": "./src/ui.css"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
