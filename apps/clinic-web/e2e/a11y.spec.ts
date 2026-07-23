@@ -22,6 +22,7 @@ const TABS = [
   { testid: 'tab-results', name: 'Results' },
   { testid: 'tab-mar', name: 'Med round' },
   { testid: 'tab-referrals', name: 'Referrals' },
+  { testid: 'tab-documents', name: 'Documents' },
   { testid: 'tab-handover', name: 'Handover' },
   { testid: 'tab-queue', name: 'Queue' },
   { testid: 'tab-calendar', name: 'Calendar' },
