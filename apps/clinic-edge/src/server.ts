@@ -496,6 +496,19 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/ehr/inbox' && req.method === 'GET') {
           return sendJson(res, 200, { inbox: await inbox(pool, url.searchParams.get('staffId') ?? '', url.searchParams.get('all') === 'true') });
         }
+        // Canonical handover paths matching the D1 Worker, so the PWA speaks one API
+        // to both backends (the /api/ehr/* aliases above remain for existing callers).
+        if (p === '/api/handover' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof sendHandover>[1];
+          try { return sendJson(res, 201, await sendHandover(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'handover_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/handover/acknowledge' && req.method === 'POST') {
+          const b = (await readBody(req)) as Parameters<typeof acknowledgeHandover>[1];
+          try { return sendJson(res, 200, await acknowledgeHandover(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'handover_ack_rejected', message: (err as Error).message } }); }
+        }
+        if (p === '/api/handover/inbox' && req.method === 'GET') {
+          return sendJson(res, 200, { inbox: await inbox(pool, url.searchParams.get('staffId') ?? '', url.searchParams.get('includeAcknowledged') === 'true') });
+        }
         if (p === '/api/encounters/attach-form' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachForm>[1];
           try { return sendJson(res, 200, await attachForm(pool, b)); }

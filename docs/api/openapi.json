@@ -67,6 +67,9 @@
       "name": "formulary"
     },
     {
+      "name": "handover"
+    },
+    {
       "name": "help"
     },
     {
@@ -2835,6 +2838,69 @@
           "formulary"
         ],
         "x-permission": "view_summary",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/handover": {
+      "post": {
+        "operationId": "post_api_handover",
+        "summary": "POST /api/handover",
+        "tags": [
+          "handover"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/handover/acknowledge": {
+      "post": {
+        "operationId": "post_api_handover_acknowledge",
+        "summary": "POST /api/handover/acknowledge",
+        "tags": [
+          "handover"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/handover/inbox": {
+      "get": {
+        "operationId": "get_api_handover_inbox",
+        "summary": "GET /api/handover/inbox",
+        "tags": [
+          "handover"
+        ],
+        "x-permission": null,
         "responses": {
           "200": {
             "description": "Success"
