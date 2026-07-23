@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ConnectivityIndicator } from '@sancta/ui';
 import { PatientBanner } from './PatientBanner.tsx';
+import { ScreenErrorBoundary } from './ScreenErrorBoundary.tsx';
 import type { Patient } from './api.ts';
 import { MODULES, SCREENS, screensOf } from './registry/index.ts';
 import './shell.css';
@@ -78,9 +79,13 @@ export function App() {
           <span className="shell__page-context">{activeModule ? `${activeModule.label} · ` : ''}{active.hint}</span>
         </div>
 
-        {/* §4.2 Work area — the active screen, rendered from the registry. */}
+        {/* §4.2 Work area — the active screen, rendered from the registry. The boundary
+            is keyed by the active screen so a fault in one screen never white-screens the
+            shell, and moving to another screen clears the error. */}
         <div className="shell__work">
-          {active.render({ patient: activePatient, setPatient: setActivePatient })}
+          <ScreenErrorBoundary key={active.id}>
+            {active.render({ patient: activePatient, setPatient: setActivePatient })}
+          </ScreenErrorBoundary>
         </div>
       </main>
     </div>
