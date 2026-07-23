@@ -29,6 +29,8 @@ export type TrialBalance = { rows: TrialBalanceRow[]; totalDebitMinor: number; t
 
 export type CriticalResult = { resultId: string; patientId: string; value: number; abnormal: string; releasedAt: string };
 export type OpsTask = { taskId: string; subject: string; owner: string | null; priority: number; dueDate: string };
+export type StockAlert = { sku: string; name: string; onHand: number; reorderMin: number | null; flags: string[] };
+export type ReorderSuggestion = { sku: string; suggest: boolean; suggestedQty: number; coverDays: number | null; assumptions: { reorderMin: number | null; reorderMax: number | null; avgDailyUse: number | null } };
 
 /** Format minor currency units (cents) as a plain amount with tabular grouping. */
 export function money(minor: number): string {
@@ -67,4 +69,6 @@ export const api = {
   trialBalance: () => jsonFetch<TrialBalance>('/api/finance/trial-balance'),
   criticalResults: () => jsonFetch<{ results: CriticalResult[] }>('/api/orders/critical/outstanding'),
   overdueTasks: (asOf?: string) => jsonFetch<{ tasks: OpsTask[] }>(`/api/ops/tasks/overdue${asOf ? `?asOf=${asOf}` : ''}`),
+  stockAlerts: (asOf?: string) => jsonFetch<{ alerts: StockAlert[] }>(`/api/stock/alerts${asOf ? `?asOf=${asOf}` : ''}`),
+  reorderSuggestions: () => jsonFetch<{ suggestions: ReorderSuggestion[] }>('/api/stock/reorder-suggestions'),
 };
