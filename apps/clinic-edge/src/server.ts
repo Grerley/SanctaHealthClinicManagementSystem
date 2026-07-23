@@ -32,7 +32,7 @@ import { sendHandover, acknowledgeHandover, inbox } from './handover.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
 import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, dueMedications } from './prescribing.ts';
 import { searchFormulary, dispensingWorklist, markDispensed, generatePrescription as generateMedPrescription } from './medication.ts';
-import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
+import { registerDevice, revokeDevice, isDeviceTrusted, listDevices } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
 import { ageingReport } from './debtors.ts';
 import { createSlot, bookAppointment, nextAvailableSlot, setAppointmentStatus, addToWaitlist, fillReleasedSlot, queueReminder, setAppointmentType, resolveAppointmentType, calendarView } from './scheduling.ts';
@@ -803,7 +803,15 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         if (p === '/api/visits/durations' && req.method === 'GET') {
           try { return sendJson(res, 200, await visitDurations(pool, url.searchParams.get('visitId') ?? '')); } catch (err) { return sendJson(res, 404, { error: { code: 'visit_not_found', message: (err as Error).message } }); }
         }
+        if (p === '/api/devices' && req.method === 'GET') {
+          return sendJson(res, 200, { devices: await listDevices(pool) });
+        }
         if (p === '/api/devices' && req.method === 'POST') {
+          const b = (await readBody(req)) as { label: string; site?: string; softwareVersion?: string };
+          return sendJson(res, 201, await registerDevice(pool, b));
+        }
+        // Canonical register path matching the D1 Worker, so the PWA speaks one API.
+        if (p === '/api/devices/register' && req.method === 'POST') {
           const b = (await readBody(req)) as { label: string; site?: string; softwareVersion?: string };
           return sendJson(res, 201, await registerDevice(pool, b));
         }

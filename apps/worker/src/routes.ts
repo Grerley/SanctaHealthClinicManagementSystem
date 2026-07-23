@@ -39,7 +39,7 @@ import {
   changeDemographic, markDeceased, patientIdentityHistory, IdentityHistoryError,
   patientCard, resolveCard, checkInView, FrontDeskError,
   issueToken, revokeToken, selfSummary, requestBooking, recordPayIntent, listBookingRequests, confirmBooking, SelfServiceError,
-  registerDevice, revokeDevice, DeviceError,
+  registerDevice, revokeDevice, listDevices, DeviceError,
   addStaff, checkCredential, createTask, completeTask, overdueTasks, staffProductivity, OpsError,
   addResource, setResourceStatus, listResources, availableCapacity, defineChecklist, runChecklist, reportIncident, updateIncident, openIncidents, scheduleMaintenance, completeMaintenance, dueMaintenance, FacilityError,
   createRelease, promoteRelease, rollbackRelease, currentConfig, setFeatureFlag, evaluateFlag, systemHealth, getHelpTopic, listHelpTopics, AdminError,
@@ -1062,6 +1062,10 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
     // --- Device trust & revocation (ADM-002) --------------------------------
     if (p.startsWith('/api/devices')) {
       try {
+        if (p === '/api/devices' && method === 'GET') {
+          const denied = guard('configure'); if (denied) return denied;
+          return json({ devices: await listDevices(env.DB) });
+        }
         if (p === '/api/devices/register' && method === 'POST') {
           const denied = guard('configure'); if (denied) return denied;
           return json(await registerDevice(env.DB, (await request.json()) as Parameters<typeof registerDevice>[1]), 201);

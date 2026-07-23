@@ -6,9 +6,27 @@
  */
 import { uuidv7 } from '@sancta/domain';
 import type { D1Database } from './d1.ts';
-import { one, run, stmt } from './query.ts';
+import { one, many, run, stmt } from './query.ts';
 
 export class DeviceError extends Error {}
+
+export type DeviceRow = { deviceId: string; label: string; site: string | null; trustState: string; softwareVersion: string | null; registeredAt: string; revokedAt: string | null };
+
+/** Every provisioned device with its trust state (ADM-002 device register). A
+ * revoked device is shown, not hidden, so an operator can see what was decommissioned
+ * and when — trusted devices first, then most-recently registered. Read-only. */
+export async function listDevices(db: D1Database): Promise<DeviceRow[]> {
+  const rows = await many<{ id: string; label: string; site_id: string | null; trust_state: string; software_version: string | null; created_at: string; revoked_at: string | null }>(
+    db,
+    `SELECT id, label, site_id, trust_state, software_version, created_at, revoked_at
+       FROM security_sync_device
+      ORDER BY (trust_state='trusted') DESC, created_at DESC`,
+  );
+  return rows.map((r) => ({
+    deviceId: r.id, label: r.label, site: r.site_id, trustState: r.trust_state,
+    softwareVersion: r.software_version, registeredAt: r.created_at, revokedAt: r.revoked_at,
+  }));
+}
 
 export async function registerDevice(db: D1Database, args: { label: string; site?: string; softwareVersion?: string }): Promise<{ deviceId: string }> {
   const deviceId = uuidv7();

@@ -9,6 +9,25 @@ import { uuidv7 } from '@sancta/domain';
 
 export class DeviceError extends Error {}
 
+export type DeviceRow = { deviceId: string; label: string; site: string | null; trustState: string; softwareVersion: string | null; registeredAt: string; revokedAt: string | null };
+
+/** Every provisioned device with its trust state (ADM-002). A revoked device is
+ * shown, not hidden, so an operator can audit what was decommissioned and when.
+ * Trusted first, then most-recently registered. Read-only. */
+export async function listDevices(pool: Pool): Promise<DeviceRow[]> {
+  const r = await pool.query(
+    `SELECT id, label, site_id, trust_state, software_version,
+            to_char(created_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS registered_at,
+            to_char(revoked_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS revoked_at
+       FROM security_sync.device
+      ORDER BY (trust_state='trusted') DESC, created_at DESC`,
+  );
+  return r.rows.map((x) => ({
+    deviceId: x.id, label: x.label, site: x.site_id, trustState: x.trust_state,
+    softwareVersion: x.software_version, registeredAt: x.registered_at, revokedAt: x.revoked_at,
+  }));
+}
+
 export async function registerDevice(pool: Pool, args: { label: string; site?: string; softwareVersion?: string }): Promise<{ deviceId: string }> {
   const deviceId = uuidv7();
   await pool.query(

@@ -1075,9 +1075,49 @@
       }
     },
     "/api/devices": {
+      "get": {
+        "operationId": "get_api_devices",
+        "summary": "GET /api/devices",
+        "tags": [
+          "devices"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      },
       "post": {
         "operationId": "post_api_devices",
         "summary": "POST /api/devices",
+        "tags": [
+          "devices"
+        ],
+        "x-permission": "administer",
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
+    "/api/devices/register": {
+      "post": {
+        "operationId": "post_api_devices_register",
+        "summary": "POST /api/devices/register",
         "tags": [
           "devices"
         ],
