@@ -13,6 +13,7 @@ import { Orders } from './screens/Orders.tsx';
 import { Results } from './screens/Results.tsx';
 import { Mar } from './screens/Mar.tsx';
 import { Handover } from './screens/Handover.tsx';
+import { Referrals } from './screens/Referrals.tsx';
 import { Finance } from './screens/Finance.tsx';
 import { Inbox } from './screens/Inbox.tsx';
 import { Inventory } from './screens/Inventory.tsx';
@@ -21,7 +22,7 @@ import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'mar' | 'handover' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
+type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'mar' | 'referrals' | 'handover' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
 // Role-ordered primary navigation (§4.1). The app opens on Dispense & Pay (the
 // flagship slice); Inbox ("Today": critical results & tasks) sits alongside it.
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
@@ -35,6 +36,7 @@ const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'orders', label: 'Orders', hint: 'Labs, imaging, referrals' },
   { id: 'results', label: 'Results', hint: 'Enter and classify results' },
   { id: 'mar', label: 'Med round', hint: 'Administer medications' },
+  { id: 'referrals', label: 'Referrals', hint: 'Refer to other facilities' },
   { id: 'handover', label: 'Handover', hint: 'SBAR shift handover' },
   { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
   { id: 'calendar', label: 'Calendar', hint: 'Appointments' },
@@ -117,6 +119,7 @@ export function App() {
           {tab === 'orders' && <Orders patient={activePatient} />}
           {tab === 'results' && <Results />}
           {tab === 'mar' && <Mar />}
+          {tab === 'referrals' && <Referrals patient={activePatient} />}
           {tab === 'handover' && <Handover />}
           {tab === 'queue' && <Queue />}
           {tab === 'calendar' && <Calendar />}
