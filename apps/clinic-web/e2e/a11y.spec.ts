@@ -12,6 +12,7 @@ import { resetDb } from './reset.ts';
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const TABS = [
   { testid: 'tab-dispense', name: 'Dispense & Pay' },
+  { testid: 'tab-inbox', name: 'Inbox' },
   { testid: 'tab-patients', name: 'Patients' },
   { testid: 'tab-chart', name: 'Chart' },
   { testid: 'tab-queue', name: 'Queue' },

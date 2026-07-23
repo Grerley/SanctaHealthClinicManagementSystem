@@ -7,14 +7,17 @@ import { Dashboard } from './screens/Dashboard.tsx';
 import { Calendar } from './screens/Calendar.tsx';
 import { Chart } from './screens/Chart.tsx';
 import { Finance } from './screens/Finance.tsx';
+import { Inbox } from './screens/Inbox.tsx';
 import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'patients' | 'chart' | 'queue' | 'calendar' | 'finance' | 'dashboard';
-// Role-ordered primary navigation (§4.1).
+type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'queue' | 'calendar' | 'finance' | 'dashboard';
+// Role-ordered primary navigation (§4.1). The app opens on Dispense & Pay (the
+// flagship slice); Inbox ("Today": critical results & tasks) sits alongside it.
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'dispense', label: 'Dispense & Pay', hint: 'Pharmacy and cashier' },
+  { id: 'inbox', label: 'Inbox', hint: 'Critical results & tasks' },
   { id: 'patients', label: 'Patients', hint: 'Search and registration' },
   { id: 'chart', label: 'Chart', hint: 'Clinical record' },
   { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
@@ -87,6 +90,7 @@ export function App() {
         {/* §4.2 Work area. */}
         <div className="shell__work">
           {tab === 'dispense' && <Dispense />}
+          {tab === 'inbox' && <Inbox />}
           {tab === 'patients' && <Patients onSelect={setActivePatient} />}
           {tab === 'chart' && <Chart patient={activePatient} />}
           {tab === 'queue' && <Queue />}

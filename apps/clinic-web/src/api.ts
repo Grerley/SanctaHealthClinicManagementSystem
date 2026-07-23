@@ -27,6 +27,9 @@ export type AgeingReport = { asOf: string; buckets: Record<AgeingBand, number>; 
 export type TrialBalanceRow = { code: string; name: string; type: string; debitMinor: number; creditMinor: number; netMinor: number };
 export type TrialBalance = { rows: TrialBalanceRow[]; totalDebitMinor: number; totalCreditMinor: number; balanced: boolean };
 
+export type CriticalResult = { resultId: string; patientId: string; value: number; abnormal: string; releasedAt: string };
+export type OpsTask = { taskId: string; subject: string; owner: string | null; priority: number; dueDate: string };
+
 /** Format minor currency units (cents) as a plain amount with tabular grouping. */
 export function money(minor: number): string {
   return (minor / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -62,4 +65,6 @@ export const api = {
   debtorsAgeing: (asOf?: string) =>
     jsonFetch<AgeingReport>(`/api/debtors/ageing${asOf ? `?asOf=${asOf}` : ''}`),
   trialBalance: () => jsonFetch<TrialBalance>('/api/finance/trial-balance'),
+  criticalResults: () => jsonFetch<{ results: CriticalResult[] }>('/api/orders/critical/outstanding'),
+  overdueTasks: (asOf?: string) => jsonFetch<{ tasks: OpsTask[] }>(`/api/ops/tasks/overdue${asOf ? `?asOf=${asOf}` : ''}`),
 };
