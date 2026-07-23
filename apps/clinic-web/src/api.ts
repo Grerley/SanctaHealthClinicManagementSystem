@@ -6,13 +6,26 @@ export type Patient = { id: string; mrn: string; given_name: string; family_name
 const SESSION_ROLES = 'reception,clinical,cashier,stock';
 const SESSION_USER = 'demo-operator';
 
+// A read that never returns (a hung LAN hub, a route that never responds) must not
+// freeze the screen — availability is not the same as navigator.onLine (§10.2). We
+// bound every read with an abort so a stalled request surfaces as "unreachable" and
+// the caller can show its stale/error state instead of spinning forever.
+const READ_TIMEOUT_MS = 10_000;
+
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    ...init,
-    headers: { 'content-type': 'application/json', 'x-roles': SESSION_ROLES, 'x-user': SESSION_USER, ...(init?.headers ?? {}) },
-  });
-  if (!res.ok && res.status !== 409) throw new Error(`${url} -> ${res.status}`);
-  return (await res.json()) as T;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), READ_TIMEOUT_MS);
+  try {
+    const res = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', 'x-roles': SESSION_ROLES, 'x-user': SESSION_USER, ...(init?.headers ?? {}) },
+    });
+    if (!res.ok && res.status !== 409) throw new Error(`${url} -> ${res.status}`);
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export type QueueRow = { visitId: string; token: number; station: string; priority: number; status: string; patientMrn: string | null };

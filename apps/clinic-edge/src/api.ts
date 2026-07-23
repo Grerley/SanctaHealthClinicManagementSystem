@@ -9,7 +9,7 @@ import { drain, HttpSyncTransport } from '@sancta/sync';
 import { PgOutboxStore } from './outbox-store.ts';
 import { assertDeviceTrusted } from './devices.ts';
 import { commitCheckout, DuplicateCheckoutError, type CheckoutRequest } from './checkout.ts';
-import { openShift, closeCashierShift } from './cashier.ts';
+import { openShift, closeCashierShift, listOpenShifts } from './cashier.ts';
 import type { Denomination } from '@sancta/domain';
 
 export async function listPatients(pool: Pool): Promise<unknown[]> {
@@ -103,6 +103,10 @@ export async function doCheckout(
 
 export async function openCashierShift(pool: Pool, body: { cashier: string; site?: string; openingFloatMinor: number }): Promise<{ shiftId: string }> {
   return openShift(pool, body);
+}
+
+export async function listCashierShifts(pool: Pool, cashier?: string): ReturnType<typeof listOpenShifts> {
+  return listOpenShifts(pool, cashier ? { cashier } : {});
 }
 
 export type CloseShiftApiBody = {

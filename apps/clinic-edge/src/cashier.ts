@@ -30,6 +30,48 @@ export async function openShift(pool: Pool, args: { cashier: string; site?: stri
 
 export class ShiftError extends Error {}
 
+export type OpenShiftRow = {
+  shiftId: string; cashier: string; site: string | null; openedAt: string;
+  openingFloatMinor: number; cashReceiptsMinor: number; paymentCount: number; expectedMinor: number;
+};
+
+/**
+ * Open shifts with their expected cash drawer (BIL-009). Expected is derived live
+ * from the immutable cash payments scoped to each shift plus the opening float —
+ * never a stored running total. Read-only; no reconciliation is implied until the
+ * shift is actually closed with a physical count.
+ */
+export async function listOpenShifts(pool: Pool, args?: { cashier?: string }): Promise<{ shifts: OpenShiftRow[] }> {
+  const params: unknown[] = [];
+  let where = `s.status='open'`;
+  if (args?.cashier) { params.push(args.cashier); where += ` AND s.cashier=$${params.length}`; }
+  const r = await pool.query(
+    `SELECT s.id, s.cashier, s.site_id, s.opened_at, s.opening_float_minor,
+            coalesce(p.cash_receipts_minor, 0)::bigint AS cash_receipts_minor,
+            coalesce(p.payment_count, 0)::bigint AS payment_count
+       FROM billing.cashier_shift s
+       LEFT JOIN (
+         SELECT shift_id, sum(amount_minor) AS cash_receipts_minor, count(*) AS payment_count
+           FROM billing.payment WHERE method='cash' AND shift_id IS NOT NULL GROUP BY shift_id
+       ) p ON p.shift_id = s.id
+      WHERE ${where}
+      ORDER BY s.opened_at ASC`,
+    params,
+  );
+  return {
+    shifts: r.rows.map((x) => {
+      const openingFloatMinor = Number(x.opening_float_minor);
+      const cashReceiptsMinor = Number(x.cash_receipts_minor);
+      return {
+        shiftId: x.id, cashier: x.cashier, site: x.site_id,
+        openedAt: x.opened_at instanceof Date ? x.opened_at.toISOString() : String(x.opened_at),
+        openingFloatMinor, cashReceiptsMinor, paymentCount: Number(x.payment_count),
+        expectedMinor: openingFloatMinor + cashReceiptsMinor,
+      };
+    }),
+  };
+}
+
 export type CloseShiftResult = {
   shiftId: string;
   expectedMinor: number;

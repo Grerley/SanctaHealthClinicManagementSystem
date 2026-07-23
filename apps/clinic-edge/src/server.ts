@@ -11,7 +11,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { readFile } from 'node:fs/promises';
 import { join, normalize, extname } from 'node:path';
 import pg from 'pg';
-import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
+import { listPatients, stockForSku, doCheckout, syncStatus, syncPush, openCashierShift, closeShiftApi, listCashierShifts, type CheckoutApiBody, type CloseShiftApiBody } from './api.ts';
 import { registerPatient, searchPatients, type RegisterBody } from './patients.ts';
 import { listPolicy, setFieldRule } from './demographics.ts';
 import { changeDemographic, markDeceased, patientIdentityHistory } from './identity-history.ts';
@@ -359,8 +359,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           try { return sendJson(res, 200, await performStocktake(pool, b)); }
           catch (err) { return sendJson(res, 409, { error: { code: 'stocktake_rejected', message: (err as Error).message } }); }
         }
-        if (p === '/api/stock/reorder' && req.method === 'GET') {
-          return sendJson(res, 200, { suggestions: await reorderSuggestions(pool) });
+        if ((p === '/api/stock/reorder' || p === '/api/stock/reorder-suggestions') && req.method === 'GET') {
+          const w = url.searchParams.get('windowDays');
+          return sendJson(res, 200, { suggestions: await reorderSuggestions(pool, w ? { windowDays: Number(w) } : {}) });
         }
         if (p === '/api/stock/movement-report' && req.method === 'GET') {
           const from = url.searchParams.get('from') ?? '2026-01-01';
@@ -664,6 +665,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/triage/summary' && req.method === 'GET') {
           return sendJson(res, 200, await triageSummary(pool, url.searchParams.get('encounterId') ?? ''));
+        }
+        if (p === '/api/cashier/shifts' && req.method === 'GET') {
+          return sendJson(res, 200, await listCashierShifts(pool, url.searchParams.get('cashier') ?? undefined));
         }
         if (p === '/api/cashier/open' && req.method === 'POST') {
           const body = (await readBody(req)) as { cashier: string; site?: string; openingFloatMinor: number };
