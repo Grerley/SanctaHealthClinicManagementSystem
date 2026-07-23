@@ -19,16 +19,20 @@ export type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'className'
   suffix?: ReactNode;
   /** Numeric presentation + wheel-guard. */
   numeric?: boolean;
+  /** Keep the label accessible to assistive tech but visually hidden — for dense
+   * grids (e.g. a denomination count) where a repeating column header supplies the
+   * visible context. The control is STILL programmatically labelled (§12). */
+  hideLabel?: boolean;
 };
 
-export function Field({ label, optional, hint, error, prefix, suffix, numeric, type, ...rest }: FieldProps): JSX.Element {
+export function Field({ label, optional, hint, error, prefix, suffix, numeric, hideLabel, type, ...rest }: FieldProps): JSX.Element {
   const id = useId();
   const hintId = `${id}-hint`;
   const errId = `${id}-err`;
   const describedBy = [hint ? hintId : null, error ? errId : null].filter(Boolean).join(' ') || undefined;
   return (
     <div className="sancta-field" data-invalid={error ? 'true' : undefined}>
-      <label className="sancta-field__label" htmlFor={id}>
+      <label className={hideLabel ? 'sancta-visually-hidden' : 'sancta-field__label'} htmlFor={id}>
         {label}{optional ? <span className="sancta-field__optional"> (Optional)</span> : null}
       </label>
       {hint ? <span className="sancta-field__hint" id={hintId}>{hint}</span> : null}

@@ -6,7 +6,7 @@
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { openShift, closeCashierShift, ShiftError, CashierError } from '../src/cashier.ts';
+import { openShift, closeCashierShift, listOpenShifts, ShiftError, CashierError } from '../src/cashier.ts';
 import { openLocalD1 } from '../src/local.ts';
 import { applyD1Migrations } from '../src/migrations.ts';
 import type { LocalD1 } from '../src/d1.ts';
@@ -53,6 +53,34 @@ test('a variance above tolerance needs a supervisor approver', async () => {
   const approved = await closeCashierShift(db, { shiftId, toleranceMinor: 100, denominations: [denom(1000, 14)], approver: 'super', postingDate: '2026-07-19' });
   assert.equal(approved.requiresApproval, true);
   assert.equal(approved.approved, true);
+});
+
+test('listOpenShifts shows expected drawer from opening float + cash receipts, and drops closed shifts', async () => {
+  const { shiftId } = await openShift(db, { cashier: 'c1', openingFloatMinor: 10000 });
+  await cashPayment(shiftId, 5000);
+  await cashPayment(shiftId, 2500);
+  const { shiftId: other } = await openShift(db, { cashier: 'c2', openingFloatMinor: 4000 });
+
+  const open = await listOpenShifts(db);
+  assert.equal(open.shifts.length, 2);
+  const s1 = open.shifts.find((s) => s.shiftId === shiftId)!;
+  assert.equal(s1.openingFloatMinor, 10000);
+  assert.equal(s1.cashReceiptsMinor, 7500);
+  assert.equal(s1.paymentCount, 2);
+  assert.equal(s1.expectedMinor, 17500); // 10000 float + 7500 receipts
+  const s2 = open.shifts.find((s) => s.shiftId === other)!;
+  assert.equal(s2.expectedMinor, 4000); // float only, no receipts yet
+
+  // Scoping by cashier narrows the list.
+  const mine = await listOpenShifts(db, { cashier: 'c2' });
+  assert.equal(mine.shifts.length, 1);
+  assert.equal(mine.shifts[0]!.shiftId, other);
+
+  // Once closed a shift leaves the open list.
+  await closeCashierShift(db, { shiftId: other, toleranceMinor: 100, denominations: [denom(1000, 4)], postingDate: '2026-07-19' });
+  const afterClose = await listOpenShifts(db);
+  assert.equal(afterClose.shifts.length, 1);
+  assert.equal(afterClose.shifts[0]!.shiftId, shiftId);
 });
 
 test('a shift cannot be closed twice', async () => {

@@ -11,7 +11,7 @@
  */
 import { uuidv7, money, reverse, closeShift as computeClose, postCashShortage, CashierError, type Denomination } from '@sancta/domain';
 import type { D1Database } from './d1.ts';
-import { one, stmt } from './query.ts';
+import { one, many, stmt } from './query.ts';
 import { ensurePeriod, journalStatements } from './journal.ts';
 
 export class ShiftError extends Error {}
@@ -22,6 +22,48 @@ export async function openShift(db: D1Database, args: { cashier: string; site?: 
   await db.prepare(`INSERT INTO billing_cashier_shift (id, cashier, site_id, status, opening_float_minor) VALUES (?,?,?,'open',?)`)
     .bind(shiftId, args.cashier, args.site ?? null, args.openingFloatMinor).run();
   return { shiftId };
+}
+
+export type OpenShiftRow = {
+  shiftId: string; cashier: string; site: string | null; openedAt: string;
+  openingFloatMinor: number; cashReceiptsMinor: number; paymentCount: number; expectedMinor: number;
+};
+
+/**
+ * Open shifts with their expected cash drawer, so the close screen can show the
+ * cashier what the drawer *should* hold before they count it (BIL-009). Expected
+ * is derived live from the immutable cash payments scoped to the shift plus the
+ * opening float — never a stored running total. Read-only; no reconciliation is
+ * implied until the shift is actually closed with a physical count.
+ */
+export async function listOpenShifts(db: D1Database, args?: { cashier?: string }): Promise<{ shifts: OpenShiftRow[] }> {
+  const where = args?.cashier ? `s.status='open' AND s.cashier=?` : `s.status='open'`;
+  const params = args?.cashier ? [args.cashier] : [];
+  const rows = await many<{ id: string; cashier: string; site_id: string | null; opened_at: string; opening_float_minor: number; cash_receipts_minor: number; payment_count: number }>(
+    db,
+    `SELECT s.id, s.cashier, s.site_id, s.opened_at, s.opening_float_minor,
+            COALESCE(p.cash_receipts_minor, 0) AS cash_receipts_minor,
+            COALESCE(p.payment_count, 0) AS payment_count
+       FROM billing_cashier_shift s
+       LEFT JOIN (
+         SELECT shift_id, SUM(amount_minor) AS cash_receipts_minor, COUNT(*) AS payment_count
+           FROM billing_payment WHERE method='cash' AND shift_id IS NOT NULL GROUP BY shift_id
+       ) p ON p.shift_id = s.id
+      WHERE ${where}
+      ORDER BY s.opened_at ASC`,
+    params,
+  );
+  return {
+    shifts: rows.map((r) => {
+      const openingFloatMinor = Number(r.opening_float_minor);
+      const cashReceiptsMinor = Number(r.cash_receipts_minor);
+      return {
+        shiftId: r.id, cashier: r.cashier, site: r.site_id, openedAt: r.opened_at,
+        openingFloatMinor, cashReceiptsMinor, paymentCount: Number(r.payment_count),
+        expectedMinor: openingFloatMinor + cashReceiptsMinor,
+      };
+    }),
+  };
 }
 
 export type CloseShiftResult = { shiftId: string; expectedMinor: number; countedMinor: number; varianceMinor: number; requiresApproval: boolean; approved: boolean; status: 'closed' };

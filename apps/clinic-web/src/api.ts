@@ -27,6 +27,8 @@ export type AgeingReport = { asOf: string; buckets: Record<AgeingBand, number>; 
 export type TrialBalanceRow = { code: string; name: string; type: string; debitMinor: number; creditMinor: number; netMinor: number };
 export type TrialBalance = { rows: TrialBalanceRow[]; totalDebitMinor: number; totalCreditMinor: number; balanced: boolean };
 
+export type OpenShift = { shiftId: string; cashier: string; site: string | null; openedAt: string; openingFloatMinor: number; cashReceiptsMinor: number; paymentCount: number; expectedMinor: number };
+export type CloseShiftResult = { shiftId: string; expectedMinor: number; countedMinor: number; varianceMinor: number; requiresApproval: boolean; approved: boolean; status: 'closed' };
 export type CriticalResult = { resultId: string; patientId: string; value: number; abnormal: string; releasedAt: string };
 export type OpsTask = { taskId: string; subject: string; owner: string | null; priority: number; dueDate: string };
 export type StockAlert = { sku: string; name: string; onHand: number; reorderMin: number | null; flags: string[] };
@@ -71,4 +73,5 @@ export const api = {
   overdueTasks: (asOf?: string) => jsonFetch<{ tasks: OpsTask[] }>(`/api/ops/tasks/overdue${asOf ? `?asOf=${asOf}` : ''}`),
   stockAlerts: (asOf?: string) => jsonFetch<{ alerts: StockAlert[] }>(`/api/stock/alerts${asOf ? `?asOf=${asOf}` : ''}`),
   reorderSuggestions: () => jsonFetch<{ suggestions: ReorderSuggestion[] }>('/api/stock/reorder-suggestions'),
+  openShifts: (cashier?: string) => jsonFetch<{ shifts: OpenShift[] }>(`/api/cashier/shifts${cashier ? `?cashier=${encodeURIComponent(cashier)}` : ''}`),
 };

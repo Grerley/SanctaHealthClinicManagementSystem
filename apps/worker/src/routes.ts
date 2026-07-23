@@ -58,7 +58,7 @@ import {
   recordExpense, paySupplier, apReconciliation, PayableError,
   setBudget, budgetVariance, BudgetError,
   balanceSheet, monthlyClose,
-  openShift, closeCashierShift, ShiftError, CashierError,
+  openShift, closeCashierShift, listOpenShifts, ShiftError, CashierError,
   type D1Database, type CheckoutD1Request,
 } from '@sancta/d1';
 import { authFromRequest } from './auth.ts';
@@ -660,8 +660,13 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
     }
 
     // --- Cashier shift open/close (BIL-009, UAT-09) -----------------------
-    if (p === '/api/cashier/open' || p === '/api/cashier/close') {
+    if (p === '/api/cashier/open' || p === '/api/cashier/close' || p === '/api/cashier/shifts') {
       try {
+        if (p === '/api/cashier/shifts' && method === 'GET') {
+          const denied = guard('receive_payment'); if (denied) return denied;
+          const cashier = url.searchParams.get('cashier');
+          return json(await listOpenShifts(env.DB, cashier ? { cashier } : {}));
+        }
         if (p === '/api/cashier/open' && method === 'POST') {
           const denied = guard('receive_payment'); if (denied) return denied;
           return json(await openShift(env.DB, (await request.json()) as Parameters<typeof openShift>[1]), 201);

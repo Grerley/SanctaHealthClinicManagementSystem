@@ -18,6 +18,7 @@ const TABS = [
   { testid: 'tab-queue', name: 'Queue' },
   { testid: 'tab-calendar', name: 'Calendar' },
   { testid: 'tab-inventory', name: 'Inventory' },
+  { testid: 'tab-cashier', name: 'Cashier' },
   { testid: 'tab-finance', name: 'Finance' },
   { testid: 'tab-dashboard', name: 'Command centre' },
 ];
