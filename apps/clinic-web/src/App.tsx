@@ -6,6 +6,7 @@ import { Queue } from './screens/Queue.tsx';
 import { Dashboard } from './screens/Dashboard.tsx';
 import { Calendar } from './screens/Calendar.tsx';
 import { Chart } from './screens/Chart.tsx';
+import { Encounter } from './screens/Encounter.tsx';
 import { Finance } from './screens/Finance.tsx';
 import { Inbox } from './screens/Inbox.tsx';
 import { Inventory } from './screens/Inventory.tsx';
@@ -14,7 +15,7 @@ import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
+type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
 // Role-ordered primary navigation (§4.1). The app opens on Dispense & Pay (the
 // flagship slice); Inbox ("Today": critical results & tasks) sits alongside it.
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
@@ -22,6 +23,7 @@ const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'inbox', label: 'Inbox', hint: 'Critical results & tasks' },
   { id: 'patients', label: 'Patients', hint: 'Search and registration' },
   { id: 'chart', label: 'Chart', hint: 'Clinical record' },
+  { id: 'encounter', label: 'Encounter', hint: 'Document and sign' },
   { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
   { id: 'calendar', label: 'Calendar', hint: 'Appointments' },
   { id: 'inventory', label: 'Inventory', hint: 'Stock and expiry' },
@@ -97,6 +99,7 @@ export function App() {
           {tab === 'inbox' && <Inbox />}
           {tab === 'patients' && <Patients onSelect={setActivePatient} />}
           {tab === 'chart' && <Chart patient={activePatient} />}
+          {tab === 'encounter' && <Encounter patient={activePatient} />}
           {tab === 'queue' && <Queue />}
           {tab === 'calendar' && <Calendar />}
           {tab === 'inventory' && <Inventory />}

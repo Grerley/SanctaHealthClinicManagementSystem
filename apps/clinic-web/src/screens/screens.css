@@ -48,3 +48,14 @@
 .scr__cal-group-name { font-size: var(--sancta-type-supporting-size); font-weight: 700; }
 .scr__cal-slot { font-size: var(--sancta-type-supporting-size); padding: 2px var(--sancta-space-1); border-left: 3px solid var(--sancta-colour-border); margin-top: 2px; font-variant-numeric: tabular-nums; }
 .scr__cal-slot[data-booked="true"] { border-left-color: var(--sancta-colour-success); }
+
+/* Clinical note authoring (EHR-03): SOAP form grid, immutable-note read view, addenda. */
+.scr__form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sancta-space-3); }
+.scr__textarea { min-height: 4.5rem; resize: vertical; font: inherit; line-height: var(--sancta-type-body-line); }
+.scr__attest { display: flex; align-items: flex-start; gap: var(--sancta-space-2); font-size: var(--sancta-type-supporting-size); cursor: pointer; }
+.scr__attest input { margin-top: 3px; min-width: 18px; min-height: 18px; }
+.scr__note { display: grid; gap: var(--sancta-space-3); margin: 0; }
+.scr__note-row { display: grid; grid-template-columns: minmax(120px, 160px) 1fr; gap: var(--sancta-space-3); align-items: baseline; }
+.scr__note-row dt { font-weight: 700; color: var(--sancta-colour-text-secondary); }
+.scr__note-row dd { margin: 0; white-space: pre-wrap; }
+.scr__addenda { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sancta-space-2); }
