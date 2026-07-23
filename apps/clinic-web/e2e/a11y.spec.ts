@@ -28,7 +28,11 @@ test('every tab has no serious/critical WCAG 2.2 AA violations (NFR-019)', async
 
   const failed: string[] = [];
   for (const testid of testids) {
-    await page.getByTestId(testid).click({ timeout: 15_000 });
+    // Dispatch the click directly rather than a pointer click: with a long grouped
+    // nav (a nested scroll container), auto-scroll-into-view for a deep tab is
+    // unreliable, but the tab is a plain button whose React onClick fires on a
+    // dispatched click regardless of scroll position — so nav depth never matters.
+    await page.getByTestId(testid).dispatchEvent('click');
     // Bound the settle wait per tab: a slow or hung read must never consume the whole
     // budget. axe still scans whatever rendered — loading/stale StateBlocks are
     // accessible — so the gate stays meaningful even on a degraded runner.
