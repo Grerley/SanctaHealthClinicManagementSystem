@@ -1,0 +1,50 @@
+/*
+ * Shared feature-screen layout on the design tokens (spec §6/§11). Structural only;
+ * colour/space come from tokens. Screens keep their data-testids and asserted copy.
+ */
+.scr { display: flex; flex-direction: column; gap: var(--sancta-space-4); }
+.scr__section-title { font: var(--sancta-type-subsection-weight) var(--sancta-type-subsection-size) / var(--sancta-type-subsection-line) var(--sancta-font-sans); }
+.scr__toolbar { display: flex; gap: var(--sancta-space-3); flex-wrap: wrap; align-items: flex-end; }
+.scr__row { display: flex; gap: var(--sancta-space-3); flex-wrap: wrap; }
+.scr__msg { min-height: 20px; margin: 0; color: var(--sancta-colour-text-secondary); font-size: var(--sancta-type-dense-size); }
+
+/* Card surface for stat tiles / grouped info. */
+.scr__card { background: var(--sancta-colour-surface); border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-panel); padding: var(--sancta-space-3); }
+
+/* Results list (search, etc.) */
+.scr__list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-panel); overflow: hidden; }
+.scr__list li + li { border-top: 1px solid var(--sancta-colour-border); }
+.scr__list-btn { display: block; width: 100%; text-align: left; padding: var(--sancta-space-3); border: 0; background: transparent; cursor: pointer; font: inherit; color: var(--sancta-colour-text); min-height: var(--sancta-touch-target-min); }
+.scr__list-btn:hover { background: var(--sancta-colour-surface-subtle); }
+.scr__list-btn strong { font-weight: 700; }
+
+/* Data table (§8.2 accessible tables; §6.3 dense body). The table lives in an
+   overflow-x scroller so a 2-D grid never forces the whole page to scroll. */
+.scr__table-scroll { overflow-x: auto; border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-panel); }
+.scr__table { width: 100%; border-collapse: collapse; font-size: var(--sancta-type-dense-size); }
+.scr__table caption { text-align: left; padding: var(--sancta-space-2) var(--sancta-space-3); font-weight: 700; }
+.scr__table th, .scr__table td { text-align: left; padding: var(--sancta-space-2) var(--sancta-space-3); }
+.scr__table thead th { background: var(--sancta-colour-surface-subtle); border-bottom: 1px solid var(--sancta-colour-border); font-weight: 600; }
+.scr__table tbody tr + tr td { border-top: 1px solid var(--sancta-colour-border); }
+.scr__table [data-numeric] { font-variant-numeric: tabular-nums; }
+
+/* KPI grid + tile (§15.2). */
+.scr__kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--sancta-space-3); }
+.scr__kpi { background: var(--sancta-colour-surface); border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-panel); padding: var(--sancta-space-3); display: flex; flex-direction: column; gap: 2px; }
+.scr__kpi-label { font-size: var(--sancta-type-supporting-size); color: var(--sancta-colour-text-secondary); }
+.scr__kpi-value { font-size: var(--sancta-type-page-size); line-height: var(--sancta-type-page-line); font-weight: 700; font-variant-numeric: tabular-nums; }
+.scr__kpi-meta { font-size: var(--sancta-type-supporting-size); color: var(--sancta-colour-text-secondary); }
+
+/* Segmented control (view mode / group by). */
+.scr__seg { display: inline-flex; gap: var(--sancta-space-1); background: var(--sancta-colour-surface-subtle); border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-control); padding: 2px; }
+.scr__seg-btn { min-height: var(--sancta-target-compact-min); padding: 0 var(--sancta-space-3); border: 0; background: transparent; border-radius: var(--sancta-radius-control); cursor: pointer; font: var(--sancta-type-label-weight) var(--sancta-type-dense-size) / 1 var(--sancta-font-sans); color: var(--sancta-colour-text-secondary); }
+.scr__seg-btn[aria-pressed="true"], .scr__seg-btn[data-active="true"] { background: var(--sancta-colour-action); color: #fff; }
+
+/* Calendar grid. */
+.scr__cal { display: grid; gap: var(--sancta-space-2); overflow-x: auto; }
+.scr__cal-day { border: 1px solid var(--sancta-colour-border); border-radius: var(--sancta-radius-panel); padding: var(--sancta-space-2); min-width: 0; }
+.scr__cal-day h3 { font-size: var(--sancta-type-supporting-size); margin-bottom: var(--sancta-space-1); }
+.scr__cal-group { margin-bottom: var(--sancta-space-2); }
+.scr__cal-group-name { font-size: var(--sancta-type-supporting-size); font-weight: 700; }
+.scr__cal-slot { font-size: var(--sancta-type-supporting-size); padding: 2px var(--sancta-space-1); border-left: 3px solid var(--sancta-colour-border); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.scr__cal-slot[data-booked="true"] { border-left-color: var(--sancta-colour-success); }

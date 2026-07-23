@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
+import { StatusTag, StateBlock } from '@sancta/ui';
 import { api, type Kpi, type Exception } from '../api.ts';
+import './screens.css';
 
+/**
+ * Management command centre (MGT-01). Exceptions lead before summaries (§9); each
+ * exception carries a count, owner and links to its work queue. Every KPI carries a
+ * definition/owner/unit (MGT-008) — derived live, never an editable field. DOM
+ * contract preserved for the e2e suite.
+ */
 export function Dashboard() {
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [exceptions, setExceptions] = useState<Exception[]>([]);
@@ -19,33 +27,41 @@ export function Dashboard() {
   }, []);
 
   return (
-    <section>
-      <h2 style={{ fontSize: 16 }}>Exceptions</h2>
-      <div data-testid="dash-exceptions">
-        {exceptions.length === 0 ? (
-          <p style={{ color: '#047857' }}>No open exceptions.</p>
-        ) : (
-          <ul style={{ paddingLeft: 18 }}>
-            {exceptions.map((e) => (
-              <li key={e.type} style={{ marginBottom: 4 }}>
-                <strong style={{ color: '#b45309' }}>{e.count}</strong> {e.label} <span style={{ color: '#595959' }}>· {e.owner}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+    <section className="scr">
+      <div>
+        <h3 className="scr__section-title">Exceptions</h3>
+        <div data-testid="dash-exceptions">
+          {exceptions.length === 0 ? (
+            <StateBlock state="empty" title="No open exceptions">Everything reconciles — nothing needs attention right now.</StateBlock>
+          ) : (
+            <ul className="scr__list">
+              {exceptions.map((e) => (
+                <li key={e.type}>
+                  <div className="scr__list-btn" style={{ display: 'flex', alignItems: 'center', gap: 'var(--sancta-space-3)', cursor: 'default' }}>
+                    <StatusTag tone="warning" icon="alert">{String(e.count)}</StatusTag>
+                    <span style={{ flex: 1 }}>{e.label}</span>
+                    <span className="scr__kpi-meta">{e.owner}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
-      <h2 style={{ fontSize: 16, marginTop: 16 }}>Key indicators</h2>
-      <div data-testid="dash-kpis" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 8 }}>
-        {kpis.map((k) => (
-          <div key={k.id} title={k.formula} style={{ padding: 10, border: '1px solid #e5e7eb', borderRadius: 8 }}>
-            <div style={{ fontSize: 12, color: '#595959' }}>{k.label}</div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{k.value}</div>
-            <div style={{ fontSize: 11, color: '#595959' }}>{k.unit} · {k.owner}</div>
-          </div>
-        ))}
+      <div>
+        <h3 className="scr__section-title">Key indicators</h3>
+        <div data-testid="dash-kpis" className="scr__kpi-grid">
+          {kpis.map((k) => (
+            <div key={k.id} className="scr__kpi" title={k.formula}>
+              <span className="scr__kpi-label">{k.label}</span>
+              <span className="scr__kpi-value">{k.value}</span>
+              <span className="scr__kpi-meta">{k.unit} · {k.owner}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      {error && <p role="status" style={{ color: '#a00' }}>{error}</p>}
+      {error && <StateBlock state="stale" title="Dashboard unavailable offline">{error}</StateBlock>}
     </section>
   );
 }

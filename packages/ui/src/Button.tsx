@@ -18,25 +18,25 @@ export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'classNa
   children: ReactNode;
 };
 
-export function Button({ variant = 'secondary', tone = 'action', density = 'comfortable', disabledReason, icon, children, disabled, type = 'button', ...rest }: ButtonProps): JSX.Element {
+export function Button({ variant = 'secondary', tone = 'action', density = 'comfortable', disabledReason, icon, children, disabled, type = 'button', onClick, ...rest }: ButtonProps): JSX.Element {
   const isDisabled = disabled || Boolean(disabledReason);
   return (
     <button
+      // rest is spread FIRST so the guarded handlers/attributes below always win.
+      {...rest}
       type={type}
       className="sancta-btn"
       data-variant={variant}
       data-tone={tone}
       data-size={density === 'compact' ? 'compact' : undefined}
       // aria-disabled (not the disabled attribute) keeps the control focusable so a
-      // screen-reader user can reach the explanation; click is guarded below.
+      // screen-reader user can reach the explanation; the click is guarded here.
       aria-disabled={isDisabled || undefined}
-      aria-describedby={rest['aria-describedby']}
       title={disabledReason}
       onClick={(e) => {
         if (isDisabled) { e.preventDefault(); return; }
-        rest.onClick?.(e);
+        onClick?.(e);
       }}
-      {...rest}
     >
       {icon}
       <span>{children}</span>

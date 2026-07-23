@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api, type CalendarEntry } from '../api.ts';
+import './screens.css';
 
 type ViewMode = 'day' | 'week';
 type GroupBy = 'provider' | 'room' | 'service';
@@ -11,7 +12,7 @@ function addDays(iso: string, days: number): string {
 }
 
 function timeOf(iso: string): string {
-  // Display HH:MM from the ISO instant (UTC — the edge stores/returns UTC).
+  // Display HH:MM from the ISO instant (UTC — the API stores/returns UTC).
   return iso.slice(11, 16);
 }
 
@@ -22,6 +23,11 @@ function keyFor(e: CalendarEntry, by: GroupBy): string {
   return v ?? 'Unassigned';
 }
 
+/**
+ * Appointment calendar (APT-01). Day/week views, groupable by provider/room/service.
+ * The grid is a labelled horizontal scroller so a week never forces page scroll
+ * (§6.3). DOM contract preserved for the e2e suite.
+ */
 export function Calendar() {
   const today = new Date().toISOString().slice(0, 10);
   const [anchor, setAnchor] = useState<string>(today);
@@ -42,19 +48,17 @@ export function Calendar() {
       setEntries(r.entries);
       setStatus(`${r.entries.length} slot(s) — ${view === 'week' ? 'week' : 'day'} of ${range.from}`);
     } catch {
-      setStatus('Calendar unavailable — the edge hub may be unreachable.');
+      setStatus('Calendar unavailable — the clinic hub may be unreachable.');
     }
   }, [range, view]);
 
   useEffect(() => { void load(); }, [load]);
 
-  // Days spanning the current view.
   const days = useMemo(() => {
     const n = view === 'week' ? 7 : 1;
     return Array.from({ length: n }, (_, i) => addDays(range.from, i));
   }, [range.from, view]);
 
-  // entries grouped: day -> group key -> entries.
   const grouped = useMemo(() => {
     const byDay = new Map<string, Map<string, CalendarEntry[]>>();
     for (const e of entries) {
@@ -69,50 +73,46 @@ export function Calendar() {
   }, [entries, groupBy]);
 
   return (
-    <section data-testid="calendar" aria-label="Appointment calendar">
-      <h2 style={{ fontSize: 16 }}>Appointment calendar</h2>
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '8px 0' }}>
-        <label style={{ fontSize: 13 }}>
-          Date{' '}
-          <input data-testid="calendar-date" type="date" aria-label="Calendar date" value={anchor} onChange={(e) => setAnchor(e.target.value)} style={{ padding: 4 }} />
+    <section className="scr" data-testid="calendar" aria-label="Appointment calendar">
+      <div className="scr__toolbar">
+        <label className="sancta-field" style={{ maxWidth: 180 }}>
+          <span className="sancta-field__label">Date</span>
+          <input data-testid="calendar-date" className="sancta-field-input" type="date" aria-label="Calendar date" value={anchor} onChange={(e) => setAnchor(e.target.value)} />
         </label>
-        <button data-testid="calendar-prev" aria-label="Previous period" onClick={() => setAnchor(addDays(anchor, view === 'week' ? -7 : -1))} style={{ padding: '6px 10px' }}>◀</button>
-        <button data-testid="calendar-next" aria-label="Next period" onClick={() => setAnchor(addDays(anchor, view === 'week' ? 7 : 1))} style={{ padding: '6px 10px' }}>▶</button>
+        <button data-testid="calendar-prev" className="scr__seg-btn sancta-focusable" aria-label="Previous period" onClick={() => setAnchor(addDays(anchor, view === 'week' ? -7 : -1))}>◀ Prev</button>
+        <button data-testid="calendar-next" className="scr__seg-btn sancta-focusable" aria-label="Next period" onClick={() => setAnchor(addDays(anchor, view === 'week' ? 7 : 1))}>Next ▶</button>
 
-        <span role="group" aria-label="View mode" style={{ display: 'inline-flex', gap: 4 }}>
+        <span className="scr__seg" role="group" aria-label="View mode">
           {(['day', 'week'] as ViewMode[]).map((v) => (
-            <button key={v} data-testid={`view-${v}`} aria-pressed={view === v} onClick={() => setView(v)}
-              style={{ padding: '6px 10px', fontWeight: view === v ? 700 : 400, background: view === v ? '#047857' : '#f3f4f6', color: view === v ? '#fff' : '#111', border: 0, borderRadius: 6 }}>
+            <button key={v} data-testid={`view-${v}`} className="scr__seg-btn sancta-focusable" aria-pressed={view === v} onClick={() => setView(v)}>
               {v === 'day' ? 'Day' : 'Week'}
             </button>
           ))}
         </span>
 
-        <span role="group" aria-label="Group by" style={{ display: 'inline-flex', gap: 4 }}>
+        <span className="scr__seg" role="group" aria-label="Group by">
           {(['provider', 'room', 'service'] as GroupBy[]).map((g) => (
-            <button key={g} data-testid={`group-${g}`} aria-pressed={groupBy === g} onClick={() => setGroupBy(g)}
-              style={{ padding: '6px 10px', fontWeight: groupBy === g ? 700 : 400, background: groupBy === g ? '#e0f2fe' : '#f3f4f6', border: 0, borderRadius: 6 }}>
+            <button key={g} data-testid={`group-${g}`} className="scr__seg-btn sancta-focusable" aria-pressed={groupBy === g} onClick={() => setGroupBy(g)}>
               {GROUP_LABEL[g]}
             </button>
           ))}
         </span>
       </div>
 
-      <p data-testid="calendar-status" role="status" aria-live="polite" style={{ fontSize: 13, color: '#595959', minHeight: 18 }}>{status}</p>
+      <p className="scr__msg" data-testid="calendar-status" role="status" aria-live="polite">{status}</p>
 
-      <div data-testid="calendar-grid" style={{ display: 'grid', gridTemplateColumns: view === 'week' ? 'repeat(7, minmax(120px, 1fr))' : '1fr', gap: 8, overflowX: 'auto' }}>
+      <div data-testid="calendar-grid" className="scr__cal" style={{ gridTemplateColumns: view === 'week' ? 'repeat(7, minmax(120px, 1fr))' : '1fr' }}>
         {days.map((day) => {
           const groups = grouped.get(day);
           return (
-            <div key={day} data-testid={`calendar-day-${day}`} style={{ border: '1px solid #e5e7eb', borderRadius: 8, padding: 8, minWidth: 0 }}>
-              <h3 style={{ fontSize: 13, margin: '0 0 6px' }}>{day}</h3>
-              {!groups && <p style={{ color: '#595959', fontSize: 12 }}>No slots.</p>}
+            <div key={day} data-testid={`calendar-day-${day}`} className="scr__cal-day">
+              <h3>{day}</h3>
+              {!groups && <p className="scr__kpi-meta">No slots.</p>}
               {groups && [...groups.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([k, list]) => (
-                <div key={k} data-testid={`calendar-group-${k}`} style={{ marginBottom: 6 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700 }}>{k}</div>
+                <div key={k} data-testid={`calendar-group-${k}`} className="scr__cal-group">
+                  <div className="scr__cal-group-name">{k}</div>
                   {list.map((e) => (
-                    <div key={e.slotId} data-testid="calendar-slot" style={{ fontSize: 12, padding: '2px 4px', borderLeft: `3px solid ${e.status === 'booked' ? '#047857' : '#9ca3af'}`, marginTop: 2 }}>
+                    <div key={e.slotId} data-testid="calendar-slot" className="scr__cal-slot" data-booked={e.status === 'booked' ? 'true' : undefined}>
                       {timeOf(e.startsAt)}–{timeOf(e.endsAt)} · {e.status}
                       {e.patientMrn ? ` · ${e.patientMrn}` : ''}
                       {groupBy !== 'room' && e.room ? ` · ${e.room}` : ''}
