@@ -5,7 +5,11 @@ import { mutate, newIdempotencyKey } from '../mutation.ts';
 import './screens.css';
 
 // The demo operator is both sender and recipient so a handover round-trips visibly.
-const ME = 'demo-operator';
+// Staff are identified by UUID (the edge `to_staff` column is a uuid; the Worker's
+// is text), so a syntactically-valid UUID is used for both the inbox lookup and the
+// recipient — a plain name would be rejected by the edge as an invalid uuid.
+const ME = '00000000-0000-7000-8000-0000000000e1';
+const shortStaff = (id: string | null): string => (id ? `···${id.slice(-6)}` : 'unknown');
 
 const SBAR: Array<{ key: 'situation' | 'background' | 'assessment' | 'recommendation'; label: string; hint: string }> = [
   { key: 'situation', label: 'Situation', hint: 'What is happening now' },
@@ -96,7 +100,7 @@ export function Handover() {
             <ul className="scr__addenda" data-testid="ho-inbox">
               {items.map((h) => (
                 <li key={h.id} className="scr__card">
-                  <div className="scr__kpi-meta">From {h.fromStaff ?? 'unknown'} · {h.createdAt.slice(0, 16).replace('T', ' ')}</div>
+                  <div className="scr__kpi-meta">From {shortStaff(h.fromStaff)} · {h.createdAt.slice(0, 16).replace('T', ' ')}</div>
                   <div style={{ whiteSpace: 'pre-wrap', margin: 'var(--sancta-space-1) 0' }}>{h.message}</div>
                   <Button variant="secondary" density="compact" data-testid="ho-ack" disabled={ackBusy === h.id} onClick={() => acknowledge(h)}>Acknowledge</Button>
                 </li>

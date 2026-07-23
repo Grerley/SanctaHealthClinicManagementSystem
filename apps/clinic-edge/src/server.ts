@@ -507,7 +507,10 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
           try { return sendJson(res, 200, await acknowledgeHandover(pool, b)); } catch (err) { return sendJson(res, 409, { error: { code: 'handover_ack_rejected', message: (err as Error).message } }); }
         }
         if (p === '/api/handover/inbox' && req.method === 'GET') {
-          return sendJson(res, 200, { inbox: await inbox(pool, url.searchParams.get('staffId') ?? '', url.searchParams.get('includeAcknowledged') === 'true') });
+          // to_staff is a uuid; a malformed id must fail fast with 400, never a hung query.
+          try {
+            return sendJson(res, 200, { inbox: await inbox(pool, url.searchParams.get('staffId') ?? '', url.searchParams.get('includeAcknowledged') === 'true') });
+          } catch (err) { return sendJson(res, 400, { error: { code: 'invalid_staff_id', message: (err as Error).message } }); }
         }
         if (p === '/api/encounters/attach-form' && req.method === 'POST') {
           const b = (await readBody(req)) as Parameters<typeof attachForm>[1];
