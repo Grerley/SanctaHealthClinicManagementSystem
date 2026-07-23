@@ -6,7 +6,11 @@ import { screens as scheduling } from './scheduling.tsx';
 import { screens as inventory } from './inventory.tsx';
 import { screens as billing } from './billing.tsx';
 import { screens as comms } from './comms.tsx';
+import { screens as selfservice } from './selfservice.tsx';
+import { screens as payer } from './payer.tsx';
 import { screens as records } from './records.tsx';
+import { screens as facility } from './facility.tsx';
+import { screens as operations } from './operations.tsx';
 import { screens as admin } from './admin.tsx';
 import { screens as management } from './management.tsx';
 
@@ -24,7 +28,11 @@ export const MODULES: ModuleDef[] = [
   { id: 'inventory', label: 'Inventory' },
   { id: 'billing', label: 'Billing' },
   { id: 'comms', label: 'Comms' },
+  { id: 'selfservice', label: 'Self-service' },
+  { id: 'payer', label: 'Payer' },
   { id: 'records', label: 'Records' },
+  { id: 'facility', label: 'Facility' },
+  { id: 'operations', label: 'Operations' },
   { id: 'admin', label: 'Administration' },
   { id: 'management', label: 'Management' },
 ];
@@ -33,7 +41,8 @@ export const MODULES: ModuleDef[] = [
  * renders from — nav and work area both derive from this, so a screen is live the
  * moment it is registered. */
 export const SCREENS: ScreenDef[] = [
-  ...today, ...patients, ...clinical, ...scheduling, ...inventory, ...billing, ...comms, ...records, ...admin, ...management,
+  ...today, ...patients, ...clinical, ...scheduling, ...inventory, ...billing, ...comms,
+  ...selfservice, ...payer, ...records, ...facility, ...operations, ...admin, ...management,
 ];
 
 /** Screens belonging to a module, in registration order. */

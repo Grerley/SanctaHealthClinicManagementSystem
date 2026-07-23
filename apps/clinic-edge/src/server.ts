@@ -90,6 +90,36 @@ const MIME: Record<string, string> = {
   '.png': 'image/png',
 };
 
+// The Worker (D1, production) and this edge server grew slightly different URL schemes
+// for a few domains. The PWA speaks the Worker's canonical paths; here we rewrite an
+// incoming canonical path to the handler path this server already dispatches, so ONE
+// client build works against both backends. Applied before authorisation and routing,
+// so the existing RBAC entries and route handlers are reused unchanged. Only the
+// canonical (Worker) spellings are rewritten — paths this server already serves are
+// left untouched, so existing callers are unaffected.
+const CANONICAL_EDGE_PATH: Record<string, string> = {
+  '/api/payer/register': '/api/billing/payer',
+  '/api/payer/coverage': '/api/billing/coverage',
+  '/api/payer/eligibility': '/api/billing/eligibility',
+  '/api/payer/claim': '/api/billing/claim',
+  '/api/payer/claim/adjudicate': '/api/billing/claim/adjudicate',
+  '/api/payer/preauth': '/api/billing/preauth',
+  '/api/payer/preauth/decide': '/api/billing/preauth/decide',
+  '/api/kpi/target': '/api/management/kpi-target',
+  '/api/kpi/snapshot': '/api/management/kpi-snapshot',
+  '/api/kpi/comparison': '/api/management/kpi-comparison',
+  '/api/selfservice/confirm-booking': '/api/self-service/booking-confirm',
+  '/api/selfservice/token/revoke': '/api/self-service/revoke',
+};
+function canonicalEdgePath(pathname: string): string {
+  const exact = CANONICAL_EDGE_PATH[pathname];
+  if (exact) return exact;
+  // Facility lives under /api/ops/* here; self-service under the hyphenated spelling.
+  if (pathname.startsWith('/api/facility/')) return `/api/ops/${pathname.slice('/api/facility/'.length)}`;
+  if (pathname.startsWith('/api/selfservice/')) return `/api/self-service/${pathname.slice('/api/selfservice/'.length)}`;
+  return pathname;
+}
+
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
   res.end(JSON.stringify(body));
@@ -139,7 +169,7 @@ async function serveStatic(res: ServerResponse, pathname: string): Promise<void>
 const server = createServer((req: IncomingMessage, res: ServerResponse) => {
   void (async () => {
     const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
-    const p = url.pathname;
+    const p = canonicalEdgePath(url.pathname);
     try {
       // Central deny-by-default authorisation for every protected /api/ route (ADM-001).
       const ctx = authFromHeaders(req.headers as Record<string, string | string[] | undefined>);

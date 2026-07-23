@@ -13,6 +13,11 @@ import { ProblemList } from '../screens/ProblemList.tsx';
 import { Allergies } from '../screens/Allergies.tsx';
 import { ClinicalForms } from '../screens/ClinicalForms.tsx';
 import { DiagnosisLookup } from '../screens/DiagnosisLookup.tsx';
+import { OrderSets } from '../screens/OrderSets.tsx';
+import { SpecimenLabels } from '../screens/SpecimenLabels.tsx';
+import { ExternalResults } from '../screens/ExternalResults.tsx';
+import { UnmatchedResults } from '../screens/UnmatchedResults.tsx';
+import { ResultCorrection } from '../screens/ResultCorrection.tsx';
 
 /** Clinical work — encounter, prescribing, observations, orders/results, MAR,
  * care plans, referrals and shift handover. */
@@ -31,4 +36,9 @@ export const screens: ScreenDef[] = [
   { id: 'allergies', moduleId: 'clinical', label: 'Allergies', hint: 'Record substance allergies', render: (ctx) => <Allergies patient={ctx.patient} /> },
   { id: 'clinical-forms', moduleId: 'clinical', label: 'Clinical forms', hint: 'Versioned form catalogue', render: () => <ClinicalForms /> },
   { id: 'diagnosis-codes', moduleId: 'clinical', label: 'Diagnosis codes', hint: 'Coded diagnosis lookup', render: () => <DiagnosisLookup /> },
+  { id: 'order-sets', moduleId: 'clinical', label: 'Order sets', hint: 'Reusable order bundles', render: (ctx) => <OrderSets patient={ctx.patient} /> },
+  { id: 'specimen-labels', moduleId: 'clinical', label: 'Specimen labels', hint: 'Identity-safe specimen labels', render: () => <SpecimenLabels /> },
+  { id: 'external-results', moduleId: 'clinical', label: 'External results', hint: 'Record outside results', render: (ctx) => <ExternalResults patient={ctx.patient} /> },
+  { id: 'unmatched-results', moduleId: 'clinical', label: 'Unmatched results', hint: 'Reconcile unmatched results', render: () => <UnmatchedResults /> },
+  { id: 'result-correction', moduleId: 'clinical', label: 'Corrections', hint: 'Correct results, cancel orders', render: () => <ResultCorrection /> },
 ];
