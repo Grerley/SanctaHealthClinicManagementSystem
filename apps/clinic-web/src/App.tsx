@@ -11,6 +11,7 @@ import { Prescribe } from './screens/Prescribe.tsx';
 import { Vitals } from './screens/Vitals.tsx';
 import { Orders } from './screens/Orders.tsx';
 import { Results } from './screens/Results.tsx';
+import { Mar } from './screens/Mar.tsx';
 import { Finance } from './screens/Finance.tsx';
 import { Inbox } from './screens/Inbox.tsx';
 import { Inventory } from './screens/Inventory.tsx';
@@ -19,7 +20,7 @@ import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
+type Tab = 'dispense' | 'inbox' | 'patients' | 'chart' | 'encounter' | 'prescribe' | 'vitals' | 'orders' | 'results' | 'mar' | 'queue' | 'calendar' | 'inventory' | 'cashier' | 'finance' | 'dashboard';
 // Role-ordered primary navigation (§4.1). The app opens on Dispense & Pay (the
 // flagship slice); Inbox ("Today": critical results & tasks) sits alongside it.
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
@@ -32,6 +33,7 @@ const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'vitals', label: 'Vitals', hint: 'Triage observations' },
   { id: 'orders', label: 'Orders', hint: 'Labs, imaging, referrals' },
   { id: 'results', label: 'Results', hint: 'Enter and classify results' },
+  { id: 'mar', label: 'Med round', hint: 'Administer medications' },
   { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
   { id: 'calendar', label: 'Calendar', hint: 'Appointments' },
   { id: 'inventory', label: 'Inventory', hint: 'Stock and expiry' },
@@ -112,6 +114,7 @@ export function App() {
           {tab === 'vitals' && <Vitals patient={activePatient} />}
           {tab === 'orders' && <Orders patient={activePatient} />}
           {tab === 'results' && <Results />}
+          {tab === 'mar' && <Mar />}
           {tab === 'queue' && <Queue />}
           {tab === 'calendar' && <Calendar />}
           {tab === 'inventory' && <Inventory />}

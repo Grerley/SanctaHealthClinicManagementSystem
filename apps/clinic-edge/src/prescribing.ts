@@ -174,6 +174,24 @@ export async function applyRxTemplate(pool: Pool, args: { templateCode: string }
 
 // --- Medication administration record (MED-009) -----------------------------
 
+export type DueMedicationRow = { requestId: string; patientId: string; mrn: string | null; name: string; medicineCode: string; substanceCode: string; dose: string | null; route: string | null; frequency: string | null; prescribedAt: string };
+
+/** Active medication requests due for administration (MED-09 worklist). Read-only. */
+export async function dueMedications(pool: Pool): Promise<DueMedicationRow[]> {
+  const res = await pool.query(
+    `SELECT mr.id, mr.patient_id, p.mrn, p.given_name, p.family_name, mr.medicine_code, mr.substance_code, mr.dose, mr.route, mr.frequency,
+            to_char(mr.created_at,'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS prescribed_at
+       FROM clinical.medication_request mr
+       JOIN identity.patient p ON p.id = mr.patient_id
+      WHERE mr.status='active'
+      ORDER BY mr.created_at ASC`,
+  );
+  return res.rows.map((r) => ({
+    requestId: r.id, patientId: r.patient_id, mrn: r.mrn, name: `${r.given_name} ${r.family_name}`.trim(),
+    medicineCode: r.medicine_code, substanceCode: r.substance_code, dose: r.dose, route: r.route, frequency: r.frequency, prescribedAt: r.prescribed_at,
+  }));
+}
+
 /**
  * Record a medicine administration against a request (MED-009). Captures time,
  * dose, route, site, performer and the given/not-given outcome. A not-given event

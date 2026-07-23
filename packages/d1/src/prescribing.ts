@@ -97,6 +97,26 @@ export async function applyRxTemplate(db: D1Database, args: { templateCode: stri
   return { templateCode: args.templateCode, proposals };
 }
 
+export type DueMedicationRow = { requestId: string; patientId: string; mrn: string | null; name: string; medicineCode: string; substanceCode: string; dose: string | null; route: string | null; frequency: string | null; prescribedAt: string };
+
+/** Active medication requests due for administration (MED-09 worklist). Read-only;
+ * recording an administration is a separate, audited write, and a not-given dose
+ * always requires a reason. */
+export async function dueMedications(db: D1Database): Promise<DueMedicationRow[]> {
+  const rows = await many<{ id: string; patient_id: string; mrn: string | null; given_name: string; family_name: string; medicine_code: string; substance_code: string; dose: string | null; route: string | null; frequency: string | null; created_at: string }>(
+    db,
+    `SELECT mr.id, mr.patient_id, p.mrn, p.given_name, p.family_name, mr.medicine_code, mr.substance_code, mr.dose, mr.route, mr.frequency, mr.created_at
+       FROM clinical_medication_request mr
+       JOIN identity_patient p ON p.id = mr.patient_id
+      WHERE mr.status='active'
+      ORDER BY mr.created_at ASC`,
+  );
+  return rows.map((r) => ({
+    requestId: r.id, patientId: r.patient_id, mrn: r.mrn, name: `${r.given_name} ${r.family_name}`.trim(),
+    medicineCode: r.medicine_code, substanceCode: r.substance_code, dose: r.dose, route: r.route, frequency: r.frequency, prescribedAt: r.created_at,
+  }));
+}
+
 // --- Medication administration record (MED-009) -----------------------------
 
 export async function recordAdministration(

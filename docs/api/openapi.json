@@ -4226,6 +4226,27 @@
         }
       }
     },
+    "/api/prescribe/due": {
+      "get": {
+        "operationId": "get_api_prescribe_due",
+        "summary": "GET /api/prescribe/due",
+        "tags": [
+          "prescribe"
+        ],
+        "x-permission": null,
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        }
+      }
+    },
     "/api/prescribe/template": {
       "post": {
         "operationId": "post_api_prescribe_template",

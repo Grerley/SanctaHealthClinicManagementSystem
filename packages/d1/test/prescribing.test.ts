@@ -7,7 +7,7 @@
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError } from '../src/prescribing.ts';
+import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, dueMedications, PrescribingError } from '../src/prescribing.ts';
 import { openLocalD1 } from '../src/local.ts';
 import { applyD1Migrations } from '../src/migrations.ts';
 import type { LocalD1 } from '../src/d1.ts';
@@ -25,6 +25,17 @@ test('a clear prescription is created', async () => {
   const r = await prescribe(db, { patientId: PID, medicineCode: 'AMOX-500', substanceCode: 'AMOXICILLIN', prescribedBy: 'dr1', dose: '500mg', frequency: 'TDS' });
   assert.equal(r.ok, true);
   if (r.ok) assert.equal(r.overridden, false);
+});
+
+test('dueMedications lists active requests with patient identity for the MAR worklist', async () => {
+  const r = await prescribe(db, { patientId: PID, medicineCode: 'AMOX-500', substanceCode: 'AMOXICILLIN', prescribedBy: 'dr1', dose: '500mg', route: 'oral', frequency: 'TDS' });
+  assert.equal(r.ok, true);
+  const due = await dueMedications(db);
+  assert.equal(due.length, 1);
+  assert.equal(due[0]!.medicineCode, 'AMOX-500');
+  assert.equal(due[0]!.name, 'Rx Test');
+  assert.equal(due[0]!.dose, '500mg');
+  assert.equal(due[0]!.route, 'oral');
 });
 
 test('an allergy blocks the prescription until overridden with a reason', async () => {

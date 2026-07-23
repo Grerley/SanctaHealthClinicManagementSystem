@@ -18,7 +18,7 @@ import {
   defineOrderSet, applyOrderSet, generateSpecimenLabel, createReferral, updateReferral, listOpenReferrals, OrderError,
   createDraftEncounter, updateDraft, signEncounter, addAddendum, markEnteredInError, getEncounter, EncounterError,
   recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError,
-  recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, PrescribingError,
+  recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, dueMedications, PrescribingError,
   searchFormulary, dispensingWorklist, markDispensed, generatePrescription, MedicationError,
   uploadDocument, openDocument, disclosureLog, indexDocument, searchDocuments, DocumentError,
   storeGeneratedDocument, supersedeDocument, markDocumentEnteredInError, setLegalHold, setRetention, disposalCandidates, disposeDocument, DocLifecycleError,
@@ -1386,6 +1386,10 @@ export async function handleApi(request: Request, env: Env, url: URL): Promise<R
         if (p === '/api/prescribe/administrations' && method === 'GET') {
           const denied = guard('view_clinical_detail'); if (denied) return denied;
           return json({ administrations: await listAdministrations(env.DB, { requestId: url.searchParams.get('requestId') ?? '' }) });
+        }
+        if (p === '/api/prescribe/due' && method === 'GET') {
+          const denied = guard('view_clinical_detail'); if (denied) return denied;
+          return json({ medications: await dueMedications(env.DB) });
         }
       } catch (e) {
         if (e instanceof PrescribingError) return json({ error: { code: 'prescribing_rejected', message: e.message } }, 422);

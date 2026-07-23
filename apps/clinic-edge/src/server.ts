@@ -30,7 +30,7 @@ import { createCarePlan, addGoal, addFollowUp, completeFollowUp, listCarePlans, 
 import { generateVisitSummary, generatePrescription, generateSickNote, generateReferral } from './docgen.ts';
 import { sendHandover, acknowledgeHandover, inbox } from './handover.ts';
 import { mergePatients, unmergePatients } from './merge.ts';
-import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations } from './prescribing.ts';
+import { recordAllergy, prescribe, defineRxTemplate, applyRxTemplate, recordAdministration, listAdministrations, dueMedications } from './prescribing.ts';
 import { searchFormulary, dispensingWorklist, markDispensed, generatePrescription as generateMedPrescription } from './medication.ts';
 import { registerDevice, revokeDevice, isDeviceTrusted } from './devices.ts';
 import { recordVitals, recordTriageAssessment, recordIntervention, signTriage, openTriageQueue, triageSummary, TriageError, type RecordVitalsBody } from './triage.ts';
@@ -548,6 +548,9 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
         }
         if (p === '/api/prescribe/administrations' && req.method === 'GET') {
           return sendJson(res, 200, { administrations: await listAdministrations(pool, { requestId: url.searchParams.get('requestId') ?? '' }) });
+        }
+        if (p === '/api/prescribe/due' && req.method === 'GET') {
+          return sendJson(res, 200, { medications: await dueMedications(pool) });
         }
         if (p === '/api/formulary' && req.method === 'GET') {
           return sendJson(res, 200, { items: await searchFormulary(pool, url.searchParams.get('q') ?? '', url.searchParams.get('location') ?? undefined) });
