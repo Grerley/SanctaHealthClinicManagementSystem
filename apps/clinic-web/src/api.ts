@@ -19,6 +19,8 @@ export type QueueRow = { visitId: string; token: number; station: string; priori
 export type CalendarEntry = { slotId: string; provider: string; room: string | null; serviceCode: string | null; startsAt: string; endsAt: string; day: string; status: string; patientMrn: string | null };
 export type Kpi = { id: string; label: string; value: number; unit: string; owner: string; formula: string };
 export type Exception = { type: string; label: string; count: number; queue: string; owner: string };
+export type TimelineItem = { type: 'encounter' | 'addendum' | 'observation' | 'result'; id: string; at: string; summary: string; author: string | null; status?: string; flags?: string[] };
+export type HistoryItem = { id: string; category: string; detail: string; code: string | null; status: string; onsetDate: string | null };
 
 export const api = {
   patients: () => jsonFetch<{ patients: Patient[] }>('/api/patients'),
@@ -43,4 +45,8 @@ export const api = {
   calendar: (from: string, to: string) => jsonFetch<{ entries: CalendarEntry[] }>(`/api/schedule/calendar?from=${from}&to=${to}`),
   createSlot: (body: { provider: string; startsAt: string; endsAt: string; room?: string; serviceCode?: string }) =>
     jsonFetch<{ slotId: string }>('/api/schedule/slot', { method: 'POST', body: JSON.stringify(body) }),
+  timeline: (patientId: string, type?: string) =>
+    jsonFetch<{ timeline: TimelineItem[] }>(`/api/timeline?patientId=${encodeURIComponent(patientId)}${type ? `&type=${encodeURIComponent(type)}` : ''}`),
+  ehrHistory: (patientId: string) =>
+    jsonFetch<{ history: HistoryItem[] }>(`/api/ehr/history?patientId=${encodeURIComponent(patientId)}`),
 };
