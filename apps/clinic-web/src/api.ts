@@ -21,6 +21,16 @@ export type Kpi = { id: string; label: string; value: number; unit: string; owne
 export type Exception = { type: string; label: string; count: number; queue: string; owner: string };
 export type TimelineItem = { type: 'encounter' | 'addendum' | 'observation' | 'result'; id: string; at: string; summary: string; author: string | null; status?: string; flags?: string[] };
 export type HistoryItem = { id: string; category: string; detail: string; code: string | null; status: string; onsetDate: string | null };
+export type AgeingBand = '0-30' | '31-60' | '61-90' | '90+';
+export type DebtorRow = { patientId: string; mrn: string | null; name: string; outstandingMinor: number; oldestBand: AgeingBand };
+export type AgeingReport = { asOf: string; buckets: Record<AgeingBand, number>; totalMinor: number; arControlMinor: number; reconciles: boolean; workQueue: DebtorRow[] };
+export type TrialBalanceRow = { code: string; name: string; type: string; debitMinor: number; creditMinor: number; netMinor: number };
+export type TrialBalance = { rows: TrialBalanceRow[]; totalDebitMinor: number; totalCreditMinor: number; balanced: boolean };
+
+/** Format minor currency units (cents) as a plain amount with tabular grouping. */
+export function money(minor: number): string {
+  return (minor / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 export const api = {
   patients: () => jsonFetch<{ patients: Patient[] }>('/api/patients'),
@@ -49,4 +59,7 @@ export const api = {
     jsonFetch<{ timeline: TimelineItem[] }>(`/api/timeline?patientId=${encodeURIComponent(patientId)}${type ? `&type=${encodeURIComponent(type)}` : ''}`),
   ehrHistory: (patientId: string) =>
     jsonFetch<{ history: HistoryItem[] }>(`/api/ehr/history?patientId=${encodeURIComponent(patientId)}`),
+  debtorsAgeing: (asOf?: string) =>
+    jsonFetch<AgeingReport>(`/api/debtors/ageing${asOf ? `?asOf=${asOf}` : ''}`),
+  trialBalance: () => jsonFetch<TrialBalance>('/api/finance/trial-balance'),
 };

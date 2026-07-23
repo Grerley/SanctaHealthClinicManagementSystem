@@ -6,11 +6,12 @@ import { Queue } from './screens/Queue.tsx';
 import { Dashboard } from './screens/Dashboard.tsx';
 import { Calendar } from './screens/Calendar.tsx';
 import { Chart } from './screens/Chart.tsx';
+import { Finance } from './screens/Finance.tsx';
 import { PatientBanner } from './PatientBanner.tsx';
 import type { Patient } from './api.ts';
 import './shell.css';
 
-type Tab = 'dispense' | 'patients' | 'chart' | 'queue' | 'calendar' | 'dashboard';
+type Tab = 'dispense' | 'patients' | 'chart' | 'queue' | 'calendar' | 'finance' | 'dashboard';
 // Role-ordered primary navigation (§4.1).
 const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'dispense', label: 'Dispense & Pay', hint: 'Pharmacy and cashier' },
@@ -18,6 +19,7 @@ const TABS: Array<{ id: Tab; label: string; hint: string }> = [
   { id: 'chart', label: 'Chart', hint: 'Clinical record' },
   { id: 'queue', label: 'Queue', hint: 'Reception and flow' },
   { id: 'calendar', label: 'Calendar', hint: 'Appointments' },
+  { id: 'finance', label: 'Finance', hint: 'Debtors and ledger' },
   { id: 'dashboard', label: 'Command centre', hint: 'Management' },
 ];
 
@@ -89,6 +91,7 @@ export function App() {
           {tab === 'chart' && <Chart patient={activePatient} />}
           {tab === 'queue' && <Queue />}
           {tab === 'calendar' && <Calendar />}
+          {tab === 'finance' && <Finance />}
           {tab === 'dashboard' && <Dashboard />}
         </div>
       </main>
