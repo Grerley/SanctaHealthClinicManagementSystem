@@ -18,6 +18,13 @@ import { SpecimenLabels } from '../screens/SpecimenLabels.tsx';
 import { ExternalResults } from '../screens/ExternalResults.tsx';
 import { UnmatchedResults } from '../screens/UnmatchedResults.tsx';
 import { ResultCorrection } from '../screens/ResultCorrection.tsx';
+import { RxTemplates } from '../screens/RxTemplates.tsx';
+import { DispenseWorklist } from '../screens/DispenseWorklist.tsx';
+import { Formulary } from '../screens/Formulary.tsx';
+import { AdminHistory } from '../screens/AdminHistory.tsx';
+import { EncounterVoid } from '../screens/EncounterVoid.tsx';
+import { ReferralStatus } from '../screens/ReferralStatus.tsx';
+import { RecordDiagnosis } from '../screens/RecordDiagnosis.tsx';
 
 /** Clinical work — encounter, prescribing, observations, orders/results, MAR,
  * care plans, referrals and shift handover. */
@@ -41,4 +48,11 @@ export const screens: ScreenDef[] = [
   { id: 'external-results', moduleId: 'clinical', label: 'External results', hint: 'Record outside results', render: (ctx) => <ExternalResults patient={ctx.patient} /> },
   { id: 'unmatched-results', moduleId: 'clinical', label: 'Unmatched results', hint: 'Reconcile unmatched results', render: () => <UnmatchedResults /> },
   { id: 'result-correction', moduleId: 'clinical', label: 'Corrections', hint: 'Correct results, cancel orders', render: () => <ResultCorrection /> },
+  { id: 'rx-templates', moduleId: 'clinical', label: 'Rx templates', hint: 'Reusable prescribing protocols', render: () => <RxTemplates /> },
+  { id: 'dispense-worklist', moduleId: 'clinical', label: 'Dispensing', hint: 'Pharmacy dispensing worklist', render: () => <DispenseWorklist /> },
+  { id: 'formulary', moduleId: 'clinical', label: 'Formulary', hint: 'Medication catalogue', render: () => <Formulary /> },
+  { id: 'medication-admin-history', moduleId: 'clinical', label: 'Admin history', hint: 'Administration trail', render: () => <AdminHistory /> },
+  { id: 'encounter-void', moduleId: 'clinical', label: 'Void encounter', hint: 'Mark entered-in-error', render: () => <EncounterVoid /> },
+  { id: 'referral-status', moduleId: 'clinical', label: 'Referral status', hint: 'Track referrals to close', render: () => <ReferralStatus /> },
+  { id: 'record-diagnosis', moduleId: 'clinical', label: 'Record diagnosis', hint: 'Code a diagnosis to an encounter', render: (ctx) => <RecordDiagnosis patient={ctx.patient} /> },
 ];

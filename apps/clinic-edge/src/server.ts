@@ -117,6 +117,8 @@ function canonicalEdgePath(pathname: string): string {
   // Facility lives under /api/ops/* here; self-service under the hyphenated spelling.
   if (pathname.startsWith('/api/facility/')) return `/api/ops/${pathname.slice('/api/facility/'.length)}`;
   if (pathname.startsWith('/api/selfservice/')) return `/api/self-service/${pathname.slice('/api/selfservice/'.length)}`;
+  // Visit lifecycle transitions are served under /api/visits/* here.
+  if (pathname.startsWith('/api/visit-lifecycle/')) return `/api/visits/${pathname.slice('/api/visit-lifecycle/'.length)}`;
   return pathname;
 }
 

@@ -7,6 +7,9 @@ import { PeriodClose } from '../screens/PeriodClose.tsx';
 import { BudgetVsActual } from '../screens/BudgetVsActual.tsx';
 import { ManualJournal } from '../screens/ManualJournal.tsx';
 import { DashboardExport } from '../screens/DashboardExport.tsx';
+import { FinanceExpense } from '../screens/FinanceExpense.tsx';
+import { FinanceMonthlyClose } from '../screens/FinanceMonthlyClose.tsx';
+import { FinanceJournalReview } from '../screens/FinanceJournalReview.tsx';
 import { FinanceCostCentres } from '../screens/FinanceCostCentres.tsx';
 import { FinanceDimensions } from '../screens/FinanceDimensions.tsx';
 import { FinanceMargin } from '../screens/FinanceMargin.tsx';
@@ -30,4 +33,7 @@ export const screens: ScreenDef[] = [
   { id: 'finance-ap-recon', moduleId: 'management', label: 'AP reconciliation', hint: 'Finance control', render: () => <FinanceApRecon /> },
   { id: 'finance-assets', moduleId: 'management', label: 'Asset register', hint: 'Finance control', render: () => <FinanceAssets /> },
   { id: 'finance-accounts', moduleId: 'management', label: 'Chart of accounts', hint: 'Finance control', render: () => <FinanceAccounts /> },
+  { id: 'finance-expense', moduleId: 'management', label: 'Expense capture', hint: 'Finance control', render: () => <FinanceExpense /> },
+  { id: 'finance-monthly-close', moduleId: 'management', label: 'Period close', hint: 'Finance control', render: () => <FinanceMonthlyClose /> },
+  { id: 'finance-journal-review', moduleId: 'management', label: 'Journal review', hint: 'Maker-checker posting', render: () => <FinanceJournalReview /> },
 ];
