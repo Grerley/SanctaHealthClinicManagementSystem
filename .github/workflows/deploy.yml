@@ -72,6 +72,14 @@ jobs:
         working-directory: apps/worker
         run: npx -y wrangler d1 migrations apply sancta --remote
 
+      # Load the bulk synthetic demo data (SYNTHETIC ONLY — no real PHI) so every
+      # screen renders with realistic volume. INSERT OR IGNORE + fixed ids make this
+      # idempotent, so re-running on each deploy never duplicates. Kept out of the
+      # migrations dir so the curated D1 test fixtures stay exact.
+      - name: Load synthetic demo data
+        working-directory: apps/worker
+        run: npx -y wrangler d1 execute sancta --remote --file=../../seed/d1-bulk-demo.sql
+
       # Ship the Worker + static assets as one versioned release.
       - name: Deploy Worker
         working-directory: apps/worker
