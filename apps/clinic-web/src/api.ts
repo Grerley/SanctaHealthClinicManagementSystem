@@ -1,10 +1,7 @@
 /** Thin client for the LAN edge API. Same-origin; the edge is on the clinic LAN. */
-export type Patient = { id: string; mrn: string; given_name: string; family_name: string; dob: string; sex: string };
+import { sessionRoles, sessionUser } from './session.ts';
 
-// In production these come from the authenticated, device-bound session. For the
-// demo shell the operator holds front-desk + clinical + cashier + stock roles.
-const SESSION_ROLES = 'reception,clinical,cashier,stock';
-const SESSION_USER = 'demo-operator';
+export type Patient = { id: string; mrn: string; given_name: string; family_name: string; dob: string; sex: string };
 
 // A read that never returns (a hung LAN hub, a route that never responds) must not
 // freeze the screen — availability is not the same as navigator.onLine (§10.2). We
@@ -21,7 +18,7 @@ export async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> 
     const res = await fetch(url, {
       ...init,
       signal: controller.signal,
-      headers: { 'content-type': 'application/json', 'x-roles': SESSION_ROLES, 'x-user': SESSION_USER, ...(init?.headers ?? {}) },
+      headers: { 'content-type': 'application/json', 'x-roles': sessionRoles(), 'x-user': sessionUser(), ...(init?.headers ?? {}) },
     });
     if (!res.ok && res.status !== 409) throw new Error(`${url} -> ${res.status}`);
     return (await res.json()) as T;

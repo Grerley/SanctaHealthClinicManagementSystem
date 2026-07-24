@@ -6,6 +6,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { resetDb } from './reset.ts';
+import { presetPersona } from './session-preset.ts';
 
 const HEADERS = { 'x-roles': 'reception,clinical,cashier,stock', 'x-user': 'demo-operator', 'content-type': 'application/json' };
 const PROVIDERS = ['00000000-0000-7000-8000-0000000000d1', '00000000-0000-7000-8000-0000000000d2'];
@@ -18,7 +19,7 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-test.beforeEach(async () => { await resetDb(); });
+test.beforeEach(async ({ page }) => { await resetDb(); await presetPersona(page); });
 
 test('calendar renders day/week views, regroups, and loads within 2s (APT-008)', async ({ page, request }) => {
   const today = new Date().toISOString().slice(0, 10);

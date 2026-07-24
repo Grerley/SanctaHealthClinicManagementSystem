@@ -5,8 +5,9 @@
  */
 import { test, expect } from '@playwright/test';
 import { resetDb } from './reset.ts';
+import { presetPersona } from './session-preset.ts';
 
-test.beforeEach(async () => { await resetDb(); });
+test.beforeEach(async ({ page }) => { await resetDb(); await presetPersona(page); });
 
 test('a selected patient banner persists across tabs and warns when offline (EHR-001)', async ({ page, context }) => {
   await page.goto('/');

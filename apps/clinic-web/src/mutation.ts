@@ -30,8 +30,7 @@ export type MutationResult<T> = {
   data?: T;
 };
 
-const SESSION_ROLES = 'reception,clinical,cashier,stock';
-const SESSION_USER = 'demo-operator';
+import { sessionRoles, sessionUser } from './session.ts';
 
 function randomId(): string {
   const c = globalThis.crypto;
@@ -105,8 +104,8 @@ export async function mutate<T>(
       method: opts.method ?? 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-roles': SESSION_ROLES,
-        'x-user': SESSION_USER,
+        'x-roles': sessionRoles(),
+        'x-user': sessionUser(),
         'x-idempotency-key': idempotencyKey,
         'x-client-event-id': clientEventId,
       },

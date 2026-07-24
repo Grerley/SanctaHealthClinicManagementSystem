@@ -8,8 +8,9 @@
  */
 import { test, expect } from '@playwright/test';
 import { resetDb } from './reset.ts';
+import { presetPersona } from './session-preset.ts';
 
-test.beforeEach(async () => { await resetDb(); });
+test.beforeEach(async ({ page }) => { await resetDb(); await presetPersona(page); });
 import pg from 'pg';
 
 const CLOUD_DATABASE_URL = process.env['CLOUD_DATABASE_URL'] ?? 'postgres://sancta@127.0.0.1:5433/sancta_cloud';

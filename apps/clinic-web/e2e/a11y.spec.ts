@@ -20,6 +20,7 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { AxeBuilder } from '@axe-core/playwright';
+import { presetPersona } from './session-preset.ts';
 
 const WCAG_AA = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 const LANES = 4; // concurrent pages within this single (serial) worker
@@ -68,6 +69,7 @@ async function sweepLane(page: Page, testids: string[], failed: string[]): Promi
 // the harness already seeds on startup — so we skip the expensive schema rebuild.
 test('every tab has no serious/critical WCAG 2.2 AA violations (NFR-019)', async ({ page, browser }) => {
   test.setTimeout(300_000);
+  await presetPersona(page);
   await page.goto('/');
 
   const testids = await page.locator('[data-testid^="tab-"]').evaluateAll(
@@ -94,6 +96,7 @@ test('every tab has no serious/critical WCAG 2.2 AA violations (NFR-019)', async
       // A fresh context per lane (the test runner disallows browser.newPage()); baseURL
       // is inherited from the config, so relative goto('/') resolves to the edge harness.
       const context = await browser.newContext();
+      await presetPersona(context);
       try {
         await sweepLane(await context.newPage(), slice, failed);
       } finally {

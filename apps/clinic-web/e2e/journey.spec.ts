@@ -8,11 +8,12 @@
  */
 import { test, expect } from '@playwright/test';
 import { resetDb } from './reset.ts';
+import { presetPersona } from './session-preset.ts';
 
 const HEADERS = { 'x-roles': 'reception,clinical,cashier,stock', 'x-user': 'demo-operator', 'content-type': 'application/json' };
 const PROVIDER = '00000000-0000-7000-8000-0000000000d1';
 
-test.beforeEach(async () => { await resetDb(); });
+test.beforeEach(async ({ page }) => { await resetDb(); await presetPersona(page); });
 
 test('a patient travels register → queue → calendar → dispense → sync → command centre', async ({ page, request }) => {
   const today = new Date().toISOString().slice(0, 10);
